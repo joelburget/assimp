@@ -21,9 +21,10 @@ Cabal-version:       >=1.2
 
 Library
   Exposed-modules: Graphics.Formats.Assimp
+  Other-modules: Graphics.Formats.Assimp.Types, Graphics.Formats.Assimp.Storable, Graphics.Formats.Assimp.Fun
   ghc-options: -Wall
-  Build-depends: base > 3 && < 5, haskell98
+  Build-depends: base > 3 && < 5, haskell98, vector
   Build-tools: c2hs
   --Extra-libraries: assimp
   --Hs-source-dirs: src
-  Include-dirs: assimp/include/
+  Include-dirs: assimp/include/, Graphics/Formats/
