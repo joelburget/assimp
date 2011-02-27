@@ -3,7 +3,7 @@
 module Graphics.Formats.Assimp.Types where
 
 import C2HS
-import Data.Vector.Storable
+import Data.Vector.Storable hiding ((++))
 
 #include "../../assimp/include/assimp.h"        // Plain-C interface
 #include "../../assimp/include/aiScene.h"       // Output data structure
@@ -24,6 +24,7 @@ import Data.Vector.Storable
 {#enum aiOrigin as AiOrigin                     {underscoreToCase} deriving (Show, Eq)#}
 {#enum aiDefaultLogStream as AiDefaultLogStream {underscoreToCase} deriving (Show, Eq)#}
 {#enum aiPrimitiveType as AiPrimitiveType       {underscoreToCase} deriving (Show, Eq)#}
+{#enum aiLightSourceType as AiLightSourceType   {underscoreToCase} deriving (Show, Eq)#}
 
 -- Texture enums
 {#enum aiTextureOp as AiTextureOp {underscoreToCase} deriving (Show, Eq)#}
@@ -99,10 +100,11 @@ data AiVector3D = AiVector3D {
   }
 {#pointer *aiVector3D     as AiVector3DPtr        -> AiVector3D     #}
 
-data AiString = AiString
-  { length'AiString :: Int
-  , data'AiString   :: String -- Maximum length MAXLEN
-  }
+--data AiString = AiString
+--  { --length'AiString :: Int
+--  , data'AiString   :: String -- Maximum length MAXLEN
+--  }
+newtype AiString = AiString String
 {#pointer *aiString       as AiStringPtr       -> AiString       #}
 
 data AiMatrix3x3 = AiMatrix3x3 {
@@ -186,6 +188,7 @@ data AiMesh = AiMesh
   }
 {#pointer *aiMesh         as AiMeshPtr         -> AiMesh         #}
 
+data AiMaterialProperty
 data AiMaterial = AiMaterial {
     mProperties'AiMaterial :: [AiMaterialProperty]
   --mNumProperties :: CUInt
@@ -193,6 +196,8 @@ data AiMaterial = AiMaterial {
   }
 {#pointer *aiMaterial     as AiMaterialPtr        -> AiMaterial     #}
 
+data AiNodeAnim
+data AiMeshAnim
 data AiAnimation = AiAnimation {
     mName'AiAnimation :: String
   , mDuration'AiAnimation :: Double
@@ -204,6 +209,7 @@ data AiAnimation = AiAnimation {
   }
 {#pointer *aiAnimation    as AiAnimationPtr       -> AiAnimation    #}
 
+data AiTexel
 data AiTexture = AiTexture {
     mWidth'AiTexture :: CUInt
   , mHeight'AiTexture :: CUInt

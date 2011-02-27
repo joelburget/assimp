@@ -11,15 +11,20 @@ import Graphics.Formats.Assimp.Storable
 #include "../../assimp/include/aiPostProcess.h" // Post processing flags
 #include "./typedefs.h"
 
+withT = with
+
+toAiScene = AiScenePtr . castPtr
+fromAiScene (AiScenePtr x) = castPtr x
+
 --peekAiScene = peek :: Ptr AiScene -> IO AiScene
 {#fun aiImportFile as ^
-  {`String', cFromEnum `SceneFlags'} -> `AiScenePtr' id#}
+  {`String', cFromEnum `SceneFlags'} -> `AiScene' fromAiScene#}
 
 -- aiImportFileEx
 -- aiImportFileFromMemory
 
 {#fun aiApplyPostProcessing as ^
-  {withT* `AiScene', cFromEnum `AiPostProcessSteps'} -> `AiScenePtr' id#}
+  {toAiScene `AiScene', cFromEnum `AiPostProcessSteps'} -> `AiScene' fromAiScene#}
 
 --{#fun aiGetPredefinedLogStream as ^
 --  {cFromEnum `AiDefaultLogStream', `String'} -> `AiLogStream' id#}
@@ -30,7 +35,7 @@ import Graphics.Formats.Assimp.Storable
 -- aiDetachAllLogStreams
 
 {#fun aiReleaseImport as ^
-  {withT* `AiScene'} -> `()'#}
+  {fromAiScene `AiScene'} -> `()'#}
 
 {#fun aiGetErrorString as ^
   {} -> `String'#}
@@ -60,3 +65,13 @@ import Graphics.Formats.Assimp.Storable
 -- aiMultiplyMatrix4
 -- aiIdentityMatrix3
 -- aiIdentityMatrix4
+-- aiGetLegalString
+-- aiGetVersionMinor
+-- aiGetVersionmajor
+-- aiGetVersionRevision
+-- aiGetCompileFlags
+-- aiGetMaterialProperty
+-- aiGetMaterialFloatArray
+-- aiGetMaterialIntegerArray
+-- aiGetMaterialColor
+-- aiGetMaterialString
