@@ -43,6 +43,6 @@ FFI bindings for Assimp - asset import library. Supports the following formats:
 - Stanford Ply ( *.ply )
 - TrueSpace ( *.cob, *.scn ) 2
 
-1: Experimental loaders
-2: Indicates very limited support - many of the format's features don't map to Assimp's data structures.
-3: These formats support animations, but ASSIMP doesn't yet support them (or they're buggy)
+1. Experimental loaders
+2. Indicates very limited support - many of the format's features don't map to Assimp's data structures.
+3. These formats support animations, but ASSIMP doesn't yet support them (or they're buggy)
