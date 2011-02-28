@@ -18,13 +18,13 @@ fromAiScene (AiScenePtr x) = castPtr x
 
 --peekAiScene = peek :: Ptr AiScene -> IO AiScene
 {#fun aiImportFile as ^
-  {`String', cFromEnum `SceneFlags'} -> `AiScene' fromAiScene#}
+  {`String', cFromEnum `SceneFlags'} -> `AiScene' toAiScene#}
 
 -- aiImportFileEx
 -- aiImportFileFromMemory
 
 {#fun aiApplyPostProcessing as ^
-  {toAiScene `AiScene', cFromEnum `AiPostProcessSteps'} -> `AiScene' fromAiScene#}
+  {fromAiScene `AiScene', cFromEnum `AiPostProcessSteps'} -> `AiScene' toAiScene#}
 
 --{#fun aiGetPredefinedLogStream as ^
 --  {cFromEnum `AiDefaultLogStream', `String'} -> `AiLogStream' id#}
