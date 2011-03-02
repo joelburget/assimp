@@ -1,4 +1,5 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Graphics.Formats.Assimp.Storable where
 

@@ -42,20 +42,20 @@ data AiPlane = AiPlane {
   , c'AiPlane :: Float
   , d'AiPlane :: Float
   }
-{#pointer *aiPlane        as AiPlanePtr           -> AiPlane        #}
+{#pointer *aiPlane as AiPlanePtr -> AiPlane#}
 
 data AiRay = AiRay {
     pos'AiRay :: AiVector3D
   , dir'AiRay :: AiVector3D
   }
-{#pointer *aiRay          as AiRayPtr             -> AiRay          #}
+{#pointer *aiRay as AiRayPtr -> AiRay#}
 
 data AiColor3D = AiColor3D {
     r'AiColor3D :: Float
   , g'AiColor3D :: Float
   , b'AiColor3D :: Float
   }
-{#pointer *aiColor3D      as AiColor3DPtr         -> AiColor3D      #}
+{#pointer *aiColor3D as AiColor3DPtr -> AiColor3D#}
 
 data AiColor4D = AiColor4D {
     r'AiColor4D :: Float
@@ -63,7 +63,7 @@ data AiColor4D = AiColor4D {
   , b'AiColor4D :: Float
   , a'AiColor4D :: Float
   }
-{#pointer *aiColor4D      as AiColor4DPtr         -> AiColor4D      #}
+{#pointer *aiColor4D as AiColor4DPtr -> AiColor4D#}
 
 data AiMemoryInfo = AiMemoryInfo {
     textures'AiMemoryInfo   :: CUInt
@@ -75,10 +75,10 @@ data AiMemoryInfo = AiMemoryInfo {
   , lights'AiMemoryInfo     :: CUInt
   , total'AiMemoryInfo      :: CUInt
   }
-{#pointer *aiMemoryInfo   as AiMemoryInfoPtr      -> AiMemoryInfo   #}
+{#pointer *aiMemoryInfo as AiMemoryInfoPtr -> AiMemoryInfo#}
 
 data AiLogStream
-{#pointer *aiLogStream    as AiLogStreamPtr       -> AiLogStream    #}
+{#pointer *aiLogStream as AiLogStreamPtr -> AiLogStream#}
 
 data AiQuaternion = AiQuaternion {
     w'AiQuaternion :: Float
@@ -86,7 +86,7 @@ data AiQuaternion = AiQuaternion {
   , y'AiQuaternion :: Float
   , z'AiQuaternion :: Float
   }
-{#pointer *aiQuaternion   as AiQuaternionPtr      -> AiQuaternion   #}
+{#pointer *aiQuaternion as AiQuaternionPtr -> AiQuaternion#}
 
 data AiVector2D = AiVector2D {
     x'AiVector2D :: Float
@@ -98,24 +98,24 @@ data AiVector3D = AiVector3D {
   , y'AiVector3D :: Float
   , z'AiVector3D :: Float
   }
-{#pointer *aiVector3D     as AiVector3DPtr        -> AiVector3D     #}
+{#pointer *aiVector3D as AiVector3DPtr -> AiVector3D#}
 
 --data AiString = AiString
 --  { --length'AiString :: Int
 --  , data'AiString   :: String -- Maximum length MAXLEN
 --  }
 newtype AiString = AiString String
-{#pointer *aiString       as AiStringPtr       -> AiString       #}
+{#pointer *aiString as AiStringPtr -> AiString#}
 
 data AiMatrix3x3 = AiMatrix3x3 {
   matrix'AiMatrix3x3 :: Vector Float
   }
-{#pointer *aiMatrix3x3    as AiMatrix3x3Ptr       -> AiMatrix3x3    #}
+{#pointer *aiMatrix3x3 as AiMatrix3x3Ptr -> AiMatrix3x3#}
 
 data AiMatrix4x4 = AiMatrix4x4 {
   matrix'AiMatrix4x4 :: Vector Float
   }
-{#pointer *aiMatrix4x4    as AiMatrix4x4Ptr    -> AiMatrix4x4    #}
+{#pointer *aiMatrix4x4 as AiMatrix4x4Ptr -> AiMatrix4x4#}
 
 {- From the Assimp source:
  -
@@ -145,19 +145,19 @@ data AiNode = AiNode
   --, mNumMeshes'AiNode    :: CUInt
   , mMeshes'AiNode         :: [CUInt] -- Holds indices defining the node
   }
-{#pointer *aiNode         as AiNodePtr         -> AiNode         #}
+{#pointer *aiNode as AiNodePtr -> AiNode#}
 
 data AiFace = AiFace
   { --mNumIndices :: CUInt
     mIndices'AiFace    :: [CUInt] -- Holds indices defining the face
   }
-{#pointer *aiFace         as AiFacePtr         -> AiFace         #}
+{#pointer *aiFace as AiFacePtr -> AiFace#}
 
 data AiVertexWeight = AiVertexWeight
   { mVertexId'AiVertexWeight :: CUInt
   , mWeight'AiVertexWeight   :: CFloat
   }
-{#pointer *aiVertexWeight as AiVertexWeightPtr -> AiVertexWeight #}
+{#pointer *aiVertexWeight as AiVertexWeightPtr -> AiVertexWeight#}
 
 data AiBone = AiBone
   { mName'AiBone         :: String
@@ -165,7 +165,7 @@ data AiBone = AiBone
   , mWeights'AiBone      :: [AiVertexWeight]
   , mOffpokeMatrix'AiBone :: AiMatrix4x4
   }
-{#pointer *aiBone         as AiBonePtr         -> AiBone         #}
+{#pointer *aiBone as AiBonePtr -> AiBone#}
 
 data AiMesh = AiMesh
   { mPrimitiveTypes'AiMesh  :: AiPrimitiveType
@@ -186,7 +186,7 @@ data AiMesh = AiMesh
   --, mNumAnimMeshes :: CUInt
   --, mAnimMeshes    :: [AiAnimMesh]
   }
-{#pointer *aiMesh         as AiMeshPtr         -> AiMesh         #}
+{#pointer *aiMesh as AiMeshPtr -> AiMesh#}
 
 data AiMaterialProperty
 data AiMaterial = AiMaterial {
@@ -194,7 +194,7 @@ data AiMaterial = AiMaterial {
   --mNumProperties :: CUInt
   --mNumAllocated :: CUInt
   }
-{#pointer *aiMaterial     as AiMaterialPtr        -> AiMaterial     #}
+{#pointer *aiMaterial as AiMaterialPtr -> AiMaterial#}
 
 data AiNodeAnim
 data AiMeshAnim
@@ -207,7 +207,7 @@ data AiAnimation = AiAnimation {
   --mNumMeshChannels
   , mMeshChannels'AiAnimation :: [AiMeshAnim]
   }
-{#pointer *aiAnimation    as AiAnimationPtr       -> AiAnimation    #}
+{#pointer *aiAnimation as AiAnimationPtr -> AiAnimation#}
 
 data AiTexel
 data AiTexture = AiTexture {
@@ -216,7 +216,7 @@ data AiTexture = AiTexture {
   , achFormatHint'AiTexture :: String
   , pcData'AiTexture :: [AiTexel]
   }
-{#pointer *aiTexture      as AiTexturePtr         -> AiTexture      #}
+{#pointer *aiTexture as AiTexturePtr -> AiTexture#}
 
 data AiUVTransform = AiUVTransform {
     mTranslation'AiUVTransform :: AiVector2D
@@ -238,7 +238,7 @@ data AiLight = AiLight {
   , mAngleInnerCone'AiLight :: Float
   , mAngleOuterCone'AiLight :: Float
   }
-{#pointer *aiLight        as AiLightPtr           -> AiLight        #}
+{#pointer *aiLight as AiLightPtr -> AiLight#}
 
 data AiCamera = AiCamera {
     mName'AiCamera :: String
@@ -250,7 +250,7 @@ data AiCamera = AiCamera {
   , mClipPlaneFar'AiCamera :: Float
   , mAspect'AiCamera :: Float
   }
-{#pointer *aiCamera       as AiCameraPtr          -> AiCamera       #}
+{#pointer *aiCamera as AiCameraPtr -> AiCamera#}
 
 data AiScene = AiScene
   { mFlags'AiScene         :: SceneFlags
@@ -273,4 +273,4 @@ data AiScene = AiScene
   --, mNumCameras    :: CUInt
   , mCameras'AiScene       :: [AiCamera]
   }
-{#pointer *aiScene        as AiScenePtr        -> AiScene        #}
+{#pointer *aiScene as AiScenePtr -> AiScene#}

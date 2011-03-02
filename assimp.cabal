@@ -2,8 +2,7 @@ Name:                assimp
 Version:             0.1
 Synopsis:            The Assimp asset import library
 
--- A longer description of the package.
--- Description:         
+-- Description:
 Homepage:            htt://programsthatsmellgood.com/haskell-assimp/
 License:             BSD3
 License-file:        LICENSE
@@ -12,19 +11,20 @@ Maintainer:          joelburget@gmail.com
 Copyright:           Joel Burget 2011
 Category:            Graphics
 Build-type:          Simple
-
--- Extra files to be distributed with the package, such as examples or
--- a README.
--- Extra-source-files:  
-
 Cabal-version:       >=1.2
 
 Library
   Exposed-modules: Graphics.Formats.Assimp
-  Other-modules: Graphics.Formats.Assimp.Types, Graphics.Formats.Assimp.Storable, Graphics.Formats.Assimp.Fun
+  Other-modules:
+    Graphics.Formats.Assimp.Types
+    Graphics.Formats.Assimp.Storable
+    Graphics.Formats.Assimp.Fun
   ghc-options: -Wall
   Build-depends: base > 3 && < 5, haskell98, vector
   Build-tools: c2hs
-  --Extra-libraries: assimp
-  --Hs-source-dirs: src
-  Include-dirs: assimp/include/, Graphics/Formats/
+  Extensions: ForeignFunctionInterface
+  Extra-libraries: assimp
+  Extra-lib-dirs: assimp/lib
+  Include-dirs: 
+    assimp/include/
+    Graphics/Formats/

@@ -14,3 +14,4 @@ makeLib _ flags = do
         ["cmake", "-DENABLE_BOOST_WORKAROUND=ON"]
     rawSystemExit (fromFlag $ buildVerbosity flags) "env"
         ["CFLAGS=-D_LIB", "make"]
+    setCurrentDirectory ".."

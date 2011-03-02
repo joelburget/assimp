@@ -6,25 +6,27 @@ import C2HS
 import Graphics.Formats.Assimp.Types
 import Graphics.Formats.Assimp.Storable
 
-#include "../../assimp/include/assimp.h"        // Plain-C interface
-#include "../../assimp/include/aiScene.h"       // Output data structure
-#include "../../assimp/include/aiPostProcess.h" // Post processing flags
-#include "./typedefs.h"
+#include "assimp.h"        // Plain-C interface
+#include "aiScene.h"       // Output data structure
+#include "aiPostProcess.h" // Post processing flags
+#include "typedefs.h"
 
-withT = with
+--withT = with -- http://blog.ezyang.com/2010/06/call-and-fun-marshalling-redux/
+with' :: (Storable a) => a -> (Ptr b -> IO c) -> IO c
+with' x y = with x (y . castPtr)
 
-toAiScene = AiScenePtr . castPtr
-fromAiScene (AiScenePtr x) = castPtr x
+peek' :: (Storable b) => Ptr a -> IO b
+peek' = peek . castPtr
 
---peekAiScene = peek :: Ptr AiScene -> IO AiScene
+--peekAiScene = liftM (AiScene . castPtr) . peek
 {#fun aiImportFile as ^
-  {`String', cFromEnum `SceneFlags'} -> `AiScene' toAiScene#}
+  {`String', cFromEnum `SceneFlags'} -> `AiScene' peek'*#}
 
 -- aiImportFileEx
 -- aiImportFileFromMemory
 
 {#fun aiApplyPostProcessing as ^
-  {fromAiScene `AiScene', cFromEnum `AiPostProcessSteps'} -> `AiScene' toAiScene#}
+  {with'* `AiScene', cFromEnum `AiPostProcessSteps'} -> `AiScene' peek'*#}
 
 --{#fun aiGetPredefinedLogStream as ^
 --  {cFromEnum `AiDefaultLogStream', `String'} -> `AiLogStream' id#}
@@ -35,7 +37,7 @@ fromAiScene (AiScenePtr x) = castPtr x
 -- aiDetachAllLogStreams
 
 {#fun aiReleaseImport as ^
-  {fromAiScene `AiScene'} -> `()'#}
+  {with'* `AiScene'} -> `()'#}
 
 {#fun aiGetErrorString as ^
   {} -> `String'#}
