@@ -19,12 +19,14 @@ Library
     Graphics.Formats.Assimp.Types
     Graphics.Formats.Assimp.Storable
     Graphics.Formats.Assimp.Fun
+    C2HS
   ghc-options: -Wall
   Build-depends: base > 3 && < 5, haskell98, vector
   Build-tools: c2hs
   Extensions: ForeignFunctionInterface
   Extra-libraries: assimp
   Extra-lib-dirs: assimp/lib
+  Includes: assimp.h
   Include-dirs: 
     assimp/include/
     Graphics/Formats/

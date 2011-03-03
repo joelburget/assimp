@@ -1,14 +1,20 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module Graphics.Formats.Assimp.Fun where
+module Graphics.Formats.Assimp.Fun (
+    aiImportFile
+  , aiApplyPostProcessing
+  , aiReleaseImport
+  , aiGetErrorString
+  , aiIsExtensionSupported
+  , aiSetImportPropertyInteger
+  , aiSetImportPropertyFloat
+  ) where
 
 import C2HS
 import Graphics.Formats.Assimp.Types
 import Graphics.Formats.Assimp.Storable
 
-#include "assimp.h"        // Plain-C interface
-#include "aiScene.h"       // Output data structure
-#include "aiPostProcess.h" // Post processing flags
+#include "assimp.h"
 #include "typedefs.h"
 
 --withT = with -- http://blog.ezyang.com/2010/06/call-and-fun-marshalling-redux/
@@ -18,9 +24,8 @@ with' x y = with x (y . castPtr)
 peek' :: (Storable b) => Ptr a -> IO b
 peek' = peek . castPtr
 
---peekAiScene = liftM (AiScene . castPtr) . peek
 {#fun aiImportFile as ^
-  {`String', cFromEnum `SceneFlags'} -> `AiScene' peek'*#}
+  {`String', cFromEnum `AiPostProcessSteps'} -> `AiScene' peek'*#}
 
 -- aiImportFileEx
 -- aiImportFileFromMemory

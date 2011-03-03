@@ -1,9 +1,47 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE EmptyDataDecls #-}
-module Graphics.Formats.Assimp.Types where
+module Graphics.Formats.Assimp.Types (
+    SceneFlags(..)
+  , AiPostProcessSteps(..)
+  , AiReturn(..)
+  , AiOrigin(..)
+  , AiDefaultLogStream(..)
+  , AiPrimitiveType(..)
+  , AiLightSourceType(..)
+  , AiTextureOp(..)
+  , AiTextureMapMode(..)
+  , AiTextureMapping(..)
+  , AiShadingMode(..)
+  , AiTextureFlags(..)
+  , AiBlendMode(..)
+  , AiPropertyTypeInfo(..)
+  , AiPlane(..)
+  , AiRay(..)
+  , AiColor3D(..)
+  , AiColor4D(..)
+  , AiMemoryInfo(..)
+  , AiQuaternion(..)
+  , AiVector2D(..)
+  , AiVector3D(..)
+  , AiString(..)
+  , AiMatrix3x3(..)
+  , AiMatrix4x4(..)
+  , AiNode(..)
+  , AiFace(..)
+  , AiVertexWeight(..)
+  , AiBone(..)
+  , AiMesh(..)
+  , AiMaterialProperty(..)
+  , AiNodeAnim(..)
+  , AiLight(..)
+  , AiCamera(..)
+  , AiScene(..)
+  , (.|.)
+  ) where
 
 import C2HS
 import Data.Vector.Storable hiding ((++))
+import Data.Bits ((.|.))
 
 #include "../../assimp/include/assimp.h"        // Plain-C interface
 #include "../../assimp/include/aiScene.h"       // Output data structure
@@ -18,6 +56,8 @@ import Data.Vector.Storable hiding ((++))
                         , AI_SCENE_FLAGS_NON_VERBOSE_FORMAT as FlagsNonVerboseFormat
                         , AI_SCENE_FLAGS_TERRAIN            as FlagsTerrain
                         }#}
+instance Show SceneFlags where
+  show _ = "Scene Flag"
 
 {#enum aiPostProcessSteps as AiPostProcessSteps {underscoreToCase} deriving (Show, Eq)#}
 {#enum aiReturn as AiReturn                     {underscoreToCase} deriving (Show, Eq)#}
@@ -27,13 +67,13 @@ import Data.Vector.Storable hiding ((++))
 {#enum aiLightSourceType as AiLightSourceType   {underscoreToCase} deriving (Show, Eq)#}
 
 -- Texture enums
-{#enum aiTextureOp as AiTextureOp {underscoreToCase} deriving (Show, Eq)#}
-{#enum aiTextureMapMode as AiTextureMapMode {underscoreToCase} deriving (Show, Eq)#}
-{#enum aiTextureMapping as AiTextureMapping {underscoreToCase} deriving (Show, Eq)#}
-{#enum aiTextureType as AiTextureType {underscoreToCase} deriving (Show, Eq)#}
-{#enum aiShadingMode as AiShadingMode {underscoreToCase} deriving (Show, Eq)#}
-{#enum aiTextureFlags as AiTextureFlags {underscoreToCase} deriving (Show, Eq)#}
-{#enum aiBlendMode as AiBlendMode {underscoreToCase} deriving (Show, Eq)#}
+{#enum aiTextureOp as AiTextureOp               {underscoreToCase} deriving (Show, Eq)#}
+{#enum aiTextureMapMode as AiTextureMapMode     {underscoreToCase} deriving (Show, Eq)#}
+{#enum aiTextureMapping as AiTextureMapping     {underscoreToCase} deriving (Show, Eq)#}
+{#enum aiTextureType as AiTextureType           {underscoreToCase} deriving (Show, Eq)#}
+{#enum aiShadingMode as AiShadingMode           {underscoreToCase} deriving (Show, Eq)#}
+{#enum aiTextureFlags as AiTextureFlags         {underscoreToCase} deriving (Show, Eq)#}
+{#enum aiBlendMode as AiBlendMode               {underscoreToCase} deriving (Show, Eq)#}
 {#enum aiPropertyTypeInfo as AiPropertyTypeInfo {underscoreToCase} deriving (Show, Eq)#}
 
 data AiPlane = AiPlane {
@@ -41,20 +81,20 @@ data AiPlane = AiPlane {
   , b'AiPlane :: Float
   , c'AiPlane :: Float
   , d'AiPlane :: Float
-  }
+  } deriving (Show)
 {#pointer *aiPlane as AiPlanePtr -> AiPlane#}
 
 data AiRay = AiRay {
     pos'AiRay :: AiVector3D
   , dir'AiRay :: AiVector3D
-  }
+  } deriving (Show)
 {#pointer *aiRay as AiRayPtr -> AiRay#}
 
 data AiColor3D = AiColor3D {
     r'AiColor3D :: Float
   , g'AiColor3D :: Float
   , b'AiColor3D :: Float
-  }
+  } deriving (Show)
 {#pointer *aiColor3D as AiColor3DPtr -> AiColor3D#}
 
 data AiColor4D = AiColor4D {
@@ -62,7 +102,7 @@ data AiColor4D = AiColor4D {
   , g'AiColor4D :: Float
   , b'AiColor4D :: Float
   , a'AiColor4D :: Float
-  }
+  } deriving (Show)
 {#pointer *aiColor4D as AiColor4DPtr -> AiColor4D#}
 
 data AiMemoryInfo = AiMemoryInfo {
@@ -74,7 +114,7 @@ data AiMemoryInfo = AiMemoryInfo {
   , cameras'AiMemoryInfo    :: CUInt
   , lights'AiMemoryInfo     :: CUInt
   , total'AiMemoryInfo      :: CUInt
-  }
+  } deriving (Show)
 {#pointer *aiMemoryInfo as AiMemoryInfoPtr -> AiMemoryInfo#}
 
 data AiLogStream
@@ -85,36 +125,33 @@ data AiQuaternion = AiQuaternion {
   , x'AiQuaternion :: Float
   , y'AiQuaternion :: Float
   , z'AiQuaternion :: Float
-  }
+  } deriving (Show)
 {#pointer *aiQuaternion as AiQuaternionPtr -> AiQuaternion#}
 
 data AiVector2D = AiVector2D {
     x'AiVector2D :: Float
   , y'AiVector2D :: Float
-  }
+  } deriving (Show)
+{#pointer *aiVector2D as AiVector2DPtr -> AiVector2D#}
 
 data AiVector3D = AiVector3D {
     x'AiVector3D :: Float
   , y'AiVector3D :: Float
   , z'AiVector3D :: Float
-  }
+  } deriving (Show)
 {#pointer *aiVector3D as AiVector3DPtr -> AiVector3D#}
 
---data AiString = AiString
---  { --length'AiString :: Int
---  , data'AiString   :: String -- Maximum length MAXLEN
---  }
-newtype AiString = AiString String
+newtype AiString = AiString String deriving (Show)
 {#pointer *aiString as AiStringPtr -> AiString#}
 
 data AiMatrix3x3 = AiMatrix3x3 {
   matrix'AiMatrix3x3 :: Vector Float
-  }
+  } deriving (Show)
 {#pointer *aiMatrix3x3 as AiMatrix3x3Ptr -> AiMatrix3x3#}
 
 data AiMatrix4x4 = AiMatrix4x4 {
   matrix'AiMatrix4x4 :: Vector Float
-  }
+  } deriving (Show)
 {#pointer *aiMatrix4x4 as AiMatrix4x4Ptr -> AiMatrix4x4#}
 
 {- From the Assimp source:
@@ -144,19 +181,19 @@ data AiNode = AiNode
   , mChildren'AiNode       :: [AiNode]
   --, mNumMeshes'AiNode    :: CUInt
   , mMeshes'AiNode         :: [CUInt] -- Holds indices defining the node
-  }
+  } deriving (Show)
 {#pointer *aiNode as AiNodePtr -> AiNode#}
 
 data AiFace = AiFace
   { --mNumIndices :: CUInt
     mIndices'AiFace    :: [CUInt] -- Holds indices defining the face
-  }
+  } deriving (Show)
 {#pointer *aiFace as AiFacePtr -> AiFace#}
 
 data AiVertexWeight = AiVertexWeight
   { mVertexId'AiVertexWeight :: CUInt
   , mWeight'AiVertexWeight   :: CFloat
-  }
+  } deriving (Show)
 {#pointer *aiVertexWeight as AiVertexWeightPtr -> AiVertexWeight#}
 
 data AiBone = AiBone
@@ -164,7 +201,7 @@ data AiBone = AiBone
   --, mNumWeights   :: CUInt
   , mWeights'AiBone      :: [AiVertexWeight]
   , mOffpokeMatrix'AiBone :: AiMatrix4x4
-  }
+  } deriving (Show)
 {#pointer *aiBone as AiBonePtr -> AiBone#}
 
 data AiMesh = AiMesh
@@ -185,19 +222,32 @@ data AiMesh = AiMesh
   , mName'AiMesh            :: String
   --, mNumAnimMeshes :: CUInt
   --, mAnimMeshes    :: [AiAnimMesh]
-  }
+  } deriving (Show)
 {#pointer *aiMesh as AiMeshPtr -> AiMesh#}
 
-data AiMaterialProperty
+data AiMaterialProperty = AiMaterialProperty {
+    mKey :: AiString
+  , mSemantic :: AiTextureType
+  , mIndex :: CUInt
+  --mDataLength :: CUInt
+  , mType :: AiPropertyTypeInfo
+  , mData :: String
+  } deriving (Show)
+{#pointer *aiMaterialProperty as AiMaterialPropertyPtr -> AiMaterialProperty#}
+
 data AiMaterial = AiMaterial {
     mProperties'AiMaterial :: [AiMaterialProperty]
   --mNumProperties :: CUInt
   --mNumAllocated :: CUInt
-  }
+  } deriving (Show)
 {#pointer *aiMaterial as AiMaterialPtr -> AiMaterial#}
 
-data AiNodeAnim
-data AiMeshAnim
+data AiNodeAnim = AiNodeAnim {
+    dummy'AiNodeAnim :: Int
+  } deriving (Show)
+data AiMeshAnim = AiMeshAnim {
+    dummy'AiMeshAnim :: Int
+  } deriving (Show)
 data AiAnimation = AiAnimation {
     mName'AiAnimation :: String
   , mDuration'AiAnimation :: Double
@@ -206,23 +256,25 @@ data AiAnimation = AiAnimation {
   , mChannels'AiAnimation :: [AiNodeAnim]
   --mNumMeshChannels
   , mMeshChannels'AiAnimation :: [AiMeshAnim]
-  }
+  } deriving (Show)
 {#pointer *aiAnimation as AiAnimationPtr -> AiAnimation#}
 
-data AiTexel
+data AiTexel = AiTexel {
+    dummy'AiTexel :: Int
+  } deriving (Show)
 data AiTexture = AiTexture {
     mWidth'AiTexture :: CUInt
   , mHeight'AiTexture :: CUInt
   , achFormatHint'AiTexture :: String
   , pcData'AiTexture :: [AiTexel]
-  }
+  } deriving (Show)
 {#pointer *aiTexture as AiTexturePtr -> AiTexture#}
 
 data AiUVTransform = AiUVTransform {
     mTranslation'AiUVTransform :: AiVector2D
   , mScaling'AiUVTransform :: AiVector2D
   , mRotation'AiUVTransform :: Float
-  }
+  } deriving (Show)
 
 data AiLight = AiLight {
     mName'AiLight :: String
@@ -237,7 +289,7 @@ data AiLight = AiLight {
   , mColorAmbient'AiLight :: AiColor3D
   , mAngleInnerCone'AiLight :: Float
   , mAngleOuterCone'AiLight :: Float
-  }
+  } deriving (Show)
 {#pointer *aiLight as AiLightPtr -> AiLight#}
 
 data AiCamera = AiCamera {
@@ -249,28 +301,16 @@ data AiCamera = AiCamera {
   , mClipPlaneNear'AiCamera :: Float
   , mClipPlaneFar'AiCamera :: Float
   , mAspect'AiCamera :: Float
-  }
+  } deriving (Show)
 {#pointer *aiCamera as AiCameraPtr -> AiCamera#}
 
 data AiScene = AiScene
   { mFlags'AiScene         :: SceneFlags
-
-  --, mNumMeshes     :: CUInt
   , mMeshes'AiScene        :: [AiMesh]
-
-  --, mNumMaterials  :: CUInt
   , mMaterials'AiScene     :: [AiMaterial]
-
-  --, mNumAnimations :: CUInt
   , mAnimations'AiScene    :: [AiAnimation]
-
-  --, mNumTextures   :: CUInt
   , mTextures'AiScene      :: [AiTexture]
-
-  --, mNumLights     :: CUInt
   , mLights'AiScene        :: [AiLight]
-
-  --, mNumCameras    :: CUInt
   , mCameras'AiScene       :: [AiCamera]
-  }
+  } deriving (Show)
 {#pointer *aiScene as AiScenePtr -> AiScene#}
