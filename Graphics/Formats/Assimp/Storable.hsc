@@ -3,9 +3,12 @@
 
 module Graphics.Formats.Assimp.Storable where
 
+import Prelude hiding (replicate)
 import Foreign.Storable
 import Foreign.C.String
 import Foreign.Marshal.Array
+import Control.Monad (liftM)
+import Data.Vector.Storable hiding (length)
 
 import Graphics.Formats.Assimp.Types
 
@@ -18,10 +21,10 @@ instance Storable AiPlane where
   sizeOf _ = #{size aiPlane}
   alignment _ = 4
   peek p = do
-    a <- #{peek aiPlane, a} p
-    b <- #{peek aiPlane, b} p
-    c <- #{peek aiPlane, c} p
-    d <- #{peek aiPlane, d} p
+    a <- (#peek aiPlane, a) p
+    b <- (#peek aiPlane, b) p
+    c <- (#peek aiPlane, c) p
+    d <- (#peek aiPlane, d) p
     return $ AiPlane a b c d
   poke p (AiPlane a b c d) = do
     (#poke aiPlane, a) p a
@@ -147,13 +150,13 @@ instance Storable AiString where
 instance Storable AiMatrix3x3 where
   sizeOf _ = (#size aiMatrix3x3)
   alignment _ = 4
-  peek = undefined
+  peek p = return $ AiMatrix3x3 $ replicate 9 0
   poke = undefined
 
 instance Storable AiMatrix4x4 where
   sizeOf _ = (#size aiMatrix4x4)
   alignment _ = 4
-  peek = undefined
+  peek p = return $ AiMatrix4x4 $ replicate 16 0
   poke = undefined
 
 instance Storable AiNode where
@@ -218,13 +221,160 @@ instance Storable AiBone where
     newArray mW >>= ((#poke aiBone, mWeights) p)
     (#poke aiBone, mOffsetMatrix) p mO
 
+instance Storable AiMesh where
+  sizeOf _ = (#size aiMesh)
+  alignment _ = 4
+  peek p = do
+    mPrimitiveTypes <- liftM toEnum $ (#peek aiMesh, mPrimitiveTypes) p
+    return $ AiMesh mPrimitiveTypes [] [] [] [] [] [] 0 [] [] 0 "Nothing"
+  poke = undefined
+
+instance Storable AiMaterialProperty where
+  sizeOf _ = (#size aiMaterialProperty)
+  alignment _ = 4
+  peek p = do
+    mKey <- (#peek aiMaterialProperty, mKey) p >>= peekCString
+    mSemantic <- liftM toEnum $ (#peek aiMaterialProperty, mSemantic) p
+    mIndex <- (#peek aiMaterialProperty, mIndex) p
+    mType <- liftM toEnum $ (#peek aiMaterialProperty, mType) p
+    mData <- (#peek aiMaterialProperty, mData) p >>= peekCString
+    return $ AiMaterialProperty mKey mSemantic mIndex mType mData
+  poke p (AiMaterialProperty mKey mSemantic mIndex mType mData) = do
+    (#poke aiMaterialProperty, mKey) p $ AiString mKey
+    (#poke aiMaterialProperty, mSemantic) p $ fromEnum mSemantic
+    (#poke aiMaterialProperty, mIndex) p mIndex
+    (#poke aiMaterialProperty, mType) p $ fromEnum mType
+    (#poke aiMaterialProperty, mData) p $ AiString mData
+
+instance Storable AiNodeAnim where
+  sizeOf _ = (#size aiNodeAnim)
+  alignment _ = 4
+  peek _ = return $ AiNodeAnim 0
+  poke _ _ = return ()
+
+instance Storable AiMeshAnim where
+  sizeOf _ = (#size aiMeshAnim)
+  alignment _ = 4
+  peek _ = return $ AiMeshAnim 0
+  poke _ _ = return ()
+
+instance Storable AiMaterial where
+  sizeOf _ = (#size aiMaterial)
+  alignment _ = 4
+  peek p = do
+    mNumProperties <- (#peek aiMaterial, mNumProperties) p
+    mProperty      <- (#peek aiMaterial, mProperties) p
+    mProperties    <- peekArray mNumProperties mProperty
+    return $ AiMaterial mProperties
+  poke p (AiMaterial mProperties) = do
+    (#poke aiMaterial, mNumProperties) p $ length mProperties
+    (#poke aiMaterial, mNumAllocated) p $ length mProperties
+    newArray mProperties >>= (#poke aiMaterial, mProperties) p
+
+instance Storable AiAnimation where
+  sizeOf _ = (#size aiAnimation)
+  alignment _ = 4
+  peek p = do
+    mName <- (#peek aiAnimation, mName) p >>= peekCString
+    mDuration <- (#peek aiAnimation, mDuration) p
+    mTicksPerSecond <- (#peek aiAnimation, mTicksPerSecond) p
+    mNumChannels <- (#peek aiAnimation, mNumChannels) p
+    mChannel <- (#peek aiAnimation, mChannels) p
+    mChannels <- peekArray mNumChannels mChannel
+    mNumMeshChannels <- (#peek aiAnimation, mNumMeshChannels) p
+    mMeshChannel <- (#peek aiAnimation, mMeshChannels) p
+    mMeshChannels <- peekArray mNumMeshChannels mMeshChannel
+    return $ AiAnimation mName mDuration mTicksPerSecond mChannels mMeshChannels
+  poke = undefined
+
+instance Storable AiLight where
+  sizeOf _ = (#size aiLight)
+  alignment _ = 4
+  peek p = do
+    mName <- (#peek aiLight, mName) p >>= peekCString
+    mType <- liftM toEnum $ (#peek aiLight, mType) p
+    mPosition <- (#peek aiLight, mPosition) p
+    mDirection <- (#peek aiLight, mDirection) p
+    mAttenuationConstant <- (#peek aiLight, mAttenuationConstant) p
+    mAttenuationLinear <- (#peek aiLight, mAttenuationLinear) p
+    mAttenuationQuadratic <- (#peek aiLight, mAttenuationQuadratic) p
+    mColorDiffuse <- (#peek aiLight, mColorDiffuse) p
+    mColorSpecular <- (#peek aiLight, mColorSpecular) p
+    mColorAmbient <- (#peek aiLight, mColorAmbient) p
+    mAngleInnerCone <- (#peek aiLight, mAngleInnerCone) p
+    mAngleOuterCone <- (#peek aiLight, mAngleOuterCone) p
+    return $ AiLight mName mType mPosition mDirection mAttenuationConstant mAttenuationLinear mAttenuationQuadratic mColorDiffuse mColorSpecular mColorAmbient mAngleInnerCone mAngleOuterCone
+  poke = undefined
+
+instance Storable AiTexture where
+  sizeOf _ = (#size aiTexture)
+  alignment _ = 4
+  peek p = do
+    mWidth <- (#peek aiTexture, mWidth) p
+    mHeight <- (#peek aiTexture, mHeight) p
+    achFormatHint <- (#peek aiTexture, achFormatHint) p >>= peekCString -- Should this be included?
+    let pcData = []
+    return $ AiTexture mWidth mHeight achFormatHint pcData
+  poke = undefined
+
+instance Storable AiCamera where
+  sizeOf _ = (#size aiCamera)
+  alignment _ = 4
+  peek p = do
+    mName <- (#peek aiCamera, mName) p >>= peekCString 
+    mPosition <- (#peek aiCamera, mPosition) p
+    mUp <- (#peek aiCamera, mUp) p
+    mLookAt <- (#peek aiCamera, mLookAt) p
+    mHorizontalFOV <- (#peek aiCamera, mHorizontalFOV) p
+    mClipPlaneNear <- (#peek aiCamera, mClipPlaneNear) p
+    mClipPlaneFar <- (#peek aiCamera, mClipPlaneFar) p
+    mAspect <- (#peek aiCamera, mAspect) p
+    return $ AiCamera mName mPosition mUp mLookAt mHorizontalFOV mClipPlaneNear mClipPlaneFar mAspect
+  poke p (AiCamera mName mPosition mUp mLookAt mHorizontalFOV mClipPlaneNear mClipPlaneFar mAspect) = do
+    (#poke aiCamera, mName) p $ AiString mName
+    (#poke aiCamera, mPosition) p mPosition
+    (#poke aiCamera, mUp) p mUp
+    (#poke aiCamera, mLookAt) p mLookAt
+    (#poke aiCamera, mHorizontalFOV) p mHorizontalFOV
+    (#poke aiCamera, mClipPlaneNear) p mClipPlaneNear
+    (#poke aiCamera, mClipPlaneFar) p mClipPlaneFar
+    (#poke aiCamera, mAspect) p mAspect
+
 instance Storable AiScene where
   sizeOf _ = (#size aiScene)
   alignment _ = 4
-  peek = undefined
-  --peek p = do
-  --  let mFlags = 
-  poke p x = undefined--do
-  --  (#poke aiString, length) p $ length'AiString x
-  --  str <- newCString $ data'AiString x
-  --  (#poke aiString, data) p str
+  peek p = do
+    mFlags         <- liftM toEnum $ (#peek aiScene, mFlags) p
+    mNumMeshes     <- (#peek aiScene, mNumMeshes) p
+    mMesh          <- (#peek aiScene, mMeshes) p
+    mMeshes        <- peekArray mNumMeshes mMesh
+    mNumMaterials  <- (#peek aiScene, mNumMaterials) p
+    mMaterial      <- (#peek aiScene, mMaterials) p
+    mMaterials     <- peekArray mNumMaterials mMaterial
+    mNumAnimations <- (#peek aiScene, mNumAnimations) p
+    mAnimation     <- (#peek aiScene, mAnimations) p
+    mAnimations    <- peekArray mNumAnimations mAnimation
+    mNumTextures   <- (#peek aiScene, mNumTextures) p
+    mTexture       <- (#peek aiScene, mTextures) p
+    mTextures      <- peekArray mNumTextures mTexture
+    mNumLights     <- (#peek aiScene, mNumLights) p
+    mLight         <- (#peek aiScene, mLights) p
+    mLights        <- peekArray mNumLights mLight
+    mNumCameras    <- (#peek aiScene, mNumCameras) p
+    mCamera        <- (#peek aiScene, mCameras) p
+    mCameras       <- peekArray mNumCameras mCamera
+    return $ AiScene mFlags mMeshes mMaterials mAnimations mTextures mLights mCameras
+  poke p (AiScene flags meshes materials animations textures lights cameras) = do
+    (#poke aiScene, mFlags) p $ fromEnum flags 
+    (#poke aiScene, mNumMeshes) p $ length meshes
+    newArray meshes >>= (#poke aiScene, mMeshes) p
+    (#poke aiScene, mNumMaterials) p $ length materials
+    newArray materials >>= (#poke aiScene, mMaterials) p
+    (#poke aiScene, mNumAnimations) p $ length animations
+    newArray animations >>= (#poke aiScene, mAnimations) p
+    (#poke aiScene, mNumTextures) p $ length textures
+    newArray textures >>= (#poke aiScene, mTextures) p
+    (#poke aiScene, mNumLights) p $ length lights
+    newArray lights >>= (#poke aiScene, mLights) p
+    (#poke aiScene, mNumCameras) p $ length cameras
+    newArray cameras >>= (#poke aiScene, mCameras) p

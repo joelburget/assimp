@@ -32,10 +32,14 @@ module Graphics.Formats.Assimp.Types (
   , AiBone(..)
   , AiMesh(..)
   , AiMaterialProperty(..)
+  , AiMaterial(..)
   , AiNodeAnim(..)
+  , AiMeshAnim(..)
+  , AiAnimation(..)
   , AiLight(..)
   , AiCamera(..)
   , AiScene(..)
+  , AiTexture(..)
   , (.|.)
   ) where
 
@@ -226,7 +230,7 @@ data AiMesh = AiMesh
 {#pointer *aiMesh as AiMeshPtr -> AiMesh#}
 
 data AiMaterialProperty = AiMaterialProperty {
-    mKey :: AiString
+    mKey :: String
   , mSemantic :: AiTextureType
   , mIndex :: CUInt
   --mDataLength :: CUInt
@@ -245,9 +249,11 @@ data AiMaterial = AiMaterial {
 data AiNodeAnim = AiNodeAnim {
     dummy'AiNodeAnim :: Int
   } deriving (Show)
+
 data AiMeshAnim = AiMeshAnim {
     dummy'AiMeshAnim :: Int
   } deriving (Show)
+
 data AiAnimation = AiAnimation {
     mName'AiAnimation :: String
   , mDuration'AiAnimation :: Double
@@ -262,6 +268,7 @@ data AiAnimation = AiAnimation {
 data AiTexel = AiTexel {
     dummy'AiTexel :: Int
   } deriving (Show)
+
 data AiTexture = AiTexture {
     mWidth'AiTexture :: CUInt
   , mHeight'AiTexture :: CUInt
@@ -272,35 +279,35 @@ data AiTexture = AiTexture {
 
 data AiUVTransform = AiUVTransform {
     mTranslation'AiUVTransform :: AiVector2D
-  , mScaling'AiUVTransform :: AiVector2D
-  , mRotation'AiUVTransform :: Float
+  , mScaling'AiUVTransform     :: AiVector2D
+  , mRotation'AiUVTransform    :: Float
   } deriving (Show)
 
 data AiLight = AiLight {
-    mName'AiLight :: String
-  , mType'AiLight :: AiLightSourceType
-  , mPosition'AiLight :: AiVector3D
-  , mDirection'AiLight :: AiVector3D
-  , mAttenuationConstant'AiLight :: Float
-  , mAttenuationLinear'AiLight :: Float
+    mName'AiLight                 :: String
+  , mType'AiLight                 :: AiLightSourceType
+  , mPosition'AiLight             :: AiVector3D
+  , mDirection'AiLight            :: AiVector3D
+  , mAttenuationConstant'AiLight  :: Float
+  , mAttenuationLinear'AiLight    :: Float
   , mAttenuationQuadratic'AiLight :: Float
-  , mColorDiffuse'AiLight :: AiColor3D
-  , mColorSpecular'AiLight :: AiColor3D
-  , mColorAmbient'AiLight :: AiColor3D
-  , mAngleInnerCone'AiLight :: Float
-  , mAngleOuterCone'AiLight :: Float
+  , mColorDiffuse'AiLight         :: AiColor3D
+  , mColorSpecular'AiLight        :: AiColor3D
+  , mColorAmbient'AiLight         :: AiColor3D
+  , mAngleInnerCone'AiLight       :: Float
+  , mAngleOuterCone'AiLight       :: Float
   } deriving (Show)
 {#pointer *aiLight as AiLightPtr -> AiLight#}
 
 data AiCamera = AiCamera {
-    mName'AiCamera :: String
-  , mPosition'AiCamera :: AiVector3D
-  , mUp'AiCamera :: AiVector3D
-  , mLookAt'AiCamera :: AiVector3D
+    mName'AiCamera          :: String
+  , mPosition'AiCamera      :: AiVector3D
+  , mUp'AiCamera            :: AiVector3D
+  , mLookAt'AiCamera        :: AiVector3D
   , mHorizontalFOV'AiCamera :: Float
   , mClipPlaneNear'AiCamera :: Float
-  , mClipPlaneFar'AiCamera :: Float
-  , mAspect'AiCamera :: Float
+  , mClipPlaneFar'AiCamera  :: Float
+  , mAspect'AiCamera        :: Float
   } deriving (Show)
 {#pointer *aiCamera as AiCameraPtr -> AiCamera#}
 
