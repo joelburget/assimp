@@ -11,6 +11,7 @@ module Graphics.Formats.Assimp.Types (
   , AiTextureOp(..)
   , AiTextureMapMode(..)
   , AiTextureMapping(..)
+  , AiTextureType(..)
   , AiShadingMode(..)
   , AiTextureFlags(..)
   , AiBlendMode(..)
@@ -180,16 +181,14 @@ data AiMatrix4x4 = AiMatrix4x4 {
 data AiNode = AiNode
   { mName'AiNode           :: String
   , mTransformation'AiNode :: AiMatrix4x4
-  , mParent'AiNode         :: AiNode
-  --, mNumChildren'AiNode  :: CUInt
+  , mParent'AiNode         :: Maybe AiNode
   , mChildren'AiNode       :: [AiNode]
-  --, mNumMeshes'AiNode    :: CUInt
   , mMeshes'AiNode         :: [CUInt] -- Holds indices defining the node
   } deriving (Show)
 {#pointer *aiNode as AiNodePtr -> AiNode#}
 
 data AiFace = AiFace
-  { --mNumIndices :: CUInt
+  {
     mIndices'AiFace    :: [CUInt] -- Holds indices defining the face
   } deriving (Show)
 {#pointer *aiFace as AiFacePtr -> AiFace#}
@@ -201,16 +200,14 @@ data AiVertexWeight = AiVertexWeight
 {#pointer *aiVertexWeight as AiVertexWeightPtr -> AiVertexWeight#}
 
 data AiBone = AiBone
-  { mName'AiBone         :: String
-  --, mNumWeights   :: CUInt
-  , mWeights'AiBone      :: [AiVertexWeight]
+  { mName'AiBone          :: String
+  , mWeights'AiBone       :: [AiVertexWeight]
   , mOffpokeMatrix'AiBone :: AiMatrix4x4
   } deriving (Show)
 {#pointer *aiBone as AiBonePtr -> AiBone#}
 
 data AiMesh = AiMesh
-  { mPrimitiveTypes'AiMesh  :: AiPrimitiveType
-  --, mNumVertices     :: CUInt
+  { mPrimitiveTypes'AiMesh  :: [AiPrimitiveType]
   , mVertices'AiMesh        :: [AiVector3D]
   , mNormals'AiMesh         :: [AiVector3D]
   , mTangents'AiMesh        :: [AiVector3D]
@@ -218,31 +215,23 @@ data AiMesh = AiMesh
   , mColors'AiMesh          :: [AiColor4D]
   , mTextureCoords'AiMesh   :: [AiVector3D]
   , mNumUVComponents'AiMesh :: CUInt
-  --, mNumFaces        :: CUInt
   , mFaces'AiMesh           :: [AiFace]
-  --, mNumBones        :: CUInt
   , mBones'AiMesh           :: [AiBone]
   , mMaterialIndex'AiMesh   :: CUInt
   , mName'AiMesh            :: String
-  --, mNumAnimMeshes :: CUInt
-  --, mAnimMeshes    :: [AiAnimMesh]
   } deriving (Show)
 {#pointer *aiMesh as AiMeshPtr -> AiMesh#}
 
 data AiMaterialProperty = AiMaterialProperty {
-    mKey :: String
+    mKey      :: String
   , mSemantic :: AiTextureType
-  , mIndex :: CUInt
-  --mDataLength :: CUInt
-  , mType :: AiPropertyTypeInfo
-  , mData :: String
+  , mIndex    :: CUInt
+  , mData     :: String
   } deriving (Show)
 {#pointer *aiMaterialProperty as AiMaterialPropertyPtr -> AiMaterialProperty#}
 
 data AiMaterial = AiMaterial {
     mProperties'AiMaterial :: [AiMaterialProperty]
-  --mNumProperties :: CUInt
-  --mNumAllocated :: CUInt
   } deriving (Show)
 {#pointer *aiMaterial as AiMaterialPtr -> AiMaterial#}
 
@@ -255,13 +244,11 @@ data AiMeshAnim = AiMeshAnim {
   } deriving (Show)
 
 data AiAnimation = AiAnimation {
-    mName'AiAnimation :: String
-  , mDuration'AiAnimation :: Double
+    mName'AiAnimation           :: String
+  , mDuration'AiAnimation       :: Double
   , mTicksPerSecond'AiAnimation :: Double
-  --mNumChannels
-  , mChannels'AiAnimation :: [AiNodeAnim]
-  --mNumMeshChannels
-  , mMeshChannels'AiAnimation :: [AiMeshAnim]
+  , mChannels'AiAnimation       :: [AiNodeAnim]
+  , mMeshChannels'AiAnimation   :: [AiMeshAnim]
   } deriving (Show)
 {#pointer *aiAnimation as AiAnimationPtr -> AiAnimation#}
 
@@ -313,6 +300,7 @@ data AiCamera = AiCamera {
 
 data AiScene = AiScene
   { mFlags'AiScene         :: SceneFlags
+  , mRootNode'AiScene      :: AiNode
   , mMeshes'AiScene        :: [AiMesh]
   , mMaterials'AiScene     :: [AiMaterial]
   , mAnimations'AiScene    :: [AiAnimation]
