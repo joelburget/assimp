@@ -9,7 +9,7 @@ import Foreign.Storable
 import Foreign.C.String
 import Foreign.Marshal.Array
 import Control.Monad (liftM, liftM2, (>>=), join)
-import Data.Vector.Storable hiding (length, mapM)
+import Data.Vector (Vector, fromList)
 
 import Graphics.Formats.Assimp.Types
 
@@ -177,13 +177,40 @@ aiStringToString (AiString s) = s
 instance Storable AiMatrix3x3 where
   sizeOf _ = #size aiMatrix3x3
   alignment _ = #alignment aiMatrix3x3
-  peek p = return $ AiMatrix3x3 $ replicate 9 0
+  peek p = do
+    a1 <- (#peek aiMatrix3x3, a1) p
+    a2 <- (#peek aiMatrix3x3, a2) p
+    a3 <- (#peek aiMatrix3x3, a3) p
+    b1 <- (#peek aiMatrix3x3, b1) p
+    b2 <- (#peek aiMatrix3x3, b2) p
+    b3 <- (#peek aiMatrix3x3, b3) p
+    c1 <- (#peek aiMatrix3x3, c1) p
+    c2 <- (#peek aiMatrix3x3, c2) p
+    c3 <- (#peek aiMatrix3x3, c3) p
+    return $ AiMatrix3x3 $ fromList $ map fromList [[a1,a2,a3],[b1,b2,b3],[c1,c2,c3]]
   poke = undefined
 
 instance Storable AiMatrix4x4 where
   sizeOf _ = #size aiMatrix4x4
   alignment _ = #alignment aiMatrix4x4
-  peek p = return $ AiMatrix4x4 $ replicate 16 0
+  peek p = do
+    a1 <- (#peek aiMatrix4x4, a1) p
+    a2 <- (#peek aiMatrix4x4, a2) p
+    a3 <- (#peek aiMatrix4x4, a3) p
+    a4 <- (#peek aiMatrix4x4, a4) p
+    b1 <- (#peek aiMatrix4x4, b1) p
+    b2 <- (#peek aiMatrix4x4, b2) p
+    b3 <- (#peek aiMatrix4x4, b3) p
+    b4 <- (#peek aiMatrix4x4, b4) p
+    c1 <- (#peek aiMatrix4x4, c1) p
+    c2 <- (#peek aiMatrix4x4, c2) p
+    c3 <- (#peek aiMatrix4x4, c3) p
+    c4 <- (#peek aiMatrix4x4, c4) p
+    d1 <- (#peek aiMatrix4x4, d1) p
+    d2 <- (#peek aiMatrix4x4, d2) p
+    d3 <- (#peek aiMatrix4x4, d3) p
+    d4 <- (#peek aiMatrix4x4, d4) p
+    return $ AiMatrix4x4 $ fromList $ map fromList [[a1,a2,a3,a4],[b1,b2,b3,b4],[c1,c2,c3,c4],[d1,d2,d3,d4]]
   poke = undefined
 
 instance Storable AiNode where

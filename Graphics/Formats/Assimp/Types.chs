@@ -45,7 +45,7 @@ module Graphics.Formats.Assimp.Types (
   ) where
 
 import C2HS
-import Data.Vector.Storable hiding ((++))
+import Data.Vector hiding ((++))
 import Data.Bits ((.|.))
 
 #include "../../assimp/include/assimp.h"        // Plain-C interface
@@ -150,12 +150,12 @@ newtype AiString = AiString String deriving (Show)
 {#pointer *aiString as AiStringPtr -> AiString#}
 
 data AiMatrix3x3 = AiMatrix3x3 {
-  matrix'AiMatrix3x3 :: Vector Float
+  matrix'AiMatrix3x3 :: Vector (Vector Float)
   } deriving (Show)
 {#pointer *aiMatrix3x3 as AiMatrix3x3Ptr -> AiMatrix3x3#}
 
 data AiMatrix4x4 = AiMatrix4x4 {
-  matrix'AiMatrix4x4 :: Vector Float
+  matrix'AiMatrix4x4 :: Vector (Vector Float)
   } deriving (Show)
 {#pointer *aiMatrix4x4 as AiMatrix4x4Ptr -> AiMatrix4x4#}
 
