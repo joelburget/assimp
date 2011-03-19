@@ -25,16 +25,16 @@ peek' :: (Storable b) => Ptr a -> IO b
 peek' = peek . castPtr
 
 {#fun aiImportFile as ^
-  {`String', cFromEnum `AiPostProcessSteps'} -> `AiScene' peek'*#}
+  {`String', cFromEnum `PostProcessSteps'} -> `Scene' peek'*#}
 
 -- aiImportFileEx
 -- aiImportFileFromMemory
 
 {#fun aiApplyPostProcessing as ^
-  {with'* `AiScene', cFromEnum `AiPostProcessSteps'} -> `AiScene' peek'*#}
+  {with'* `Scene', cFromEnum `PostProcessSteps'} -> `Scene' peek'*#}
 
 --{#fun aiGetPredefinedLogStream as ^
---  {cFromEnum `AiDefaultLogStream', `String'} -> `AiLogStream' id#}
+--  {cFromEnum `DefaultLogStream', `String'} -> `LogStream' id#}
 
 -- aiAttachLogStream
 -- aiEnableVerboseLogging
@@ -42,7 +42,7 @@ peek' = peek . castPtr
 -- aiDetachAllLogStreams
 
 {#fun aiReleaseImport as ^
-  {with'* `AiScene'} -> `()'#}
+  {with'* `Scene'} -> `()'#}
 
 {#fun aiGetErrorString as ^
   {} -> `String'#}
@@ -60,7 +60,7 @@ peek' = peek . castPtr
   {`String', `Float'} -> `()'#}
 
 --{# fun aiSetImportPropertyString as ^
---  {`String', `AiString'} -> `()'#}
+--  {`String', `String'} -> `()'#}
 
 -- aiCreateQuaternionFromMatrix
 -- aiDecomposeMatrix

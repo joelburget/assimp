@@ -24,3 +24,4 @@ typedef struct aiCamera       aiCamera;
 typedef struct aiMaterialProperty aiMaterialProperty;
 typedef struct aiNodeAnim     aiNodeAnim;
 typedef struct aiMeshAnim     aiMeshAnim;
+typedef struct aiTexel        aiTexel;

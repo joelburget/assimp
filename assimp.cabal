@@ -25,7 +25,7 @@ Library
   Build-tools: c2hs
   Extensions: ForeignFunctionInterface
   Extra-libraries: assimp
-  Extra-lib-dirs: assimp/lib
+  -- Extra-lib-dirs: assimp/lib
   Includes: assimp.h
   Include-dirs: 
     assimp/include/
