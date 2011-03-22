@@ -1,13 +1,13 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 module Graphics.Formats.Assimp.Fun (
-    aiImportFile
-  , aiApplyPostProcessing
-  , aiReleaseImport
-  , aiGetErrorString
-  , aiIsExtensionSupported
-  , aiSetImportPropertyInteger
-  , aiSetImportPropertyFloat
+    importFile
+  , applyPostProcessing
+  , releaseImport
+  , getErrorString
+  , isExtensionSupported
+  , setImportPropertyInteger
+  , setImportPropertyFloat
   ) where
 
 import C2HS
@@ -24,13 +24,13 @@ with' x y = with x (y . castPtr)
 peek' :: (Storable b) => Ptr a -> IO b
 peek' = peek . castPtr
 
-{#fun aiImportFile as ^
+{#fun aiImportFile as importFile
   {`String', cFromEnum `PostProcessSteps'} -> `Scene' peek'*#}
 
 -- aiImportFileEx
 -- aiImportFileFromMemory
 
-{#fun aiApplyPostProcessing as ^
+{#fun aiApplyPostProcessing as applyPostProcessing 
   {with'* `Scene', cFromEnum `PostProcessSteps'} -> `Scene' peek'*#}
 
 --{#fun aiGetPredefinedLogStream as ^
@@ -41,22 +41,22 @@ peek' = peek . castPtr
 -- aiDetachLogStream
 -- aiDetachAllLogStreams
 
-{#fun aiReleaseImport as ^
+{#fun aiReleaseImport as releaseImport
   {with'* `Scene'} -> `()'#}
 
-{#fun aiGetErrorString as ^
+{#fun aiGetErrorString as getErrorString
   {} -> `String'#}
 
-{#fun aiIsExtensionSupported as ^
+{#fun aiIsExtensionSupported as isExtensionSupported
   {`String'} -> `Bool'#}
 
 -- aiGetExtensionList
 -- aiGetMemoryRequirements
 
-{# fun aiSetImportPropertyInteger as ^
+{# fun aiSetImportPropertyInteger as setImportPropertyInteger
   {`String', `Int'} -> `()'#}
 
-{# fun aiSetImportPropertyFloat as ^
+{# fun aiSetImportPropertyFloat as setImportPropertyFloat 
   {`String', `Float'} -> `()'#}
 
 --{# fun aiSetImportPropertyString as ^

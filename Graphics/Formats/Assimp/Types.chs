@@ -55,6 +55,7 @@ import Data.Bits ((.|.))
 #include "typedefs.h"
 
 {#context lib="assimp"#}
+{#context prefix="ai"#}
 
 {#enum define SceneFlags {AI_SCENE_FLAGS_INCOMPLETE         as FlagsIncomplete
                         , AI_SCENE_FLAGS_VALIDATED          as FlagsValidated
@@ -63,7 +64,11 @@ import Data.Bits ((.|.))
                         , AI_SCENE_FLAGS_TERRAIN            as FlagsTerrain
                         }#}
 instance Show SceneFlags where
-  show _ = "Scene Flag"
+  show FlagsIncomplete        = "FlagsIncomplete"
+  show FlagsValidated         = "FlagsValidated"
+  show FlagsValidationWarning = "FlagsValidationWarning"
+  show FlagsNonVerboseFormat  = "FlagsNonVerboseFormat"
+  show FlagsTerrain           = "FlagsTerrain"
 
 {#enum aiPostProcessSteps as PostProcessSteps {underscoreToCase} deriving (Show, Eq)#}
 {#enum aiReturn as Return                     {underscoreToCase} deriving (Show, Eq)#}
@@ -300,7 +305,7 @@ data Camera = Camera {
 {#pointer *aiCamera as CameraPtr -> Camera#}
 
 data Scene = Scene
-  { mFlags'Scene         :: SceneFlags
+  { mFlags'Scene         :: [SceneFlags]
   , mRootNode'Scene      :: Node
   , mMeshes'Scene        :: [Mesh]
   , mMaterials'Scene     :: [Material]
