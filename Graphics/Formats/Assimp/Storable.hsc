@@ -295,14 +295,14 @@ instance Storable Mesh where
     -- think that should have been necessary.
     mPrimitiveTypes <- liftM (toEnumList . (flip shiftR 1)) 
                               ((#peek aiMesh, mPrimitiveTypes) p :: IO CUInt)
-    mNumVertices <- liftM fromIntegral $ 
-                      ((#peek aiMesh, mNumVertices) p :: IO CUInt)
-    mVertices    <- (#peek aiMesh, mVertices) p        >>= peekArray  mNumVertices
-    mNormals     <- (#peek aiMesh, mNormals) p         >>= peekArray' mNumVertices
-    mTangents    <- (#peek aiMesh, mTangents) p        >>= peekArray' mNumVertices
-    mBitangents  <- (#peek aiMesh, mBitangents) p      >>= peekArray' mNumVertices
-    mColors      <- (#peek aiMesh, mColors) p          >>= peekArray' mNumVertices
-    mTextureCoords <- (#peek aiMesh, mTextureCoords) p >>= peekArray' mNumVertices
+    mNumVs <- liftM fromIntegral $ 
+                ((#peek aiMesh, mNumVertices) p :: IO CUInt)
+    mVertices    <- (#peek aiMesh, mVertices) p        >>= peekArray  mNumVs
+    mNormals     <- (#peek aiMesh, mNormals) p         >>= peekArray' mNumVs
+    mTangents    <- (#peek aiMesh, mTangents) p        >>= peekArray' mNumVs
+    mBitangents  <- (#peek aiMesh, mBitangents) p      >>= peekArray' mNumVs
+    mColors      <- (#peek aiMesh, mColors) p          >>= peekArray' mNumVs
+    mTextureCoords <- (#peek aiMesh, mTextureCoords) p >>= peekArray' mNumVs
     mNumUVComponents <- (#peek aiMesh, mNumUVComponents) p
     mNumFaces <- liftM fromIntegral ((#peek aiMesh, mNumFaces) p :: IO CUInt)
     mFaces <- (#peek aiMesh, mFaces) p >>= peekArray' mNumFaces
