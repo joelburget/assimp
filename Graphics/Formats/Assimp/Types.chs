@@ -88,43 +88,43 @@ instance Show SceneFlags where
 {#enum aiPropertyTypeInfo as PropertyTypeInfo {underscoreToCase} deriving (Show, Eq)#}
 
 data Plane = Plane {
-    a'Plane :: Float
-  , b'Plane :: Float
-  , c'Plane :: Float
-  , d'Plane :: Float
+    planeA :: Float
+  , planeB :: Float
+  , planeC :: Float
+  , planeD :: Float
   } deriving (Show)
 {#pointer *aiPlane as PlanePtr -> Plane#}
 
 data Ray = Ray {
-    pos'Ray :: Vector3D
-  , dir'Ray :: Vector3D
+    rayPos :: Vector3D
+  , rayDir :: Vector3D
   } deriving (Show)
 {#pointer *aiRay as RayPtr -> Ray#}
 
 data Color3D = Color3D {
-    r'Color3D :: Float
-  , g'Color3D :: Float
-  , b'Color3D :: Float
+    color3dR :: Float
+  , color3dG :: Float
+  , color3dB :: Float
   } deriving (Show)
 {#pointer *aiColor3D as Color3DPtr -> Color3D#}
 
 data Color4D = Color4D {
-    r'Color4D :: Float
-  , g'Color4D :: Float
-  , b'Color4D :: Float
-  , a'Color4D :: Float
+    color4dR :: Float
+  , color4dG :: Float
+  , color4dB :: Float
+  , color4dA :: Float
   } deriving (Show)
 {#pointer *aiColor4D as Color4DPtr -> Color4D#}
 
 data MemoryInfo = MemoryInfo {
-    textures'MemoryInfo   :: CUInt
-  , materials'MemoryInfo  :: CUInt
-  , meshes'MemoryInfo     :: CUInt
-  , nodes'MemoryInfo      :: CUInt
-  , animations'MemoryInfo :: CUInt
-  , cameras'MemoryInfo    :: CUInt
-  , lights'MemoryInfo     :: CUInt
-  , total'MemoryInfo      :: CUInt
+    textures   :: CUInt
+  , materials  :: CUInt
+  , meshes     :: CUInt
+  , nodes      :: CUInt
+  , animations :: CUInt
+  , cameras    :: CUInt
+  , lights     :: CUInt
+  , total      :: CUInt
   } deriving (Show)
 {#pointer *aiMemoryInfo as MemoryInfoPtr -> MemoryInfo#}
 
@@ -132,23 +132,23 @@ data LogStream
 {#pointer *aiLogStream as LogStreamPtr -> LogStream#}
 
 data Quaternion = Quaternion {
-    w'Quaternion :: Float
-  , x'Quaternion :: Float
-  , y'Quaternion :: Float
-  , z'Quaternion :: Float
+    quaternionW :: Float
+  , quaternionX :: Float
+  , quaternionY :: Float
+  , quaternionZ :: Float
   } deriving (Show)
 {#pointer *aiQuaternion as QuaternionPtr -> Quaternion#}
 
 data Vector2D = Vector2D {
-    x'Vector2D :: Float
-  , y'Vector2D :: Float
+    vector2dX :: Float
+  , vector2dY :: Float
   } deriving (Show)
 {#pointer *aiVector2D as Vector2DPtr -> Vector2D#}
 
 data Vector3D = Vector3D {
-    x'Vector3D :: Float
-  , y'Vector3D :: Float
-  , z'Vector3D :: Float
+    vector3dX :: Float
+  , vector3dY :: Float
+  , vector3dZ :: Float
   } deriving (Show)
 {#pointer *aiVector3D as Vector3DPtr -> Vector3D#}
 
@@ -156,12 +156,12 @@ newtype AiString = AiString String deriving (Show)
 {#pointer *aiString as StringPtr -> AiString#}
 
 data Matrix3x3 = Matrix3x3 {
-  matrix'Matrix3x3 :: Vector (Vector Float)
+  matrix3x3 :: Vector (Vector Float)
   } deriving (Show)
 {#pointer *aiMatrix3x3 as Matrix3x3Ptr -> Matrix3x3#}
 
 data Matrix4x4 = Matrix4x4 {
-  matrix'Matrix4x4 :: Vector (Vector Float)
+  matrix4x4 :: Vector (Vector Float)
   } deriving (Show)
 {#pointer *aiMatrix4x4 as Matrix4x4Ptr -> Matrix4x4#}
 
@@ -185,46 +185,46 @@ data Matrix4x4 = Matrix4x4 {
  - its parents.
 -}
 data Node = Node
-  { mName'Node           :: String
-  , mTransformation'Node :: Matrix4x4
-  , mParent'Node         :: Maybe Node
-  , mChildren'Node       :: [Node]
-  , mMeshes'Node         :: [CUInt] -- Holds indices defining the node
+  { nodeMName       :: String
+  , mTransformation :: Matrix4x4
+  , mParent         :: Maybe Node
+  , mChildren       :: [Node]
+  , nodeMMeshes     :: [CUInt] -- Holds indices defining the node
   } deriving (Show)
 {#pointer *aiNode as NodePtr -> Node#}
 
 data Face = Face
   {
-    mIndices'Face    :: [CUInt] -- Holds indices defining the face
+    mIndices :: [CUInt] -- Holds indices defining the face
   } deriving (Show)
 {#pointer *aiFace as FacePtr -> Face#}
 
 data VertexWeight = VertexWeight
-  { mVertexId'VertexWeight :: CUInt
-  , mWeight'VertexWeight   :: CFloat
+  { mVertexId :: CUInt
+  , mWeight   :: CFloat
   } deriving (Show)
 {#pointer *aiVertexWeight as VertexWeightPtr -> VertexWeight#}
 
 data Bone = Bone
-  { mName'Bone          :: String
-  , mWeights'Bone       :: [VertexWeight]
-  , mOffpokeMatrix'Bone :: Matrix4x4
+  { boneMName          :: String
+  , mWeights       :: [VertexWeight]
+  , mOffpokeMatrix :: Matrix4x4
   } deriving (Show)
 {#pointer *aiBone as BonePtr -> Bone#}
 
 data Mesh = Mesh
-  { mPrimitiveTypes'Mesh  :: [PrimitiveType]
-  , mVertices'Mesh        :: [Vector3D]
-  , mNormals'Mesh         :: [Vector3D]
-  , mTangents'Mesh        :: [Vector3D]
-  , mBitangents'Mesh      :: [Vector3D]
-  , mColors'Mesh          :: [Color4D]
-  , mTextureCoords'Mesh   :: [Vector3D]
-  , mNumUVComponents'Mesh :: CUInt
-  , mFaces'Mesh           :: [Face]
-  , mBones'Mesh           :: [Bone]
-  , mMaterialIndex'Mesh   :: CUInt
-  , mName'Mesh            :: String
+  { mPrimitiveTypes  :: [PrimitiveType]
+  , mVertices        :: [Vector3D]
+  , mNormals         :: [Vector3D]
+  , mTangents        :: [Vector3D]
+  , mBitangents      :: [Vector3D]
+  , mColors          :: [Color4D]
+  , mTextureCoords   :: [Vector3D]
+  , mNumUVComponents :: CUInt
+  , mFaces           :: [Face]
+  , mBones           :: [Bone]
+  , mMaterialIndex   :: CUInt
+  , meshMName        :: String
   } deriving (Show)
 {#pointer *aiMesh as MeshPtr -> Mesh#}
 
@@ -237,7 +237,7 @@ data MaterialProperty = MaterialProperty {
 {#pointer *aiMaterialProperty as MaterialPropertyPtr -> MaterialProperty#}
 
 data Material = Material {
-    mProperties'Material :: [MaterialProperty]
+    mProperties :: [MaterialProperty]
   } deriving (Show)
 {#pointer *aiMaterial as MaterialPtr -> Material#}
 
@@ -250,11 +250,11 @@ data MeshAnim = MeshAnim {
   } deriving (Show)
 
 data Animation = Animation {
-    mName'Animation           :: String
-  , mDuration'Animation       :: Double
-  , mTicksPerSecond'Animation :: Double
-  , mChannels'Animation       :: [NodeAnim]
-  , mMeshChannels'Animation   :: [MeshAnim]
+    animationMName           :: String
+  , mDuration       :: Double
+  , mTicksPerSecond :: Double
+  , mChannels       :: [NodeAnim]
+  , mMeshChannels   :: [MeshAnim]
   } deriving (Show)
 {#pointer *aiAnimation as AnimationPtr -> Animation#}
 
@@ -263,55 +263,55 @@ data Texel = Texel {
   } deriving (Show)
 
 data Texture = Texture {
-    mWidth'Texture :: CUInt
-  , mHeight'Texture :: CUInt
-  , achFormatHint'Texture :: String
-  , pcData'Texture :: [Texel]
+    mWidth        :: CUInt
+  , mHeight       :: CUInt
+  , achFormatHint :: String
+  , pcData        :: [Texel]
   } deriving (Show)
 {#pointer *aiTexture as TexturePtr -> Texture#}
 
 data UVTransform = UVTransform {
-    mTranslation'UVTransform :: Vector2D
-  , mScaling'UVTransform     :: Vector2D
-  , mRotation'UVTransform    :: Float
+    mTranslation :: Vector2D
+  , mScaling     :: Vector2D
+  , mRotation    :: Float
   } deriving (Show)
 
 data Light = Light {
-    mName'Light                 :: String
-  , mType'Light                 :: LightSourceType
-  , mPosition'Light             :: Vector3D
-  , mDirection'Light            :: Vector3D
-  , mAttenuationConstant'Light  :: Float
-  , mAttenuationLinear'Light    :: Float
-  , mAttenuationQuadratic'Light :: Float
-  , mColorDiffuse'Light         :: Color3D
-  , mColorSpecular'Light        :: Color3D
-  , mColorAmbient'Light         :: Color3D
-  , mAngleInnerCone'Light       :: Float
-  , mAngleOuterCone'Light       :: Float
+    lightMName                 :: String
+  , mType                 :: LightSourceType
+  , lightMPosition             :: Vector3D
+  , mDirection            :: Vector3D
+  , mAttenuationConstant  :: Float
+  , mAttenuationLinear    :: Float
+  , mAttenuationQuadratic :: Float
+  , mColorDiffuse         :: Color3D
+  , mColorSpecular        :: Color3D
+  , mColorAmbient         :: Color3D
+  , mAngleInnerCone       :: Float
+  , mAngleOuterCone       :: Float
   } deriving (Show)
 {#pointer *aiLight as LightPtr -> Light#}
 
 data Camera = Camera {
-    mName'Camera          :: String
-  , mPosition'Camera      :: Vector3D
-  , mUp'Camera            :: Vector3D
-  , mLookAt'Camera        :: Vector3D
-  , mHorizontalFOV'Camera :: Float
-  , mClipPlaneNear'Camera :: Float
-  , mClipPlaneFar'Camera  :: Float
-  , mAspect'Camera        :: Float
+    cameraMName    :: String
+  , mPosition      :: Vector3D
+  , mUp            :: Vector3D
+  , mLookAt        :: Vector3D
+  , mHorizontalFOV :: Float
+  , mClipPlaneNear :: Float
+  , mClipPlaneFar  :: Float
+  , mAspect        :: Float
   } deriving (Show)
 {#pointer *aiCamera as CameraPtr -> Camera#}
 
 data Scene = Scene
-  { mFlags'Scene         :: [SceneFlags]
-  , mRootNode'Scene      :: Node
-  , mMeshes'Scene        :: [Mesh]
-  , mMaterials'Scene     :: [Material]
-  , mAnimations'Scene    :: [Animation]
-  , mTextures'Scene      :: [Texture]
-  , mLights'Scene        :: [Light]
-  , mCameras'Scene       :: [Camera]
+  { mFlags         :: [SceneFlags]
+  , mRootNode      :: Node
+  , mMeshes        :: [Mesh]
+  , mMaterials     :: [Material]
+  , mAnimations    :: [Animation]
+  , mTextures      :: [Texture]
+  , mLights        :: [Light]
+  , mCameras       :: [Camera]
   } deriving (Show)
 {#pointer *aiScene as ScenePtr -> Scene#}
