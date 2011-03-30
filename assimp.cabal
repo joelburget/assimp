@@ -16,6 +16,7 @@ Cabal-version:       >=1.2
 Library
   Exposed-modules: Graphics.Formats.Assimp
   Other-modules:
+    Graphics.Formats.Assimp.Vec
     Graphics.Formats.Assimp.Types
     Graphics.Formats.Assimp.Storable
     Graphics.Formats.Assimp.Fun
@@ -25,7 +26,6 @@ Library
   Build-tools: c2hs
   Extensions: ForeignFunctionInterface
   Extra-libraries: assimp
-  -- Extra-lib-dirs: assimp/lib
   Includes: assimp.h
   Include-dirs: 
     assimp/include/
