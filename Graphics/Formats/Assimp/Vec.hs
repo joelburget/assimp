@@ -35,24 +35,29 @@ module Graphics.Formats.Assimp.Vec (
 
 import Data.List (foldl1')
 
+-- Type level naturals
 data N2
 data N3
 data N4
 
-class Vector n a where
-  data Vec n a :: *
-  (|+|) :: Vec n a -> Vec n a -> Vec n a
-  (|-|) :: Vec n a -> Vec n a -> Vec n a
-  (|*|) :: Vec n a -> a -> Vec n a
-  vmult :: Vec n a -> Vec n a -> Vec n a
-  dot   :: Vec n a -> Vec n a -> a
-  vmap  :: (a -> a) -> Vec n a -> Vec n a
-  len2  :: Vec n a -> a
+-- Plain vector or color, intended to be used as a phantom type
+-- example: Vec3D 1 2 3 :: Vec3D Color
+data Color
 
-len :: (Floating a, Vector n a) => Vec n a -> a
+class Vector n a where
+  data Vec n a :: * -> *
+  (|+|) :: Vec n a t -> Vec n a t -> Vec n a t
+  (|-|) :: Vec n a t -> Vec n a t -> Vec n a t
+  (|*|) :: Vec n a t -> a -> Vec n a t
+  vmult :: Vec n a t -> Vec n a t -> Vec n a t
+  dot   :: Vec n a t -> Vec n a t -> a
+  vmap  :: (a -> a) -> Vec n a t -> Vec n a t
+  len2  :: Vec n a t -> a
+
+len :: (Floating a, Vector n a) => Vec n a t -> a
 len = sqrt . len2
 
-normalize :: (Floating a, Vector n a) => Vec n a -> Vec n a 
+normalize :: (Floating a, Vector n a) => Vec n a t -> Vec n a t
 normalize v = v |*| (1 / len v)
 
 infixl 6 |+|
@@ -60,7 +65,7 @@ infixl 6 |-|
 infixl 7 |*|
 
 -- Clearly this is intended to be used with colors
-avgColor :: (Vector n a, Fractional a) => [Vec n a] -> Vec n a
+avgColor :: (Vector n a, Fractional a) => [Vec n a t] -> Vec n a t
 avgColor xs = (foldl1' (|+|) xs) 
   |*| (1 / ((fromInteger . toInteger) (length xs)))
 
@@ -88,7 +93,7 @@ type Vec4I = Vec N4 Int
 type Color4I = Vec4I
 
 instance Vector N2 Double where
-  data Vec N2 Double = Vec2D !Double !Double deriving (Show, Eq)
+  data Vec N2 Double t = Vec2D !Double !Double deriving (Show, Eq)
   (Vec2D x1 y1) |+| (Vec2D x2 y2 ) = Vec2D (x1 + x2) (y1 + y2)
   (Vec2D x1 y1) |-| (Vec2D x2 y2 ) = Vec2D (x1 - x2) (y1 - y2)
   (Vec2D x y) |*| n = Vec2D (n*x) (n*y)
@@ -98,7 +103,7 @@ instance Vector N2 Double where
   len2 (Vec2D x y) = x*x + y*y
 
 instance Vector N2 Float where
-  data Vec N2 Float = Vec2F !Float !Float deriving (Show, Eq)
+  data Vec N2 Float t = Vec2F !Float !Float deriving (Show, Eq)
   (Vec2F x1 y1) |+| (Vec2F x2 y2 ) = Vec2F (x1 + x2) (y1 + y2)
   (Vec2F x1 y1) |-| (Vec2F x2 y2 ) = Vec2F (x1 - x2) (y1 - y2)
   (Vec2F x y) |*| n = Vec2F (n*x) (n*y)
@@ -108,7 +113,7 @@ instance Vector N2 Float where
   len2 (Vec2F x y) = x*x + y*y
 
 instance Vector N2 Int where
-  data Vec N2 Int = Vec2I !Int !Int deriving (Show, Eq)
+  data Vec N2 Int t = Vec2I !Int !Int deriving (Show, Eq)
   (Vec2I x1 y1) |+| (Vec2I x2 y2 ) = Vec2I (x1 + x2) (y1 + y2)
   (Vec2I x1 y1) |-| (Vec2I x2 y2 ) = Vec2I (x1 - x2) (y1 - y2)
   (Vec2I x y) |*| n = Vec2I (n*x) (n*y)
@@ -118,7 +123,7 @@ instance Vector N2 Int where
   len2 (Vec2I x y) = x*x + y*y
 
 instance Vector N3 Double where
-  data Vec N3 Double = Vec3D !Double !Double !Double deriving (Show, Eq)
+  data Vec N3 Double t = Vec3D !Double !Double !Double deriving (Show, Eq)
   (Vec3D x1 y1 z1) |+| (Vec3D x2 y2 z2) = Vec3D (x1 + x2) (y1 + y2) (z1 + z2)
   (Vec3D x1 y1 z1) |-| (Vec3D x2 y2 z2) = Vec3D (x1 - x2) (y1 - y2) (z1 - z2)
   (Vec3D x y z) |*| n = Vec3D (n*x) (n*y) (n*z)
@@ -128,7 +133,7 @@ instance Vector N3 Double where
   len2 (Vec3D x y z) = x*x + y*y + z*z
 
 instance Vector N3 Float where
-  data Vec N3 Float = Vec3F !Float !Float !Float deriving (Show, Eq)
+  data Vec N3 Float t = Vec3F !Float !Float !Float deriving (Show, Eq)
   (Vec3F x1 y1 z1) |+| (Vec3F x2 y2 z2) = Vec3F (x1 + x2) (y1 + y2) (z1 + z2)
   (Vec3F x1 y1 z1) |-| (Vec3F x2 y2 z2) = Vec3F (x1 - x2) (y1 - y2) (z1 - z2)
   (Vec3F x y z) |*| n = Vec3F (n*x) (n*y) (n*z)
@@ -138,7 +143,7 @@ instance Vector N3 Float where
   len2 (Vec3F x y z) = x*x + y*y + z*z
 
 instance Vector N3 Int where
-  data Vec N3 Int = Vec3I !Int !Int !Int deriving (Show, Eq)
+  data Vec N3 Int t = Vec3I !Int !Int !Int deriving (Show, Eq)
   (Vec3I x1 y1 z1) |+| (Vec3I x2 y2 z2) = Vec3I (x1 + x2) (y1 + y2) (z1 + z2)
   (Vec3I x1 y1 z1) |-| (Vec3I x2 y2 z2) = Vec3I (x1 - x2) (y1 - y2) (z1 - z2)
   (Vec3I x y z) |*| n = Vec3I (n*x) (n*y) (n*z)
@@ -148,7 +153,7 @@ instance Vector N3 Int where
   len2 (Vec3I x y z) = x*x + y*y + z*z
 
 instance Vector N4 Double where
-  data Vec N4 Double = Vec4D !Double !Double !Double !Double deriving (Show, Eq)
+  data Vec N4 Double t = Vec4D !Double !Double !Double !Double deriving (Show, Eq)
   (Vec4D x1 y1 z1 w1) |+| (Vec4D x2 y2 z2 w2) = Vec4D (x1 + x2) (y1 + y2) (z1 + z2) (w1 + w2)
   (Vec4D x1 y1 z1 w1) |-| (Vec4D x2 y2 z2 w2) = Vec4D (x1 - x2) (y1 - y2) (z1 - z2) (w1 - w2)
   (Vec4D x y z w) |*| n = Vec4D (n*x) (n*y) (n*z) (n*w)
@@ -158,7 +163,7 @@ instance Vector N4 Double where
   len2 (Vec4D x y z w) = x*x + y*y + z*z + w*w
 
 instance Vector N4 Float where
-  data Vec N4 Float = Vec4F !Float !Float !Float !Float deriving (Show, Eq)
+  data Vec N4 Float t = Vec4F !Float !Float !Float !Float deriving (Show, Eq)
   (Vec4F x1 y1 z1 w1) |+| (Vec4F x2 y2 z2 w2) = Vec4F (x1 + x2) (y1 + y2) (z1 + z2) (w1 + w2)
   (Vec4F x1 y1 z1 w1) |-| (Vec4F x2 y2 z2 w2) = Vec4F (x1 - x2) (y1 - y2) (z1 - z2) (w1 - w2)
   (Vec4F x y z w) |*| n = Vec4F (n*x) (n*y) (n*z) (n*w)
@@ -168,7 +173,7 @@ instance Vector N4 Float where
   len2 (Vec4F x y z w) = x*x + y*y + z*z + w*w
 
 instance Vector N4 Int where
-  data Vec N4 Int = Vec4I !Int !Int !Int !Int deriving (Show, Eq)
+  data Vec N4 Int t = Vec4I !Int !Int !Int !Int deriving (Show, Eq)
   (Vec4I x1 y1 z1 w1) |+| (Vec4I x2 y2 z2 w2) = Vec4I (x1 + x2) (y1 + y2) (z1 + z2) (w1 + w2)
   (Vec4I x1 y1 z1 w1) |-| (Vec4I x2 y2 z2 w2) = Vec4I (x1 - x2) (y1 - y2) (z1 - z2) (w1 - w2)
   (Vec4I x y z w) |*| n = Vec4I (n*x) (n*y) (n*z) (n*w)
