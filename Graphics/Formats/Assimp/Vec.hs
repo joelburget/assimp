@@ -74,23 +74,23 @@ avgColor xs = (foldl1' (|+|) xs)
 --
 
 -- Don't include color type synonyms because nobody uses 2-d colors
-type Vec2D = Vec N2 Double
-type Vec2F = Vec N2 Float
-type Vec2I = Vec N2 Int
+type Vec2D = Vec N2 Double ()
+type Vec2F = Vec N2 Float ()
+type Vec2I = Vec N2 Int ()
 
-type Vec3D = Vec N3 Double
-type Color3D = Vec3D
-type Vec3F = Vec N3 Float
-type Color3F = Vec3F
-type Vec3I = Vec N3 Int
-type Color3I = Vec3I
+type Vec3D = Vec N3 Double ()
+type Color3D = Vec N3 Double Color
+type Vec3F = Vec N3 Float ()
+type Color3F = Vec N3 Float Color
+type Vec3I = Vec N3 Int ()
+type Color3I = Vec N3 Int Color
 
-type Vec4D = Vec N4 Double
-type Color4D = Vec4D
-type Vec4F = Vec N4 Float
-type Color4F = Vec4F
-type Vec4I = Vec N4 Int
-type Color4I = Vec4I
+type Vec4D = Vec N4 Double ()
+type Color4D = Vec N4 Double Color
+type Vec4F = Vec N4 Float ()
+type Color4F = Vec N4 Float Color
+type Vec4I = Vec N4 Int ()
+type Color4I = Vec N4 Int Color
 
 instance Vector N2 Double where
   data Vec N2 Double t = Vec2D !Double !Double deriving (Show, Eq)
