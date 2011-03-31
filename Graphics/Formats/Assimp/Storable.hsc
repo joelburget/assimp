@@ -1,5 +1,6 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module Graphics.Formats.Assimp.Storable where
 
@@ -14,6 +15,7 @@ import Data.Vector (Vector, fromList)
 import Data.Bits ((.&.))
 
 import Graphics.Formats.Assimp.Types
+import Graphics.Formats.Assimp.Vec
 
 #include "../../assimp/include/assimp.h"        // Plain-C interface
 #include "../../assimp/include/aiScene.h"       // Output data structure
@@ -61,6 +63,30 @@ instance Storable Ray where
     (#poke aiRay, pos) p pos
     (#poke aiRay, dir) p dir
 
+instance Storable Vec2D where
+  sizeOf _ = #size aiVector2D
+  alignment _ = #alignment aiVector2D
+  peek p = do
+    x <- (#peek aiVector2D, x) p
+    y <- (#peek aiVector2D, y) p
+    return $ Vec2D x y
+  poke p (Vec2D x y) = do
+    (#poke aiVector2D, x) p x
+    (#poke aiVector2D, y) p y
+
+instance Storable Vec3D where
+  sizeOf _ = #size aiVector3D
+  alignment _ = #alignment aiVector3D
+  peek p = do
+    x <- (#peek aiVector3D, x) p
+    y <- (#peek aiVector3D, y) p
+    z <- (#peek aiVector3D, z) p
+    return $ Vec3D x y z
+  poke p (Vec3D x y z) = do
+    (#poke aiVector3D, x) p x
+    (#poke aiVector3D, y) p y
+    (#poke aiVector3D, z) p z
+
 instance Storable Color3D where
   sizeOf _ = #size aiColor3D
   alignment _ = #alignment aiColor3D
@@ -68,8 +94,8 @@ instance Storable Color3D where
     r <- (#peek aiColor3D, r) p
     g <- (#peek aiColor3D, g) p
     b <- (#peek aiColor3D, b) p
-    return $ Color3D r g b
-  poke p (Color3D r g b) = do
+    return $ Vec3D r g b
+  poke p (Vec3D r g b) = do
     (#poke aiColor3D, r) p r
     (#poke aiColor3D, g) p g
     (#poke aiColor3D, b) p b
@@ -82,8 +108,8 @@ instance Storable Color4D where
     g <- (#peek aiColor4D, g) p
     b <- (#peek aiColor4D, b) p
     a <- (#peek aiColor4D, a) p
-    return $ Color4D r g b a
-  poke p (Color4D r g b a) = do
+    return $ Vec4D r g b a
+  poke p (Vec4D r g b a) = do
     (#poke aiColor4D, r) p r
     (#poke aiColor4D, g) p g
     (#poke aiColor4D, b) p b
@@ -127,30 +153,6 @@ instance Storable Quaternion where
     (#poke aiQuaternion, y) p y
     (#poke aiQuaternion, z) p z
 
-instance Storable Vector2D where
-  sizeOf _ = #size aiVector2D
-  alignment _ = #alignment aiVector2D
-  peek p = do
-    x <- (#peek aiVector2D, x) p
-    y <- (#peek aiVector2D, y) p
-    return $ Vector2D x y
-  poke p (Vector2D x y) = do
-    (#poke aiVector2D, x) p x
-    (#poke aiVector2D, y) p y
-
-instance Storable Vector3D where
-  sizeOf _ = #size aiVector3D
-  alignment _ = #alignment aiVector3D
-  peek p = do
-    x <- (#peek aiVector3D, x) p
-    y <- (#peek aiVector3D, y) p
-    z <- (#peek aiVector3D, z) p
-    return $ Vector3D x y z
-  poke p (Vector3D x y z) = do
-    (#poke aiVector3D, x) p x
-    (#poke aiVector3D, y) p y
-    (#poke aiVector3D, z) p z
-
 instance Storable AiString where
   sizeOf _ = #size aiString
   alignment _ = #alignment aiString
@@ -189,7 +191,12 @@ instance Storable Matrix3x3 where
     c1 <- (#peek aiMatrix3x3, c1) p
     c2 <- (#peek aiMatrix3x3, c2) p
     c3 <- (#peek aiMatrix3x3, c3) p
-    return $ Matrix3x3 $ fromList $ map fromList [[a1,a2,a3],[b1,b2,b3],[c1,c2,c3]]
+    return $ Matrix3x3 $ fromList $ map fromList 
+      [
+        [a1,a2,a3]
+      , [b1,b2,b3]
+      , [c1,c2,c3]
+      ]
   poke = undefined
 
 instance Storable Matrix4x4 where
@@ -212,7 +219,12 @@ instance Storable Matrix4x4 where
     d2 <- (#peek aiMatrix4x4, d2) p
     d3 <- (#peek aiMatrix4x4, d3) p
     d4 <- (#peek aiMatrix4x4, d4) p
-    return $ Matrix4x4 $ fromList $ map fromList [[a1,a2,a3,a4],[b1,b2,b3,b4],[c1,c2,c3,c4],[d1,d2,d3,d4]]
+    return $ Matrix4x4 $ fromList $ map fromList 
+      [ [a1,a2,a3,a4]
+      , [b1,b2,b3,b4]
+      , [c1,c2,c3,c4]
+      , [d1,d2,d3,d4]
+      ]
   poke = undefined
 
 instance Storable Node where

@@ -18,12 +18,8 @@ module Graphics.Formats.Assimp.Types (
   , PropertyTypeInfo(..)
   , Plane(..)
   , Ray(..)
-  , Color3D(..)
-  , Color4D(..)
   , MemoryInfo(..)
   , Quaternion(..)
-  , Vector2D(..)
-  , Vector3D(..)
   , AiString(..)
   , Matrix3x3(..)
   , Matrix4x4(..)
@@ -48,6 +44,8 @@ module Graphics.Formats.Assimp.Types (
 import C2HS
 import Data.Vector hiding ((++))
 import Data.Bits ((.|.))
+
+import Graphics.Formats.Assimp.Vec
 
 #include "../../assimp/include/assimp.h"        // Plain-C interface
 #include "../../assimp/include/aiScene.h"       // Output data structure
@@ -96,25 +94,15 @@ data Plane = Plane {
 {#pointer *aiPlane as PlanePtr -> Plane#}
 
 data Ray = Ray {
-    rayPos :: Vector3D
-  , rayDir :: Vector3D
+    rayPos :: Vec3D
+  , rayDir :: Vec3D
   } deriving (Show)
 {#pointer *aiRay as RayPtr -> Ray#}
 
-data Color3D = Color3D {
-    color3dR :: Float
-  , color3dG :: Float
-  , color3dB :: Float
-  } deriving (Show)
 {#pointer *aiColor3D as Color3DPtr -> Color3D#}
-
-data Color4D = Color4D {
-    color4dR :: Float
-  , color4dG :: Float
-  , color4dB :: Float
-  , color4dA :: Float
-  } deriving (Show)
 {#pointer *aiColor4D as Color4DPtr -> Color4D#}
+{#pointer *aiVector2D as Vec2DPtr -> Vec2D#}
+{#pointer *aiVector3D as Vec3DPtr -> Vec3D#}
 
 data MemoryInfo = MemoryInfo {
     memoryInfoTextures   :: CUInt
@@ -138,19 +126,6 @@ data Quaternion = Quaternion {
   , quaternionZ :: Float
   } deriving (Show)
 {#pointer *aiQuaternion as QuaternionPtr -> Quaternion#}
-
-data Vector2D = Vector2D {
-    vector2dX :: Float
-  , vector2dY :: Float
-  } deriving (Show)
-{#pointer *aiVector2D as Vector2DPtr -> Vector2D#}
-
-data Vector3D = Vector3D {
-    vector3dX :: Float
-  , vector3dY :: Float
-  , vector3dZ :: Float
-  } deriving (Show)
-{#pointer *aiVector3D as Vector3DPtr -> Vector3D#}
 
 newtype AiString = AiString String deriving (Show)
 {#pointer *aiString as StringPtr -> AiString#}
@@ -214,12 +189,12 @@ data Bone = Bone
 
 data Mesh = Mesh
   { primitiveTypes  :: [PrimitiveType]
-  , vertices        :: [Vector3D]
-  , normals         :: [Vector3D]
-  , tangents        :: [Vector3D]
-  , bitangents      :: [Vector3D]
+  , vertices        :: [Vec3D]
+  , normals         :: [Vec3D]
+  , tangents        :: [Vec3D]
+  , bitangents      :: [Vec3D]
   , colors          :: [Color4D]
-  , textureCoords   :: [Vector3D]
+  , textureCoords   :: [Vec3D]
   , numUVComponents :: CUInt
   , faces           :: [Face]
   , bones           :: [Bone]
@@ -271,16 +246,16 @@ data Texture = Texture {
 {#pointer *aiTexture as TexturePtr -> Texture#}
 
 data UVTransform = UVTransform {
-    translation :: Vector2D
-  , scaling     :: Vector2D
+    translation :: Vec2D
+  , scaling     :: Vec2D
   , rotation    :: Float
   } deriving (Show)
 
 data Light = Light {
     lightName            :: String
   , mType                :: LightSourceType
-  , lightPosition        :: Vector3D
-  , direction            :: Vector3D
+  , lightPosition        :: Vec3D
+  , direction            :: Vec3D
   , attenuationConstant  :: Float
   , attenuationLinear    :: Float
   , attenuationQuadratic :: Float
@@ -294,9 +269,9 @@ data Light = Light {
 
 data Camera = Camera {
     cameraName     :: String
-  , cameraPosition :: Vector3D
-  , up             :: Vector3D
-  , lookAt         :: Vector3D
+  , cameraPosition :: Vec3D
+  , up             :: Vec3D
+  , lookAt         :: Vec3D
   , horizontalFOV  :: Float
   , clipPlaneNear  :: Float
   , clipPlaneFar   :: Float

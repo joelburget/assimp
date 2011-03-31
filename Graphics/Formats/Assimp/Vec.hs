@@ -30,6 +30,7 @@ module Graphics.Formats.Assimp.Vec (
   , len2
   , len
   , normalize
+  , cross
   , avgColor
   ) where
 
@@ -53,6 +54,9 @@ class Vector n a where
   dot   :: Vec n a t -> Vec n a t -> a
   vmap  :: (a -> a) -> Vec n a t -> Vec n a t
   len2  :: Vec n a t -> a
+
+class Vector3d n a where
+  cross :: Vec n a t -> Vec n a t -> Vec n a t
 
 len :: (Floating a, Vector n a) => Vec n a t -> a
 len = sqrt . len2
@@ -132,6 +136,10 @@ instance Vector N3 Double where
   vmap f (Vec3D x y z) = Vec3D (f x) (f y) (f z)
   len2 (Vec3D x y z) = x*x + y*y + z*z
 
+instance Vector3d N3 Double where
+  (Vec3D x1 y1 z1) `cross` (Vec3D x2 y2 z2) = 
+    Vec3D (y1*z2 - z1*y2) (z1*x2 - x1*z2) (x1*y2 - y1*x2)
+
 instance Vector N3 Float where
   data Vec N3 Float t = Vec3F !Float !Float !Float deriving (Show, Eq)
   (Vec3F x1 y1 z1) |+| (Vec3F x2 y2 z2) = Vec3F (x1 + x2) (y1 + y2) (z1 + z2)
@@ -142,6 +150,10 @@ instance Vector N3 Float where
   vmap f (Vec3F x y z) = Vec3F (f x) (f y) (f z)
   len2 (Vec3F x y z) = x*x + y*y + z*z
 
+instance Vector3d N3 Float where
+  (Vec3F x1 y1 z1) `cross` (Vec3F x2 y2 z2) = 
+    Vec3F (y1*z2 - z1*y2) (z1*x2 - x1*z2) (x1*y2 - y1*x2)
+
 instance Vector N3 Int where
   data Vec N3 Int t = Vec3I !Int !Int !Int deriving (Show, Eq)
   (Vec3I x1 y1 z1) |+| (Vec3I x2 y2 z2) = Vec3I (x1 + x2) (y1 + y2) (z1 + z2)
@@ -151,6 +163,10 @@ instance Vector N3 Int where
   (Vec3I x1 y1 z1) `dot` (Vec3I x2 y2 z2) = (x1 * x2) + (y1 * y2) + (z1 * z2)
   vmap f (Vec3I x y z) = Vec3I (f x) (f y) (f z)
   len2 (Vec3I x y z) = x*x + y*y + z*z
+
+instance Vector3d N3 Int where
+  (Vec3I x1 y1 z1) `cross` (Vec3I x2 y2 z2) = 
+    Vec3I (y1*z2 - z1*y2) (z1*x2 - x1*z2) (x1*y2 - y1*x2)
 
 instance Vector N4 Double where
   data Vec N4 Double t = Vec4D !Double !Double !Double !Double deriving (Show, Eq)
