@@ -39,6 +39,7 @@ module Graphics.Formats.Assimp.Types (
   , Texture(..)
   , Texel(..)
   , (.|.)
+  , position
   ) where
 
 import C2HS
@@ -85,16 +86,16 @@ instance Show SceneFlags where
 {#enum aiBlendMode as BlendMode               {underscoreToCase} deriving (Show, Eq)#}
 {#enum aiPropertyTypeInfo as PropertyTypeInfo {underscoreToCase} deriving (Show, Eq)#}
 
-data Plane = Plane {
-    planeA :: Float
+data Plane = Plane 
+  { planeA :: Float
   , planeB :: Float
   , planeC :: Float
   , planeD :: Float
   } deriving (Show)
 {#pointer *aiPlane as PlanePtr -> Plane#}
 
-data Ray = Ray {
-    rayPos :: Vec3D
+data Ray = Ray 
+  { rayPos :: Vec3D
   , rayDir :: Vec3D
   } deriving (Show)
 {#pointer *aiRay as RayPtr -> Ray#}
@@ -104,8 +105,8 @@ data Ray = Ray {
 {#pointer *aiVector2D as Vec2DPtr -> Vec2D#}
 {#pointer *aiVector3D as Vec3DPtr -> Vec3D#}
 
-data MemoryInfo = MemoryInfo {
-    memoryInfoTextures   :: CUInt
+data MemoryInfo = MemoryInfo 
+  { memoryInfoTextures   :: CUInt
   , memoryInfoMaterials  :: CUInt
   , memoryInfoMeshes     :: CUInt
   , memoryInfoNodes      :: CUInt
@@ -119,8 +120,8 @@ data MemoryInfo = MemoryInfo {
 data LogStream
 {#pointer *aiLogStream as LogStreamPtr -> LogStream#}
 
-data Quaternion = Quaternion {
-    quaternionW :: Float
+data Quaternion = Quaternion 
+  { quaternionW :: Float
   , quaternionX :: Float
   , quaternionY :: Float
   , quaternionZ :: Float
@@ -130,35 +131,16 @@ data Quaternion = Quaternion {
 newtype AiString = AiString String deriving (Show)
 {#pointer *aiString as StringPtr -> AiString#}
 
-data Matrix3x3 = Matrix3x3 {
-  matrix3x3 :: Vector (Vector Float)
+data Matrix3x3 = Matrix3x3 
+  { matrix3x3 :: Vector (Vector Float)
   } deriving (Show)
 {#pointer *aiMatrix3x3 as Matrix3x3Ptr -> Matrix3x3#}
 
-data Matrix4x4 = Matrix4x4 {
-  matrix4x4 :: Vector (Vector Float)
+data Matrix4x4 = Matrix4x4 
+  { matrix4x4 :: Vector (Vector Float)
   } deriving (Show)
 {#pointer *aiMatrix4x4 as Matrix4x4Ptr -> Matrix4x4#}
 
-{- From the Assimp source:
- -
- - Nodes are little named entities in the scene that have a place and
- - orientation relative to their parents. Starting from the scene's root node
- - all nodes can have 0 to x child nodes, thus forming a hierarchy. They form
- - the base on which the scene is built on: a node can refer to 0..x meshes,
- - can be referred to by a bone of a mesh or can be animated by a key sequence
- - of an animation. DirectX calls them "frames", others call them "objects", we
- - call them aiNode.
- -
- - A node can potentially refer to single or multiple meshes. The meshes are
- - not stored inside the node, but instead in an array of aiMesh inside the
- - aiScene. A node only refers to them by their array index. This also means
- - that multiple nodes can refer to the same mesh, which provides a simple form
- - of instancing. A mesh referred to by this way lives in the node's local
- - coordinate system. If you want the mesh's orientation in global space, you'd
- - have to concatenate the transformations from the referring node and all of
- - its parents.
--}
 data Node = Node
   { nodeName       :: String
   , transformation :: Matrix4x4
@@ -169,8 +151,7 @@ data Node = Node
 {#pointer *aiNode as NodePtr -> Node#}
 
 data Face = Face
-  {
-    indices :: [CUInt] -- Holds indices defining the face
+  { indices :: [CUInt] -- Holds indices defining the face
   } deriving (Show)
 {#pointer *aiFace as FacePtr -> Face#}
 
@@ -203,29 +184,29 @@ data Mesh = Mesh
   } deriving (Show)
 {#pointer *aiMesh as MeshPtr -> Mesh#}
 
-data MaterialProperty = MaterialProperty {
-    key      :: String
+data MaterialProperty = MaterialProperty 
+  { key      :: String
   , semantic :: TextureType
   , index    :: CUInt
   , mData    :: String
   } deriving (Show)
 {#pointer *aiMaterialProperty as MaterialPropertyPtr -> MaterialProperty#}
 
-data Material = Material {
-    properties :: [MaterialProperty]
+data Material = Material 
+  { properties :: [MaterialProperty]
   } deriving (Show)
 {#pointer *aiMaterial as MaterialPtr -> Material#}
 
-data NodeAnim = NodeAnim {
-    dummy'NodeAnim :: Int
+data NodeAnim = NodeAnim 
+  { dummy'NodeAnim :: Int
   } deriving (Show)
 
-data MeshAnim = MeshAnim {
-    dummy'MeshAnim :: Int
+data MeshAnim = MeshAnim 
+  { dummy'MeshAnim :: Int
   } deriving (Show)
 
-data Animation = Animation {
-    animationName  :: String
+data Animation = Animation 
+  { animationName  :: String
   , duration       :: Double
   , ticksPerSecond :: Double
   , channels       :: [NodeAnim]
@@ -233,26 +214,26 @@ data Animation = Animation {
   } deriving (Show)
 {#pointer *aiAnimation as AnimationPtr -> Animation#}
 
-data Texel = Texel {
-    dummy'Texel :: Int
+data Texel = Texel 
+  { dummy'Texel :: Int
   } deriving (Show)
 
-data Texture = Texture {
-    width        :: CUInt
+data Texture = Texture 
+  { width        :: CUInt
   , height       :: CUInt
   , achFormatHint :: String
   , pcData        :: [Texel]
   } deriving (Show)
 {#pointer *aiTexture as TexturePtr -> Texture#}
 
-data UVTransform = UVTransform {
-    translation :: Vec2D
+data UVTransform = UVTransform 
+  { translation :: Vec2D
   , scaling     :: Vec2D
   , rotation    :: Float
   } deriving (Show)
 
-data Light = Light {
-    lightName            :: String
+data Light = Light 
+  { lightName            :: String
   , mType                :: LightSourceType
   , lightPosition        :: Vec3D
   , direction            :: Vec3D
@@ -267,8 +248,8 @@ data Light = Light {
   } deriving (Show)
 {#pointer *aiLight as LightPtr -> Light#}
 
-data Camera = Camera {
-    cameraName     :: String
+data Camera = Camera 
+  { cameraName     :: String
   , cameraPosition :: Vec3D
   , up             :: Vec3D
   , lookAt         :: Vec3D
@@ -278,6 +259,15 @@ data Camera = Camera {
   , aspect         :: Float
   } deriving (Show)
 {#pointer *aiCamera as CameraPtr -> Camera#}
+
+class Position a where
+  position :: a -> Vec3D
+
+instance Position Camera where
+  position = cameraPosition
+
+instance Position Light where
+  position = lightPosition
 
 data Scene = Scene
   { flags      :: [SceneFlags]

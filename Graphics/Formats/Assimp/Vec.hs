@@ -32,6 +32,7 @@ module Graphics.Formats.Assimp.Vec (
   , normalize
   , cross
   , avgColor
+  , toInt
   ) where
 
 import Data.List (foldl1')
@@ -73,6 +74,14 @@ avgColor :: (Vector n a, Fractional a) => [Vec n a t] -> Vec n a t
 avgColor xs = (foldl1' (|+|) xs) 
   |*| (1 / ((fromInteger . toInteger) (length xs)))
 
+toInt :: (Floating a, Ord a, RealFrac a, Integral b) => a -> b
+toInt x = truncate (((clamp x ** (1 / 2.2)) * 255) + 0.5)
+
+clamp :: (Num a, Ord a) => a -> a
+clamp x | x < 0     = 0
+        | x > 1     = 1
+        | otherwise = x
+
 --
 -- Begin uninteresting code
 --
@@ -105,6 +114,13 @@ instance Vector N2 Double where
   (Vec2D x1 y1) `dot` (Vec2D x2 y2) = (x1 * x2) + (y1 * y2)
   vmap f (Vec2D x y) = Vec2D (f x) (f y)
   len2 (Vec2D x y) = x*x + y*y
+  {-# INLINE (|+|) #-}
+  {-# INLINE (|-|) #-}
+  {-# INLINE (|*|) #-}
+  {-# INLINE vmult #-}
+  {-# INLINE dot #-}
+  {-# INLINE vmap #-}
+  {-# INLINE len2 #-}
 
 instance Vector N2 Float where
   data Vec N2 Float t = Vec2F !Float !Float deriving (Show, Eq)
@@ -115,6 +131,13 @@ instance Vector N2 Float where
   (Vec2F x1 y1) `dot` (Vec2F x2 y2) = (x1 * x2) + (y1 * y2)
   vmap f (Vec2F x y) = Vec2F (f x) (f y)
   len2 (Vec2F x y) = x*x + y*y
+  {-# INLINE (|+|) #-}
+  {-# INLINE (|-|) #-}
+  {-# INLINE (|*|) #-}
+  {-# INLINE vmult #-}
+  {-# INLINE dot #-}
+  {-# INLINE vmap #-}
+  {-# INLINE len2 #-}
 
 instance Vector N2 Int where
   data Vec N2 Int t = Vec2I !Int !Int deriving (Show, Eq)
@@ -125,6 +148,13 @@ instance Vector N2 Int where
   (Vec2I x1 y1) `dot` (Vec2I x2 y2) = (x1 * x2) + (y1 * y2)
   vmap f (Vec2I x y) = Vec2I (f x) (f y)
   len2 (Vec2I x y) = x*x + y*y
+  {-# INLINE (|+|) #-}
+  {-# INLINE (|-|) #-}
+  {-# INLINE (|*|) #-}
+  {-# INLINE vmult #-}
+  {-# INLINE dot #-}
+  {-# INLINE vmap #-}
+  {-# INLINE len2 #-}
 
 instance Vector N3 Double where
   data Vec N3 Double t = Vec3D !Double !Double !Double deriving (Show, Eq)
@@ -135,6 +165,13 @@ instance Vector N3 Double where
   (Vec3D x1 y1 z1) `dot` (Vec3D x2 y2 z2) = (x1 * x2) + (y1 * y2) + (z1 * z2)
   vmap f (Vec3D x y z) = Vec3D (f x) (f y) (f z)
   len2 (Vec3D x y z) = x*x + y*y + z*z
+  {-# INLINE (|+|) #-}
+  {-# INLINE (|-|) #-}
+  {-# INLINE (|*|) #-}
+  {-# INLINE vmult #-}
+  {-# INLINE dot #-}
+  {-# INLINE vmap #-}
+  {-# INLINE len2 #-}
 
 instance Vector3d N3 Double where
   (Vec3D x1 y1 z1) `cross` (Vec3D x2 y2 z2) = 
@@ -149,10 +186,18 @@ instance Vector N3 Float where
   (Vec3F x1 y1 z1) `dot` (Vec3F x2 y2 z2) = (x1 * x2) + (y1 * y2) + (z1 * z2)
   vmap f (Vec3F x y z) = Vec3F (f x) (f y) (f z)
   len2 (Vec3F x y z) = x*x + y*y + z*z
+  {-# INLINE (|+|) #-}
+  {-# INLINE (|-|) #-}
+  {-# INLINE (|*|) #-}
+  {-# INLINE vmult #-}
+  {-# INLINE dot #-}
+  {-# INLINE vmap #-}
+  {-# INLINE len2 #-}
 
 instance Vector3d N3 Float where
   (Vec3F x1 y1 z1) `cross` (Vec3F x2 y2 z2) = 
     Vec3F (y1*z2 - z1*y2) (z1*x2 - x1*z2) (x1*y2 - y1*x2)
+  {-# INLINE cross #-}
 
 instance Vector N3 Int where
   data Vec N3 Int t = Vec3I !Int !Int !Int deriving (Show, Eq)
@@ -163,10 +208,18 @@ instance Vector N3 Int where
   (Vec3I x1 y1 z1) `dot` (Vec3I x2 y2 z2) = (x1 * x2) + (y1 * y2) + (z1 * z2)
   vmap f (Vec3I x y z) = Vec3I (f x) (f y) (f z)
   len2 (Vec3I x y z) = x*x + y*y + z*z
+  {-# INLINE (|+|) #-}
+  {-# INLINE (|-|) #-}
+  {-# INLINE (|*|) #-}
+  {-# INLINE vmult #-}
+  {-# INLINE dot #-}
+  {-# INLINE vmap #-}
+  {-# INLINE len2 #-}
 
 instance Vector3d N3 Int where
   (Vec3I x1 y1 z1) `cross` (Vec3I x2 y2 z2) = 
     Vec3I (y1*z2 - z1*y2) (z1*x2 - x1*z2) (x1*y2 - y1*x2)
+  {-# INLINE cross #-}
 
 instance Vector N4 Double where
   data Vec N4 Double t = Vec4D !Double !Double !Double !Double deriving (Show, Eq)
@@ -177,6 +230,13 @@ instance Vector N4 Double where
   (Vec4D x1 y1 z1 w1) `dot` (Vec4D x2 y2 z2 w2) = (x1 * x2) + (y1 * y2) + (z1 * z2) + (w1 * w2)
   vmap f (Vec4D x y z w) = Vec4D (f x) (f y) (f z) (f w)
   len2 (Vec4D x y z w) = x*x + y*y + z*z + w*w
+  {-# INLINE (|+|) #-}
+  {-# INLINE (|-|) #-}
+  {-# INLINE (|*|) #-}
+  {-# INLINE vmult #-}
+  {-# INLINE dot #-}
+  {-# INLINE vmap #-}
+  {-# INLINE len2 #-}
 
 instance Vector N4 Float where
   data Vec N4 Float t = Vec4F !Float !Float !Float !Float deriving (Show, Eq)
@@ -187,6 +247,13 @@ instance Vector N4 Float where
   (Vec4F x1 y1 z1 w1) `dot` (Vec4F x2 y2 z2 w2) = (x1 * x2) + (y1 * y2) + (z1 * z2) + (w1 * w2)
   vmap f (Vec4F x y z w) = Vec4F (f x) (f y) (f z) (f w)
   len2 (Vec4F x y z w) = x*x + y*y + z*z + w*w
+  {-# INLINE (|+|) #-}
+  {-# INLINE (|-|) #-}
+  {-# INLINE (|*|) #-}
+  {-# INLINE vmult #-}
+  {-# INLINE dot #-}
+  {-# INLINE vmap #-}
+  {-# INLINE len2 #-}
 
 instance Vector N4 Int where
   data Vec N4 Int t = Vec4I !Int !Int !Int !Int deriving (Show, Eq)
@@ -197,3 +264,10 @@ instance Vector N4 Int where
   (Vec4I x1 y1 z1 w1) `dot` (Vec4I x2 y2 z2 w2) = (x1 * x2) + (y1 * y2) + (z1 * z2) + (w1 * w2)
   vmap f (Vec4I x y z w) = Vec4I (f x) (f y) (f z) (f w)
   len2 (Vec4I x y z w) = x*x + y*y + z*z + w*w
+  {-# INLINE (|+|) #-}
+  {-# INLINE (|-|) #-}
+  {-# INLINE (|*|) #-}
+  {-# INLINE vmult #-}
+  {-# INLINE dot #-}
+  {-# INLINE vmap #-}
+  {-# INLINE len2 #-}
