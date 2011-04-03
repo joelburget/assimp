@@ -24,13 +24,13 @@ with' x y = with x (y . castPtr)
 peek' :: (Storable b) => Ptr a -> IO b
 peek' = peek . castPtr
 
-{#fun aiImportFile as importFile
+{#fun unsafe aiImportFile as importFile
   {`String', cFromEnum `PostProcessSteps'} -> `Scene' peek'*#}
 
 -- aiImportFileEx
 -- aiImportFileFromMemory
 
-{#fun aiApplyPostProcessing as applyPostProcessing 
+{#fun unsafe aiApplyPostProcessing as applyPostProcessing 
   {with'* `Scene', cFromEnum `PostProcessSteps'} -> `Scene' peek'*#}
 
 --{#fun aiGetPredefinedLogStream as ^
@@ -41,26 +41,41 @@ peek' = peek . castPtr
 -- aiDetachLogStream
 -- aiDetachAllLogStreams
 
-{#fun aiReleaseImport as releaseImport
+{#fun unsafe aiReleaseImport as releaseImport
   {with'* `Scene'} -> `()'#}
 
-{#fun aiGetErrorString as getErrorString
+{#fun unsafe aiGetErrorString as getErrorString
   {} -> `String'#}
 
-{#fun aiIsExtensionSupported as isExtensionSupported
+{#fun unsafe aiIsExtensionSupported as isExtensionSupported
   {`String'} -> `Bool'#}
 
 -- aiGetExtensionList
 -- aiGetMemoryRequirements
 
-{# fun aiSetImportPropertyInteger as setImportPropertyInteger
+{# fun unsafe aiSetImportPropertyInteger as setImportPropertyInteger
   {`String', `Int'} -> `()'#}
 
-{# fun aiSetImportPropertyFloat as setImportPropertyFloat 
+{# fun unsafe aiSetImportPropertyFloat as setImportPropertyFloat 
   {`String', `Float'} -> `()'#}
 
 --{# fun aiSetImportPropertyString as ^
 --  {`String', `String'} -> `()'#}
+
+-- aiGetLegalString
+-- aiGetVersionMinor
+-- aiGetVersionmajor
+-- aiGetVersionRevision
+-- aiGetCompileFlags
+-- aiGetMaterialProperty
+-- aiGetMaterialFloatArray
+-- aiGetMaterialIntegerArray
+-- aiGetMaterialColor
+-- aiGetMaterialString
+
+-- I'm not sure whether or not I will implement these or not. I guess I'll
+-- check the source to see if they're pure. They could easily be implemented in
+-- pure haskell.
 
 -- aiCreateQuaternionFromMatrix
 -- aiDecomposeMatrix
@@ -72,13 +87,3 @@ peek' = peek . castPtr
 -- aiMultiplyMatrix4
 -- aiIdentityMatrix3
 -- aiIdentityMatrix4
--- aiGetLegalString
--- aiGetVersionMinor
--- aiGetVersionmajor
--- aiGetVersionRevision
--- aiGetCompileFlags
--- aiGetMaterialProperty
--- aiGetMaterialFloatArray
--- aiGetMaterialIntegerArray
--- aiGetMaterialColor
--- aiGetMaterialString

@@ -459,20 +459,20 @@ instance Storable Scene where
   peek p = do
     mFlags         <- liftM toEnumList $ ((#peek aiScene, mFlags) p :: IO CUInt)
     mRootNode      <- (#peek aiScene, mRootNode) p >>= peek
-    mNumMeshes     <- (#peek aiScene, mNumMeshes) p
-    mMeshes'       <- (#peek aiScene, mMeshes) p >>= peekArray mNumMeshes
+    mNumMeshes     <- (#peek aiScene, mNumMeshes) p :: IO CUInt
+    mMeshes'       <- (#peek aiScene, mMeshes) p >>= peekArray (fromIntegral mNumMeshes)
     mMeshes        <- mapM peek mMeshes'
-    mNumMaterials  <- (#peek aiScene, mNumMaterials) p
-    mMaterials'    <- (#peek aiScene, mMaterials) p >>= peekArray mNumMaterials
+    mNumMaterials  <- (#peek aiScene, mNumMaterials) p :: IO CUInt
+    mMaterials'    <- (#peek aiScene, mMaterials) p >>= peekArray (fromIntegral mNumMaterials)
     mMaterials     <- mapM peek mMaterials'
-    mNumAnimations <- (#peek aiScene, mNumAnimations) p
-    mAnimations    <- (#peek aiScene, mAnimations) p >>= peekArrayPtr mNumAnimations
-    mNumTextures   <- (#peek aiScene, mNumTextures) p
-    mTextures      <- (#peek aiScene, mTextures) p >>= peekArrayPtr mNumTextures
-    mNumLights     <- (#peek aiScene, mNumLights) p
-    mLights        <- (#peek aiScene, mLights) p >>= peekArrayPtr mNumLights
-    mNumCameras    <- (#peek aiScene, mNumCameras) p
-    mCameras       <- (#peek aiScene, mCameras) p >>= peekArrayPtr mNumCameras
+    mNumAnimations <- (#peek aiScene, mNumAnimations) p :: IO CUInt
+    mAnimations    <- (#peek aiScene, mAnimations) p >>= peekArrayPtr (fromIntegral mNumAnimations)
+    mNumTextures   <- (#peek aiScene, mNumTextures) p :: IO CUInt
+    mTextures      <- (#peek aiScene, mTextures) p >>= peekArrayPtr (fromIntegral mNumTextures)
+    mNumLights     <- (#peek aiScene, mNumLights) p :: IO CUInt
+    mLights        <- (#peek aiScene, mLights) p >>= peekArrayPtr (fromIntegral mNumLights)
+    mNumCameras    <- (#peek aiScene, mNumCameras) p :: IO CUInt
+    mCameras       <- (#peek aiScene, mCameras) p >>= peekArrayPtr (fromIntegral mNumCameras)
     return $ Scene mFlags mRootNode mMeshes mMaterials mAnimations mTextures 
                    mLights mCameras
   poke p (Scene flags mRootNode meshes materials 

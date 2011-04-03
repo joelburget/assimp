@@ -2,8 +2,15 @@ Name:                assimp
 Version:             0.1
 Synopsis:            The Assimp asset import library
 
--- Description:
-Homepage:            htt://programsthatsmellgood.com/haskell-assimp/
+Description:
+    This library provides FFI bindings to the Assimp asset import
+    library. It requires Assimp to already be installed. For more
+    information about Assimp see the assimp website at
+    http://assimp.sourceforge.net/.
+
+    This release corresponds to Assimp 2.0. When this package stabilizes I
+    intend to track new releases of Assimp by also releasing new versions with
+    the same version number.
 License:             BSD3
 License-file:        LICENSE
 Author:              Joel Burget
@@ -21,9 +28,9 @@ Library
     Graphics.Formats.Assimp.Storable
     Graphics.Formats.Assimp.Fun
     C2HS
-  ghc-options: -Wall
+  ghc-options: -Wall -O
   Build-depends: base > 3 && < 5, haskell98, vector
-  Build-tools: c2hs
+  Build-tools: c2hs, hsc2hs
   Extensions: ForeignFunctionInterface
   Extra-libraries: assimp
   Includes: assimp.h

@@ -269,6 +269,27 @@ instance Position Camera where
 instance Position Light where
   position = lightPosition
 
+class Name a where
+  name :: a -> String
+
+instance Name Node where
+  name = nodeName
+
+instance Name Bone where
+  name = boneName
+
+instance Name Mesh where
+  name = meshName
+
+instance Name Animation where
+  name = animationName
+
+instance Name Light where
+  name = lightName
+
+instance Name Camera where
+  name = cameraName
+
 data Scene = Scene
   { flags      :: [SceneFlags]
   , rootNode   :: Node
