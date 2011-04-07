@@ -37,6 +37,12 @@ module Graphics.Formats.Assimp.Vec (
   , Matrix2D
   , Matrix2I
   , Matrix2F
+  , Matrix3D
+  , Matrix3I
+  , Matrix3F
+  , Matrix4D
+  , Matrix4I
+  , Matrix4F
   , Mat(..)
   , (||+||)
   , (||-||)
@@ -67,18 +73,18 @@ data Color
 
 class Num a => Vector n a where
   data Vec n a :: * -> *
-  (|+|)  :: Vec n a t -> Vec n a t -> Vec n a t
-  (|-|)  :: Vec n a t -> Vec n a t -> Vec n a t
+  (|+|)   :: Vec n a t -> Vec n a t -> Vec n a t
+  (|-|)   :: Vec n a t -> Vec n a t -> Vec n a t
   x |-| y = x |+| (y |* (-1))
-  (|*)   :: Vec n a t -> a -> Vec n a t
-  (|*)   = flip (*|)
-  (*|)   :: a -> Vec n a t -> Vec n a t
-  (*|)   = flip (|*)
-  (|*|)  :: Vec n a t -> Vec n a t -> Vec n a t
-  dot    :: Vec n a t -> Vec n a t -> a
-  vmap   :: (a -> a) -> Vec n a t -> Vec n a t
-  len2   :: Vec n a t -> a
-  vIndex :: Vec n a t -> Int -> a
+  (|*)    :: Vec n a t -> a -> Vec n a t
+  (|*)    = flip (*|)
+  (*|)    :: a -> Vec n a t -> Vec n a t
+  (*|)    = flip (|*)
+  (|*|)   :: Vec n a t -> Vec n a t -> Vec n a t
+  dot     :: Vec n a t -> Vec n a t -> a
+  vmap    :: (a -> a) -> Vec n a t -> Vec n a t
+  len2    :: Vec n a t -> a
+  vIndex  :: Vec n a t -> Int -> a
 
 infixl 6 |+|
 infixl 6 |-|
@@ -94,19 +100,19 @@ class Num a => Matrix n a where
   -- vectors, simply because it's slightly easier to prettyprint and I don't
   -- see a good reason to do it one way or another.
   data Mat n a :: * -> *
-  (||+||) :: Mat n a t -> Mat n a t -> Mat n a t
-  (||-||) :: Mat n a t -> Mat n a t -> Mat n a t
+  (||+||)   :: Mat n a t -> Mat n a t -> Mat n a t
+  (||-||)   :: Mat n a t -> Mat n a t -> Mat n a t
   x ||-|| y = x ||+|| (y ||* (-1))
-  (||*||) :: Mat n a t -> Mat n a t -> Mat n a t
-  (||*|)  :: Mat n a t -> Vec n a t -> Vec n a t
-  m ||*| v = v |*|| (transpose m)
-  (|*||)  :: Vec n a t -> Mat n a t -> Vec n a t
-  v |*|| m = (transpose m) ||*| v
-  (||*)   :: Mat n a t -> a -> Mat n a t
-  (||*)   = flip (*||)
-  (*||)   :: a -> Mat n a t -> Mat n a t
-  (*||)   = flip (||*)
-  mIndex  :: Mat n a t -> Int -> Vec n a t
+  (||*||)   :: Mat n a t -> Mat n a t -> Mat n a t
+  (||*|)    :: Mat n a t -> Vec n a t -> Vec n a t
+  m ||*| v  = v |*|| (transpose m)
+  (|*||)    :: Vec n a t -> Mat n a t -> Vec n a t
+  v |*|| m  = (transpose m) ||*| v
+  (||*)     :: Mat n a t -> a -> Mat n a t
+  (||*)     = flip (*||)
+  (*||)     :: a -> Mat n a t -> Mat n a t
+  (*||)     = flip (||*)
+  mIndex    :: Mat n a t -> Int -> Vec n a t
   transpose :: Mat n a t -> Mat n a t
 
 infixl 6 ||+||
@@ -156,18 +162,18 @@ type Vec2D = Vec N2 Double ()
 type Vec2F = Vec N2 Float ()
 type Vec2I = Vec N2 Int ()
 
-type Vec3D = Vec N3 Double ()
+type Vec3D   = Vec N3 Double ()
 type Color3D = Vec N3 Double Color
-type Vec3F = Vec N3 Float ()
+type Vec3F   = Vec N3 Float ()
 type Color3F = Vec N3 Float Color
-type Vec3I = Vec N3 Int ()
+type Vec3I   = Vec N3 Int ()
 type Color3I = Vec N3 Int Color
 
-type Vec4D = Vec N4 Double ()
+type Vec4D   = Vec N4 Double ()
 type Color4D = Vec N4 Double Color
-type Vec4F = Vec N4 Float ()
+type Vec4F   = Vec N4 Float ()
 type Color4F = Vec N4 Float Color
-type Vec4I = Vec N4 Int ()
+type Vec4I   = Vec N4 Int ()
 type Color4I = Vec N4 Int Color
 
 type Matrix2D = Mat N2 Double ()

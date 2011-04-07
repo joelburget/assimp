@@ -2,6 +2,7 @@
 {-# LANGUAGE EmptyDataDecls #-}
 module Graphics.Formats.Assimp.Types (
     SceneFlags(..)
+  , CompileFlags(..)
   , PostProcessSteps(..)
   , Return(..)
   , Origin(..)
@@ -21,8 +22,6 @@ module Graphics.Formats.Assimp.Types (
   , MemoryInfo(..)
   , Quaternion(..)
   , AiString(..)
-  , Matrix3x3(..)
-  , Matrix4x4(..)
   , Node(..)
   , Face(..)
   , VertexWeight(..)
@@ -43,14 +42,14 @@ module Graphics.Formats.Assimp.Types (
   ) where
 
 import C2HS
-import Data.Vector hiding ((++))
 import Data.Bits ((.|.))
 
 import Graphics.Formats.Assimp.Vec
 
-#include "../../assimp/include/assimp.h"        // Plain-C interface
-#include "../../assimp/include/aiScene.h"       // Output data structure
-#include "../../assimp/include/aiPostProcess.h" // Post processing flags
+#include "assimp.h"        // Plain-C interface
+#include "aiScene.h"       // Output data structure
+#include "aiPostProcess.h" // Post processing flags
+#include "aiVersion.h"     // Version information
 #include "typedefs.h"
 
 {#context lib="assimp"#}
@@ -69,7 +68,14 @@ instance Show SceneFlags where
   show FlagsNonVerboseFormat  = "FlagsNonVerboseFormat"
   show FlagsTerrain           = "FlagsTerrain"
 
-{#enum aiPostProcessSteps as PostProcessSteps {underscoreToCase} deriving (Show, Eq)#}
+{#enum define CompileFlags {ASSIMP_CFLAGS_SHARED         as Shared
+                          , ASSIMP_CFLAGS_STLPORT        as StlPort
+                          , ASSIMP_CFLAGS_DEBUG          as Debug
+                          , ASSIMP_CFLAGS_NOBOOST        as NoBoost
+                          , ASSIMP_CFLAGS_SINGLETHREADED as SingleThreaded
+                          }#}
+
+{#enum aiPostProcessSteps as PostProcessSteps {} with prefix="aiProcess_" deriving (Show, Eq)#}
 {#enum aiReturn as Return                     {underscoreToCase} deriving (Show, Eq)#}
 {#enum aiOrigin as Origin                     {underscoreToCase} deriving (Show, Eq)#}
 {#enum aiDefaultLogStream as DefaultLogStream {underscoreToCase} deriving (Show, Eq)#}
@@ -95,15 +101,17 @@ data Plane = Plane
 {#pointer *aiPlane as PlanePtr -> Plane#}
 
 data Ray = Ray 
-  { rayPos :: Vec3D
-  , rayDir :: Vec3D
+  { rayPos :: Vec3F
+  , rayDir :: Vec3F
   } deriving (Show)
 {#pointer *aiRay as RayPtr -> Ray#}
 
-{#pointer *aiColor3D as Color3DPtr -> Color3D#}
-{#pointer *aiColor4D as Color4DPtr -> Color4D#}
-{#pointer *aiVector2D as Vec2DPtr -> Vec2D#}
-{#pointer *aiVector3D as Vec3DPtr -> Vec3D#}
+{#pointer *aiColor3D as Color3FPtr -> Color3F#}
+{#pointer *aiColor4D as Color4FPtr -> Color4F#}
+{#pointer *aiVector2D as Vec2FPtr -> Vec2F#}
+{#pointer *aiVector3D as Vec3FPtr -> Vec3F#}
+{#pointer *aiMatrix3x3 as Matrix3FPtr -> Matrix3F#}
+{#pointer *aiMatrix4x4 as Matrix4FPtr -> Matrix4F#}
 
 data MemoryInfo = MemoryInfo 
   { memoryInfoTextures   :: CUInt
@@ -131,19 +139,9 @@ data Quaternion = Quaternion
 newtype AiString = AiString String deriving (Show)
 {#pointer *aiString as StringPtr -> AiString#}
 
-data Matrix3x3 = Matrix3x3 
-  { matrix3x3 :: Vector (Vector Float)
-  } deriving (Show)
-{#pointer *aiMatrix3x3 as Matrix3x3Ptr -> Matrix3x3#}
-
-data Matrix4x4 = Matrix4x4 
-  { matrix4x4 :: Vector (Vector Float)
-  } deriving (Show)
-{#pointer *aiMatrix4x4 as Matrix4x4Ptr -> Matrix4x4#}
-
 data Node = Node
   { nodeName       :: String
-  , transformation :: Matrix4x4
+  , transformation :: Matrix4F
   , parent         :: Maybe Node
   , children       :: [Node]
   , nodeMeshes     :: [CUInt] -- Holds indices defining the node
@@ -164,18 +162,18 @@ data VertexWeight = VertexWeight
 data Bone = Bone
   { boneName      :: String
   , weights       :: [VertexWeight]
-  , offpokeMatrix :: Matrix4x4
+  , offpokeMatrix :: Matrix4F
   } deriving (Show)
 {#pointer *aiBone as BonePtr -> Bone#}
 
 data Mesh = Mesh
   { primitiveTypes  :: [PrimitiveType]
-  , vertices        :: [Vec3D]
-  , normals         :: [Vec3D]
-  , tangents        :: [Vec3D]
-  , bitangents      :: [Vec3D]
-  , colors          :: [Color4D]
-  , textureCoords   :: [Vec3D]
+  , vertices        :: [Vec3F]
+  , normals         :: [Vec3F]
+  , tangents        :: [Vec3F]
+  , bitangents      :: [Vec3F]
+  , colors          :: [Color4F]
+  , textureCoords   :: [Vec3F]
   , numUVComponents :: CUInt
   , faces           :: [Face]
   , bones           :: [Bone]
@@ -219,30 +217,30 @@ data Texel = Texel
   } deriving (Show)
 
 data Texture = Texture 
-  { width        :: CUInt
-  , height       :: CUInt
+  { width         :: CUInt
+  , height        :: CUInt
   , achFormatHint :: String
   , pcData        :: [Texel]
   } deriving (Show)
 {#pointer *aiTexture as TexturePtr -> Texture#}
 
 data UVTransform = UVTransform 
-  { translation :: Vec2D
-  , scaling     :: Vec2D
+  { translation :: Vec2F
+  , scaling     :: Vec2F
   , rotation    :: Float
   } deriving (Show)
 
 data Light = Light 
   { lightName            :: String
   , mType                :: LightSourceType
-  , lightPosition        :: Vec3D
-  , direction            :: Vec3D
+  , lightPosition        :: Vec3F
+  , direction            :: Vec3F
   , attenuationConstant  :: Float
   , attenuationLinear    :: Float
   , attenuationQuadratic :: Float
-  , colorDiffuse         :: Color3D
-  , colorSpecular        :: Color3D
-  , colorAmbient         :: Color3D
+  , colorDiffuse         :: Color3F
+  , colorSpecular        :: Color3F
+  , colorAmbient         :: Color3F
   , angleInnerCone       :: Float
   , angleOuterCone       :: Float
   } deriving (Show)
@@ -250,9 +248,9 @@ data Light = Light
 
 data Camera = Camera 
   { cameraName     :: String
-  , cameraPosition :: Vec3D
-  , up             :: Vec3D
-  , lookAt         :: Vec3D
+  , cameraPosition :: Vec3F
+  , up             :: Vec3F
+  , lookAt         :: Vec3F
   , horizontalFOV  :: Float
   , clipPlaneNear  :: Float
   , clipPlaneFar   :: Float
@@ -261,7 +259,7 @@ data Camera = Camera
 {#pointer *aiCamera as CameraPtr -> Camera#}
 
 class Position a where
-  position :: a -> Vec3D
+  position :: a -> Vec3F
 
 instance Position Camera where
   position = cameraPosition
