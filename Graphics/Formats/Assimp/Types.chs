@@ -4,9 +4,9 @@ module Graphics.Formats.Assimp.Types (
     SceneFlags(..)
   , CompileFlags(..)
   , PostProcessSteps(..)
-  , Return(..)
-  , Origin(..)
-  , DefaultLogStream(..)
+--   , Return(..)
+--   , Origin(..)
+--  , DefaultLogStream(..)
   , PrimitiveType(..)
   , LightSourceType(..)
   , TextureOp(..)
@@ -17,7 +17,7 @@ module Graphics.Formats.Assimp.Types (
   , TextureFlags(..)
   , BlendMode(..)
   , PropertyTypeInfo(..)
-  , Plane(..)
+  , Plane3d(..)
   , Ray(..)
   , MemoryInfo(..)
   , Quaternion(..)
@@ -46,6 +46,9 @@ import Data.Bits ((.|.))
 
 import Graphics.Formats.Assimp.Vec
 
+-- Remove the force32bit enums
+#define SWIG
+
 #include "assimp.h"        // Plain-C interface
 #include "aiScene.h"       // Output data structure
 #include "aiPostProcess.h" // Post processing flags
@@ -54,6 +57,8 @@ import Graphics.Formats.Assimp.Vec
 
 {#context lib="assimp"#}
 {#context prefix="ai"#}
+
+-- PostProcessSteps
 
 {#enum define SceneFlags {AI_SCENE_FLAGS_INCOMPLETE         as FlagsIncomplete
                         , AI_SCENE_FLAGS_VALIDATED          as FlagsValidated
@@ -74,31 +79,83 @@ instance Show SceneFlags where
                           , ASSIMP_CFLAGS_NOBOOST        as NoBoost
                           , ASSIMP_CFLAGS_SINGLETHREADED as SingleThreaded
                           }#}
+instance Show CompileFlags where
+  show Shared         = "Shared"
+  show StlPort        = "StlPort"
+  show Debug          = "Debug"
+  show NoBoost        = "NoBoost"
+  show SingleThreaded = "SingleThreaded"
 
 {#enum aiPostProcessSteps as PostProcessSteps {} with prefix="aiProcess_" deriving (Show, Eq)#}
-{#enum aiReturn as Return                     {underscoreToCase} deriving (Show, Eq)#}
-{#enum aiOrigin as Origin                     {underscoreToCase} deriving (Show, Eq)#}
-{#enum aiDefaultLogStream as DefaultLogStream {underscoreToCase} deriving (Show, Eq)#}
-{#enum aiPrimitiveType as PrimitiveType       {underscoreToCase} deriving (Show, Eq)#}
-{#enum aiLightSourceType as LightSourceType   {underscoreToCase} deriving (Show, Eq)#}
+
+data Return = ReturnSuccess
+            | ReturnFailure
+            | ReturnOutofmemory
+            deriving (Show,Eq)
+instance Enum Return where
+  fromEnum ReturnSuccess = 0
+  fromEnum ReturnFailure = (-1)
+  fromEnum ReturnOutofmemory = (-3)
+
+  toEnum 0 = ReturnSuccess
+  toEnum (-1) = ReturnFailure
+  toEnum (-3) = ReturnOutofmemory
+  toEnum unmatched = error ("Return.toEnum: Cannot match " ++ show unmatched)
+
+--{#enum aiOrigin as Origin                     {} with prefix="aiOrigin_" deriving (Show, Eq)#}
+--{#enum aiDefaultLogStream as DefaultLogStream {underscoreToCase} with prefix="aiDefaultLogStream" deriving (Show, Eq)#}
+
+data PrimitiveType = PrimitiveTypePoint
+                   | PrimitiveTypeLine
+                   | PrimitiveTypeTriangle
+                   | PrimitiveTypePolygon
+                   deriving (Show,Eq)
+instance Enum PrimitiveType where
+  fromEnum PrimitiveTypePoint = 1
+  fromEnum PrimitiveTypeLine = 2
+  fromEnum PrimitiveTypeTriangle = 4
+  fromEnum PrimitiveTypePolygon = 8
+
+  toEnum 1 = PrimitiveTypePoint
+  toEnum 2 = PrimitiveTypeLine
+  toEnum 4 = PrimitiveTypeTriangle
+  toEnum 8 = PrimitiveTypePolygon
+  toEnum unmatched = error ("PrimitiveType.toEnum: Cannot match " ++ show unmatched)
+
+data LightSourceType = LightSourceUndefined
+                     | LightSourceDirectional
+                     | LightSourcePoint
+                     | LightSourceSpot
+                     deriving (Show,Eq)
+instance Enum LightSourceType where
+  fromEnum LightSourceUndefined = 0
+  fromEnum LightSourceDirectional = 1
+  fromEnum LightSourcePoint = 2
+  fromEnum LightSourceSpot = 3
+
+  toEnum 0 = LightSourceUndefined
+  toEnum 1 = LightSourceDirectional
+  toEnum 2 = LightSourcePoint
+  toEnum 3 = LightSourceSpot
+  toEnum unmatched = error ("LightSourceType.toEnum: Cannot match " ++ show unmatched)
 
 -- Texture enums
-{#enum aiTextureOp as TextureOp               {underscoreToCase} deriving (Show, Eq)#}
-{#enum aiTextureMapMode as TextureMapMode     {underscoreToCase} deriving (Show, Eq)#}
-{#enum aiTextureMapping as TextureMapping     {underscoreToCase} deriving (Show, Eq)#}
-{#enum aiTextureType as TextureType           {underscoreToCase} deriving (Show, Eq)#}
-{#enum aiShadingMode as ShadingMode           {underscoreToCase} deriving (Show, Eq)#}
-{#enum aiTextureFlags as TextureFlags         {underscoreToCase} deriving (Show, Eq)#}
-{#enum aiBlendMode as BlendMode               {underscoreToCase} deriving (Show, Eq)#}
+{#enum aiTextureOp as TextureOp               {} with prefix="aiTextureOp_" deriving (Show, Eq)#}
+{#enum aiTextureMapMode as TextureMapMode     {} with prefix="aiTextureMapMode_" deriving (Show, Eq)#}
+{#enum aiTextureMapping as TextureMapping     {underscoreToCase} with prefix="aiTextureMapping_" deriving (Show, Eq)#}
+{#enum aiTextureType as TextureType           {underscoreToCase} with prefix="aiTextureType_" deriving (Show, Eq)#}
+{#enum aiShadingMode as ShadingMode           {} with prefix="aiShadingMode_" deriving (Show, Eq)#}
+{#enum aiTextureFlags as TextureFlags         {} with prefix="aiTextureFlags_" deriving (Show, Eq)#}
+{#enum aiBlendMode as BlendMode               {} with prefix="aiBlendMode_" deriving (Show, Eq)#}
 {#enum aiPropertyTypeInfo as PropertyTypeInfo {underscoreToCase} deriving (Show, Eq)#}
 
-data Plane = Plane 
+data Plane3d = Plane3d
   { planeA :: Float
   , planeB :: Float
   , planeC :: Float
   , planeD :: Float
   } deriving (Show)
-{#pointer *aiPlane as PlanePtr -> Plane#}
+{#pointer *aiPlane as PlanePtr -> Plane3d#}
 
 data Ray = Ray 
   { rayPos :: Vec3F

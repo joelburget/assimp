@@ -36,7 +36,7 @@ peekArrayPtr n p = do
   arr  <- mapM peek arr'
   return arr
 
-instance Storable Plane where
+instance Storable Plane3d where
   sizeOf _ = #size aiPlane
   alignment _ = #alignment aiPlane
   peek p = do
@@ -44,8 +44,8 @@ instance Storable Plane where
     b <- (#peek aiPlane, b) p
     c <- (#peek aiPlane, c) p
     d <- (#peek aiPlane, d) p
-    return $ Plane a b c d
-  poke p (Plane a b c d) = do
+    return $ Plane3d a b c d
+  poke p (Plane3d a b c d) = do
     (#poke aiPlane, a) p a
     (#poke aiPlane, b) p b
     (#poke aiPlane, c) p c
