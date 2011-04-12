@@ -5,23 +5,34 @@
 {-# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE CPP #-}
+
+{- |
+   Module      : Graphics.Formats.Assimp.Vec
+   Copyright   : (c) Joel Burget 2011
+   License     : BSD3
+  
+   Maintainer  : joelburget@gmail.com
+   Stability   : Unstable
+   Portability : GHC
+
+   Fast 2-4 dimensional linear algebra for use in Assimp and graphics
+   applications.
+-}
 
 module Graphics.Formats.Assimp.Vec (
-    Vec2D
+    Color
+  , Direction
+  , Location
+  , Vec2D
   , Vec2I
   , Vec2F
   , Vec3D
   , Vec3I
   , Vec3F
-  , Color3D
-  , Color3I
-  , Color3F
   , Vec4D
   , Vec4I
   , Vec4F
-  , Color4D
-  , Color4I
-  , Color4F
   , Vec(..)
   , (|+|)
   , (|-|)
@@ -70,20 +81,31 @@ data N4
 --          Vec3D 1 2 3 :: Vec3D ()
 -- TODO: remove () in lieu of Direction and Location
 data Color
+data Direction
+data Location
 
 class Num a => Vector n a where
   data Vec n a :: * -> *
-  (|+|)   :: Vec n a t -> Vec n a t -> Vec n a t
-  (|-|)   :: Vec n a t -> Vec n a t -> Vec n a t
+  -- | Add vectors
+  (|+|)   :: Vec n a t1 -> Vec n a t2 -> Vec n a t3
+  -- | Subtract vectors
+  (|-|)   :: Vec n a t1 -> Vec n a t2 -> Vec n a t3
   x |-| y = x |+| (y |* (-1))
-  (|*)    :: Vec n a t -> a -> Vec n a t
+  -- | Multiply a vector on the left and a scalar on the right
+  (|*)    :: Vec n a t1 -> a -> Vec n a t2
   (|*)    = flip (*|)
-  (*|)    :: a -> Vec n a t -> Vec n a t
+  -- | Multiply a scalar on the left and a vector on the right
+  (*|)    :: a -> Vec n a t1 -> Vec n a t2
   (*|)    = flip (|*)
-  (|*|)   :: Vec n a t -> Vec n a t -> Vec n a t
-  dot     :: Vec n a t -> Vec n a t -> a
-  vmap    :: (a -> a) -> Vec n a t -> Vec n a t
+  -- | Multiply vectors componentwise
+  (|*|)   :: Vec n a t1 -> Vec n a t2 -> Vec n a t3
+  -- | Dot product
+  dot     :: Vec n a t1 -> Vec n a t2 -> a
+  -- | Apply a function to each element
+  vmap    :: (a -> a) -> Vec n a t1 -> Vec n a t2
+  -- | The squared length of the vector
   len2    :: Vec n a t -> a
+  -- | Get an element, 0-indexed
   vIndex  :: Vec n a t -> Int -> a
 
 infixl 6 |+|
@@ -99,21 +121,30 @@ class Num a => Matrix n a where
   -- Note: I'll be defining matrices as rows of vectors instead of columns of
   -- vectors, simply because it's slightly easier to prettyprint and I don't
   -- see a good reason to do it one way or another.
-  data Mat n a :: * -> *
-  (||+||)   :: Mat n a t -> Mat n a t -> Mat n a t
-  (||-||)   :: Mat n a t -> Mat n a t -> Mat n a t
+  data Mat n a :: *
+  -- | Add matrices
+  (||+||)   :: Mat n a -> Mat n a -> Mat n a 
+  -- | Subtract matrices
+  (||-||)   :: Mat n a -> Mat n a -> Mat n a 
   x ||-|| y = x ||+|| (y ||* (-1))
-  (||*||)   :: Mat n a t -> Mat n a t -> Mat n a t
-  (||*|)    :: Mat n a t -> Vec n a t -> Vec n a t
+  -- | Multiply matrices
+  (||*||)   :: Mat n a -> Mat n a -> Mat n a 
+  -- | Multiply a matrix on the left and a vector on the right
+  (||*|)    :: Mat n a -> Vec n a t -> Vec n a t
   m ||*| v  = v |*|| (transpose m)
-  (|*||)    :: Vec n a t -> Mat n a t -> Vec n a t
+  -- | Multiply a vector on the left and a matrix on the right
+  (|*||)    :: Vec n a t -> Mat n a -> Vec n a t
   v |*|| m  = (transpose m) ||*| v
-  (||*)     :: Mat n a t -> a -> Mat n a t
+  -- | Multiply a vector on the left and a scalar on the right
+  (||*)     :: Mat n a -> a -> Mat n a 
   (||*)     = flip (*||)
-  (*||)     :: a -> Mat n a t -> Mat n a t
+  -- | Multiply a scalar on the left and a matrix on the right
+  (*||)     :: a -> Mat n a -> Mat n a 
   (*||)     = flip (||*)
-  mIndex    :: Mat n a t -> Int -> Vec n a t
-  transpose :: Mat n a t -> Mat n a t
+  -- | Get a row from a matrix, 0-indexed
+  mIndex    :: Mat n a -> Int -> Vec n a ()
+  -- | Transpose a matrix
+  transpose :: Mat n a -> Mat n a 
 
 infixl 6 ||+||
 infixl 6 ||-||
@@ -126,7 +157,7 @@ infixl 7 *||
 class Indexable a b where
   (!) :: a -> Int -> b
 
-instance Matrix n a => Indexable (Mat n a t) (Vec n a t) where
+instance Matrix n a => Indexable (Mat n a) (Vec n a ()) where
   (!) = mIndex
   {-# INLINE (!) #-}
 
@@ -141,7 +172,7 @@ normalize :: (Floating a, Vector n a) => Vec n a t -> Vec n a t
 normalize v = v |* (1 / len v)
 
 -- Clearly this is intended to be used with colors
-avgColor :: (Vector n a, Fractional a) => [Vec n a t] -> Vec n a t
+avgColor :: (Vector n a, Fractional a) => [Vec n a Color] -> Vec n a Color
 avgColor xs = (foldl1' (|+|) xs) 
   |* (1 / ((fromInteger . toInteger) (length xs)))
 
@@ -157,218 +188,129 @@ clamp x | x < 0     = 0
 -- Begin uninteresting code
 --
 
--- Don't include color type synonyms because nobody uses 2-d colors
-type Vec2D = Vec N2 Double ()
-type Vec2F = Vec N2 Float ()
-type Vec2I = Vec N2 Int ()
+-- All of the Vec type synonyms have kind * -> *
+-- Example use: color :: Vec3F Color
+type Vec2D = Vec N2 Double
+type Vec2F = Vec N2 Float
+type Vec2I = Vec N2 Int
 
-type Vec3D   = Vec N3 Double ()
-type Color3D = Vec N3 Double Color
-type Vec3F   = Vec N3 Float ()
-type Color3F = Vec N3 Float Color
-type Vec3I   = Vec N3 Int ()
-type Color3I = Vec N3 Int Color
+type Vec3D = Vec N3 Double
+type Vec3F = Vec N3 Float
+type Vec3I = Vec N3 Int
 
-type Vec4D   = Vec N4 Double ()
-type Color4D = Vec N4 Double Color
-type Vec4F   = Vec N4 Float ()
-type Color4F = Vec N4 Float Color
-type Vec4I   = Vec N4 Int ()
-type Color4I = Vec N4 Int Color
+type Vec4D = Vec N4 Double
+type Vec4F = Vec N4 Float
+type Vec4I = Vec N4 Int
 
-type Matrix2D = Mat N2 Double ()
-type Matrix2F = Mat N2 Float ()
-type Matrix2I = Mat N2 Int ()
+type Matrix2D = Mat N2 Double
+type Matrix2F = Mat N2 Float
+type Matrix2I = Mat N2 Int
 
-type Matrix3D = Mat N3 Double ()
-type Matrix3F = Mat N3 Float ()
-type Matrix3I = Mat N3 Int ()
+type Matrix3D = Mat N3 Double
+type Matrix3F = Mat N3 Float
+type Matrix3I = Mat N3 Int
 
-type Matrix4D = Mat N4 Double ()
-type Matrix4F = Mat N4 Float ()
-type Matrix4I = Mat N4 Int ()
+type Matrix4D = Mat N4 Double
+type Matrix4F = Mat N4 Float
+type Matrix4I = Mat N4 Int
 
-instance Vector N2 Double where
-  data Vec N2 Double t = Vec2D !Double !Double deriving (Show, Eq)
-  (Vec2D x1 y1) |+| (Vec2D x2 y2 ) = Vec2D (x1 + x2) (y1 + y2)
-  (Vec2D x1 y1) |-| (Vec2D x2 y2 ) = Vec2D (x1 - x2) (y1 - y2)
-  (Vec2D x y) |* n = Vec2D (n*x) (n*y)
-  (Vec2D x1 y1) |*| (Vec2D x2 y2) = Vec2D (x1 * x2) (y1 * y2)
-  (Vec2D x1 y1) `dot` (Vec2D x2 y2) = (x1 * x2) + (y1 * y2)
-  vmap f (Vec2D x y) = Vec2D (f x) (f y)
-  len2 (Vec2D x y) = x*x + y*y
-  vIndex (Vec2D x y) 0 = x
-  vIndex (Vec2D x y) 1 = y
-  vIndex _ _ = throw $ IndexOutOfBounds ""
-  {-# INLINE (|+|) #-}
-  {-# INLINE (|-|) #-}
-  {-# INLINE (|*) #-}
-  {-# INLINE (|*|) #-}
-  {-# INLINE dot #-}
-  {-# INLINE vmap #-}
-  {-# INLINE len2 #-}
+#define InstanceVec2(type, constructor)                                     \
+instance Vector N2 type where                                               \
+{ data Vec N2 type t = constructor !type !type deriving (Show, Eq)          \
+; (constructor x1 y1) |+| (constructor x2 y2) = constructor (x1+x2) (y1+y2) \
+; (constructor x1 y1) |-| (constructor x2 y2) = constructor (x1-x2) (y1-y2) \
+; (constructor x y) |* n = constructor (n*x) (n*y)                          \
+; (constructor x1 y1) |*| (constructor x2 y2) = constructor (x1*x2) (y1*y2) \
+; (constructor x1 y1) `dot` (constructor x2 y2) = (x1*x2) + (y1*y2)         \
+; vmap f (constructor x y) = constructor (f x) (f y)                        \
+; len2 (constructor x y) = x*x + y*y                                        \
+; vIndex (constructor x _) 0 = x                                            \
+; vIndex (constructor _ y) 1 = y                                            \
+; vIndex _ _ = throw $ IndexOutOfBounds ""                                  \
+; {-# INLINE (|+|) #-}                                                      \
+; {-# INLINE (|-|) #-}                                                      \
+; {-# INLINE (|*) #-}                                                       \
+; {-# INLINE (|*|) #-}                                                      \
+; {-# INLINE dot #-}                                                        \
+; {-# INLINE vmap #-}                                                       \
+; {-# INLINE len2 #-}                                                       \
+}
 
-instance Vector N2 Float where
-  data Vec N2 Float t = Vec2F !Float !Float deriving (Show, Eq)
-  (Vec2F x1 y1) |+| (Vec2F x2 y2 ) = Vec2F (x1 + x2) (y1 + y2)
-  (Vec2F x1 y1) |-| (Vec2F x2 y2 ) = Vec2F (x1 - x2) (y1 - y2)
-  (Vec2F x y) |* n = Vec2F (n*x) (n*y)
-  (Vec2F x1 y1) |*| (Vec2F x2 y2) = Vec2F (x1 * x2) (y1 * y2)
-  (Vec2F x1 y1) `dot` (Vec2F x2 y2) = (x1 * x2) + (y1 * y2)
-  vmap f (Vec2F x y) = Vec2F (f x) (f y)
-  len2 (Vec2F x y) = x*x + y*y
-  vIndex (Vec2F x y) 0 = x
-  vIndex (Vec2F x y) 1 = y
-  vIndex _ _ = throw $ IndexOutOfBounds ""
-  {-# INLINE (|+|) #-}
-  {-# INLINE (|-|) #-}
-  {-# INLINE (|*) #-}
-  {-# INLINE (|*|) #-}
-  {-# INLINE dot #-}
-  {-# INLINE vmap #-}
-  {-# INLINE len2 #-}
+InstanceVec2(Double, Vec2D)
+InstanceVec2(Float, Vec2F)
+InstanceVec2(Int, Vec2I)
 
-instance Vector N2 Int where
-  data Vec N2 Int t = Vec2I !Int !Int deriving (Show, Eq)
-  (Vec2I x1 y1) |+| (Vec2I x2 y2 ) = Vec2I (x1 + x2) (y1 + y2)
-  (Vec2I x1 y1) |-| (Vec2I x2 y2 ) = Vec2I (x1 - x2) (y1 - y2)
-  (Vec2I x y) |* n = Vec2I (n*x) (n*y)
-  (Vec2I x1 y1) |*| (Vec2I x2 y2) = Vec2I (x1 * x2) (y1 * y2)
-  (Vec2I x1 y1) `dot` (Vec2I x2 y2) = (x1 * x2) + (y1 * y2)
-  vmap f (Vec2I x y) = Vec2I (f x) (f y)
-  len2 (Vec2I x y) = x*x + y*y
-  {-# INLINE (|+|) #-}
-  {-# INLINE (|-|) #-}
-  {-# INLINE (|*) #-}
-  {-# INLINE (|*|) #-}
-  {-# INLINE dot #-}
-  {-# INLINE vmap #-}
-  {-# INLINE len2 #-}
+-- Note we also define cross here
+#define InstanceVec3(type, constructor)                                  \
+instance Vector N3 type where                                            \
+{ data Vec N3 type t = constructor !type !type !type deriving (Show, Eq) \
+; (constructor x1 y1 z1) |+| (constructor x2 y2 z2) =                    \
+    constructor (x1+x2) (y1+y2) (z1+z2)                                  \
+; (constructor x1 y1 z1) |-| (constructor x2 y2 z2) =                    \
+    constructor (x1-x2) (y1-y2) (z1-z2)                                  \
+; (constructor x y z) |* n = constructor (n*x) (n*y) (n*z)               \
+; (constructor x1 y1 z1) |*| (constructor x2 y2 z2) =                    \
+    constructor (x1*x2) (y1*y2) (z1*z2)                                  \
+; (constructor x1 y1 z1) `dot` (constructor x2 y2 z2) =                  \
+    (x1*x2) + (y1*y2) + (z1*z2)                                          \
+; vmap f (constructor x y z) = constructor (f x) (f y) (f z)             \
+; len2 (constructor x y z) = x*x + y*y + z*z                             \
+; vIndex (constructor x _ _) 0 = x                                       \
+; vIndex (constructor _ y _) 1 = y                                       \
+; vIndex (constructor _ _ z) 2 = z                                       \
+; vIndex _ _ = throw $ IndexOutOfBounds ""                               \
+; {-# INLINE (|+|) #-}                                                   \
+; {-# INLINE (|-|) #-}                                                   \
+; {-# INLINE (|*) #-}                                                    \
+; {-# INLINE (|*|) #-}                                                   \
+; {-# INLINE dot #-}                                                     \
+; {-# INLINE vmap #-}                                                    \
+; {-# INLINE len2 #-}                                                    \
+};                                                                       \
+instance Vector3d N3 type where                                          \
+{ (constructor x1 y1 z1) `cross` (constructor x2 y2 z2) =                \
+    constructor (y1*z2 - z1*y2) (z1*x2 - x1*z2) (x1*y2 - y1*x2)          \
+;  {-# INLINE cross #-}                                                  \
+}
 
-instance Indexable Vec2I Int where
-  (Vec2I x y) ! 0 = x
-  (Vec2I x y) ! 1 = y
-  _ ! _ = throw $ IndexOutOfBounds ""
-  {-# INLINE (!) #-}
+InstanceVec3(Double, Vec3D)
+InstanceVec3(Float, Vec3F)
+InstanceVec3(Int, Vec3I)
 
-instance Vector N3 Double where
-  data Vec N3 Double t = Vec3D !Double !Double !Double deriving (Show, Eq)
-  (Vec3D x1 y1 z1) |+| (Vec3D x2 y2 z2) = Vec3D (x1 + x2) (y1 + y2) (z1 + z2)
-  (Vec3D x1 y1 z1) |-| (Vec3D x2 y2 z2) = Vec3D (x1 - x2) (y1 - y2) (z1 - z2)
-  (Vec3D x y z) |* n = Vec3D (n*x) (n*y) (n*z)
-  (Vec3D x1 y1 z1) |*| (Vec3D x2 y2 z2) = Vec3D (x1 * x2) (y1 * y2) (z1 * z2)
-  (Vec3D x1 y1 z1) `dot` (Vec3D x2 y2 z2) = (x1 * x2) + (y1 * y2) + (z1 * z2)
-  vmap f (Vec3D x y z) = Vec3D (f x) (f y) (f z)
-  len2 (Vec3D x y z) = x*x + y*y + z*z
-  {-# INLINE (|+|) #-}
-  {-# INLINE (|-|) #-}
-  {-# INLINE (|*) #-}
-  {-# INLINE (|*|) #-}
-  {-# INLINE dot #-}
-  {-# INLINE vmap #-}
-  {-# INLINE len2 #-}
+#define InstanceVec4(type, constructor)                                        \
+instance Vector N4 type where                                                  \
+{ data Vec N4 type t = constructor !type !type !type !type deriving (Show, Eq) \
+; (constructor x1 y1 z1 w1) |+| (constructor x2 y2 z2 w2) =                    \
+    constructor (x1 + x2) (y1 + y2) (z1 + z2) (w1 + w2)                        \
+; (constructor x1 y1 z1 w1) |-| (constructor x2 y2 z2 w2) =                    \
+    constructor (x1 - x2) (y1 - y2) (z1 - z2) (w1 - w2)                        \
+; (constructor x y z w) |* n = constructor (n*x) (n*y) (n*z) (n*w)             \
+; (constructor x1 y1 z1 w1) |*| (constructor x2 y2 z2 w2) =                    \
+    constructor (x1 * x2) (y1 * y2) (z1 * z2) (w1 * w2)                        \
+; (constructor x1 y1 z1 w1) `dot` (constructor x2 y2 z2 w2) =                  \
+    (x1 * x2) + (y1 * y2) + (z1 * z2) + (w1 * w2)                              \
+; vmap f (constructor x y z w) = constructor (f x) (f y) (f z) (f w)           \
+; len2 (constructor x y z w) = x*x + y*y + z*z + w*w                           \
+; vIndex (constructor x _ _ _) 0 = x                                           \
+; vIndex (constructor _ y _ _) 1 = y                                           \
+; vIndex (constructor _ _ z _) 2 = z                                           \
+; vIndex (constructor _ _ _ w) 3 = w                                           \
+; vIndex _ _ = throw $ IndexOutOfBounds ""                                     \
+; {-# INLINE (|+|) #-}                                                         \
+; {-# INLINE (|-|) #-}                                                         \
+; {-# INLINE (|*) #-}                                                          \
+; {-# INLINE (|*|) #-}                                                         \
+; {-# INLINE dot #-}                                                           \
+; {-# INLINE vmap #-}                                                          \
+; {-# INLINE len2 #-}                                                          \
+}
 
-instance Vector3d N3 Double where
-  (Vec3D x1 y1 z1) `cross` (Vec3D x2 y2 z2) = 
-    Vec3D (y1*z2 - z1*y2) (z1*x2 - x1*z2) (x1*y2 - y1*x2)
-
-instance Vector N3 Float where
-  data Vec N3 Float t = Vec3F !Float !Float !Float deriving (Show, Eq)
-  (Vec3F x1 y1 z1) |+| (Vec3F x2 y2 z2) = Vec3F (x1 + x2) (y1 + y2) (z1 + z2)
-  (Vec3F x1 y1 z1) |-| (Vec3F x2 y2 z2) = Vec3F (x1 - x2) (y1 - y2) (z1 - z2)
-  (Vec3F x y z) |* n = Vec3F (n*x) (n*y) (n*z)
-  (Vec3F x1 y1 z1) |*| (Vec3F x2 y2 z2) = Vec3F (x1 * x2) (y1 * y2) (z1 * z2)
-  (Vec3F x1 y1 z1) `dot` (Vec3F x2 y2 z2) = (x1 * x2) + (y1 * y2) + (z1 * z2)
-  vmap f (Vec3F x y z) = Vec3F (f x) (f y) (f z)
-  len2 (Vec3F x y z) = x*x + y*y + z*z
-  {-# INLINE (|+|) #-}
-  {-# INLINE (|-|) #-}
-  {-# INLINE (|*) #-}
-  {-# INLINE (|*|) #-}
-  {-# INLINE dot #-}
-  {-# INLINE vmap #-}
-  {-# INLINE len2 #-}
-
-instance Vector3d N3 Float where
-  (Vec3F x1 y1 z1) `cross` (Vec3F x2 y2 z2) = 
-    Vec3F (y1*z2 - z1*y2) (z1*x2 - x1*z2) (x1*y2 - y1*x2)
-  {-# INLINE cross #-}
-
-instance Vector N3 Int where
-  data Vec N3 Int t = Vec3I !Int !Int !Int deriving (Show, Eq)
-  (Vec3I x1 y1 z1) |+| (Vec3I x2 y2 z2) = Vec3I (x1 + x2) (y1 + y2) (z1 + z2)
-  (Vec3I x1 y1 z1) |-| (Vec3I x2 y2 z2) = Vec3I (x1 - x2) (y1 - y2) (z1 - z2)
-  (Vec3I x y z) |* n = Vec3I (n*x) (n*y) (n*z)
-  (Vec3I x1 y1 z1) |*| (Vec3I x2 y2 z2) = Vec3I (x1 * x2) (y1 * y2) (z1 * z2)
-  (Vec3I x1 y1 z1) `dot` (Vec3I x2 y2 z2) = (x1 * x2) + (y1 * y2) + (z1 * z2)
-  vmap f (Vec3I x y z) = Vec3I (f x) (f y) (f z)
-  len2 (Vec3I x y z) = x*x + y*y + z*z
-  {-# INLINE (|+|) #-}
-  {-# INLINE (|-|) #-}
-  {-# INLINE (|*) #-}
-  {-# INLINE (|*|) #-}
-  {-# INLINE dot #-}
-  {-# INLINE vmap #-}
-  {-# INLINE len2 #-}
-
-instance Vector3d N3 Int where
-  (Vec3I x1 y1 z1) `cross` (Vec3I x2 y2 z2) = 
-    Vec3I (y1*z2 - z1*y2) (z1*x2 - x1*z2) (x1*y2 - y1*x2)
-  {-# INLINE cross #-}
-
-instance Vector N4 Double where
-  data Vec N4 Double t = Vec4D !Double !Double !Double !Double deriving (Show, Eq)
-  (Vec4D x1 y1 z1 w1) |+| (Vec4D x2 y2 z2 w2) = Vec4D (x1 + x2) (y1 + y2) (z1 + z2) (w1 + w2)
-  (Vec4D x1 y1 z1 w1) |-| (Vec4D x2 y2 z2 w2) = Vec4D (x1 - x2) (y1 - y2) (z1 - z2) (w1 - w2)
-  (Vec4D x y z w) |* n = Vec4D (n*x) (n*y) (n*z) (n*w)
-  (Vec4D x1 y1 z1 w1) |*| (Vec4D x2 y2 z2 w2) = Vec4D (x1 * x2) (y1 * y2) (z1 * z2) (w1 * w2)
-  (Vec4D x1 y1 z1 w1) `dot` (Vec4D x2 y2 z2 w2) = (x1 * x2) + (y1 * y2) + (z1 * z2) + (w1 * w2)
-  vmap f (Vec4D x y z w) = Vec4D (f x) (f y) (f z) (f w)
-  len2 (Vec4D x y z w) = x*x + y*y + z*z + w*w
-  {-# INLINE (|+|) #-}
-  {-# INLINE (|-|) #-}
-  {-# INLINE (|*) #-}
-  {-# INLINE (|*|) #-}
-  {-# INLINE dot #-}
-  {-# INLINE vmap #-}
-  {-# INLINE len2 #-}
-
-instance Vector N4 Float where
-  data Vec N4 Float t = Vec4F !Float !Float !Float !Float deriving (Show, Eq)
-  (Vec4F x1 y1 z1 w1) |+| (Vec4F x2 y2 z2 w2) = Vec4F (x1 + x2) (y1 + y2) (z1 + z2) (w1 + w2)
-  (Vec4F x1 y1 z1 w1) |-| (Vec4F x2 y2 z2 w2) = Vec4F (x1 - x2) (y1 - y2) (z1 - z2) (w1 - w2)
-  (Vec4F x y z w) |* n = Vec4F (n*x) (n*y) (n*z) (n*w)
-  (Vec4F x1 y1 z1 w1) |*| (Vec4F x2 y2 z2 w2) = Vec4F (x1 * x2) (y1 * y2) (z1 * z2) (w1 * w2)
-  (Vec4F x1 y1 z1 w1) `dot` (Vec4F x2 y2 z2 w2) = (x1 * x2) + (y1 * y2) + (z1 * z2) + (w1 * w2)
-  vmap f (Vec4F x y z w) = Vec4F (f x) (f y) (f z) (f w)
-  len2 (Vec4F x y z w) = x*x + y*y + z*z + w*w
-  {-# INLINE (|+|) #-}
-  {-# INLINE (|-|) #-}
-  {-# INLINE (|*) #-}
-  {-# INLINE (|*|) #-}
-  {-# INLINE dot #-}
-  {-# INLINE vmap #-}
-  {-# INLINE len2 #-}
-
-instance Vector N4 Int where
-  data Vec N4 Int t = Vec4I !Int !Int !Int !Int deriving (Show, Eq)
-  (Vec4I x1 y1 z1 w1) |+| (Vec4I x2 y2 z2 w2) = Vec4I (x1 + x2) (y1 + y2) (z1 + z2) (w1 + w2)
-  (Vec4I x1 y1 z1 w1) |-| (Vec4I x2 y2 z2 w2) = Vec4I (x1 - x2) (y1 - y2) (z1 - z2) (w1 - w2)
-  (Vec4I x y z w) |* n = Vec4I (n*x) (n*y) (n*z) (n*w)
-  (Vec4I x1 y1 z1 w1) |*| (Vec4I x2 y2 z2 w2) = Vec4I (x1 * x2) (y1 * y2) (z1 * z2) (w1 * w2)
-  (Vec4I x1 y1 z1 w1) `dot` (Vec4I x2 y2 z2 w2) = (x1 * x2) + (y1 * y2) + (z1 * z2) + (w1 * w2)
-  vmap f (Vec4I x y z w) = Vec4I (f x) (f y) (f z) (f w)
-  len2 (Vec4I x y z w) = x*x + y*y + z*z + w*w
-  {-# INLINE (|+|) #-}
-  {-# INLINE (|-|) #-}
-  {-# INLINE (|*) #-}
-  {-# INLINE (|*|) #-}
-  {-# INLINE dot #-}
-  {-# INLINE vmap #-}
-  {-# INLINE len2 #-}
+InstanceVec4(Double, Vec4D)
+InstanceVec4(Float, Vec4F)
+InstanceVec4(Int, Vec4I)
 
 instance Matrix N2 Double where
-  data Mat N2 Double t = Matrix2D !(Vec N2 Double t) !(Vec N2 Double t) deriving (Show, Eq)
+  data Mat N2 Double = Matrix2D !(Vec N2 Double ()) !(Vec N2 Double ()) deriving (Show, Eq)
   (Matrix2D v1 v2) ||+|| (Matrix2D u1 u2) = Matrix2D (v1|+|u1) (v2|+|u2)
   (Matrix2D v1 v2) ||*|| m = let (Matrix2D u1 u2) = transpose m
     in Matrix2D (Vec2D (v1 `dot` u1) (v1 `dot` u2)) 
@@ -382,7 +324,7 @@ instance Matrix N2 Double where
     Matrix2D (Vec2D x1 x2) (Vec2D y1 y2)
 
 instance Matrix N2 Float where
-  data Mat N2 Float t = Matrix2F !(Vec N2 Float t) !(Vec N2 Float t) deriving (Show, Eq)
+  data Mat N2 Float = Matrix2F !(Vec N2 Float ()) !(Vec N2 Float ()) deriving (Show, Eq)
   (Matrix2F v1 v2) ||+|| (Matrix2F u1 u2) = Matrix2F (v1|+|u1) (v2|+|u2)
   (Matrix2F v1 v2) ||*|| m = let (Matrix2F u1 u2) = transpose m
     in Matrix2F (Vec2F (v1 `dot` u1) (v1 `dot` u2)) 
@@ -396,7 +338,7 @@ instance Matrix N2 Float where
     Matrix2F (Vec2F x1 x2) (Vec2F y1 y2)
 
 instance Matrix N2 Int where
-  data Mat N2 Int t = Matrix2I !(Vec N2 Int t) !(Vec N2 Int t) deriving (Show, Eq)
+  data Mat N2 Int = Matrix2I !(Vec N2 Int ()) !(Vec N2 Int ()) deriving (Show, Eq)
   (Matrix2I v1 v2) ||+|| (Matrix2I u1 u2) = Matrix2I (v1|+|u1) (v2|+|u2)
   (Matrix2I v1 v2) ||*|| m = let (Matrix2I u1 u2) = transpose m
     in Matrix2I (Vec2I (v1 `dot` u1) (v1 `dot` u2)) 
@@ -410,7 +352,7 @@ instance Matrix N2 Int where
     Matrix2I (Vec2I x1 x2) (Vec2I y1 y2)
 
 instance Matrix N3 Double where
-  data Mat N3 Double t = Matrix3D !(Vec N3 Double t) !(Vec N3 Double t) !(Vec N3 Double t) deriving (Show, Eq)
+  data Mat N3 Double = Matrix3D !(Vec N3 Double ()) !(Vec N3 Double ()) !(Vec N3 Double ()) deriving (Show, Eq)
   (Matrix3D v1 v2 v3) ||+|| (Matrix3D u1 u2 u3) = Matrix3D (v1|+|u1) (v2|+|u2) (v3|+|u3)
   (Matrix3D v1 v2 v3) ||*|| m = let (Matrix3D u1 u2 u3) = transpose m
     in Matrix3D (Vec3D (v1 `dot` u1) (v1 `dot` u2) (v1 `dot` u3)) 
@@ -426,7 +368,7 @@ instance Matrix N3 Double where
     Matrix3D (Vec3D x1 x2 x3) (Vec3D y1 y2 y3) (Vec3D z1 z2 z3)
 
 instance Matrix N3 Float where
-  data Mat N3 Float t = Matrix3F !(Vec N3 Float t) !(Vec N3 Float t) !(Vec N3 Float t) deriving (Show, Eq)
+  data Mat N3 Float = Matrix3F !(Vec N3 Float ()) !(Vec N3 Float ()) !(Vec N3 Float ()) deriving (Show, Eq)
   (Matrix3F v1 v2 v3) ||+|| (Matrix3F u1 u2 u3) = Matrix3F (v1|+|u1) (v2|+|u2) (v3|+|u3)
   (Matrix3F v1 v2 v3) ||*|| m = let (Matrix3F u1 u2 u3) = transpose m
     in Matrix3F (Vec3F (v1 `dot` u1) (v1 `dot` u2) (v1 `dot` u3)) 
@@ -442,7 +384,7 @@ instance Matrix N3 Float where
     Matrix3F (Vec3F x1 x2 x3) (Vec3F y1 y2 y3) (Vec3F z1 z2 z3)
 
 instance Matrix N3 Int where
-  data Mat N3 Int t = Matrix3I !(Vec N3 Int t) !(Vec N3 Int t) !(Vec N3 Int t) deriving (Show, Eq)
+  data Mat N3 Int = Matrix3I !(Vec N3 Int ()) !(Vec N3 Int ()) !(Vec N3 Int ()) deriving (Show, Eq)
   (Matrix3I v1 v2 v3) ||+|| (Matrix3I u1 u2 u3) = Matrix3I (v1|+|u1) (v2|+|u2) (v3|+|u3)
   (Matrix3I v1 v2 v3) ||*|| m = let (Matrix3I u1 u2 u3) = transpose m
     in Matrix3I (Vec3I (v1 `dot` u1) (v1 `dot` u2) (v1 `dot` u3)) 
@@ -458,7 +400,7 @@ instance Matrix N3 Int where
     Matrix3I (Vec3I x1 x2 x3) (Vec3I y1 y2 y3) (Vec3I z1 z2 z3)
 
 instance Matrix N4 Double where
-  data Mat N4 Double t = Matrix4D !(Vec N4 Double t) !(Vec N4 Double t) !(Vec N4 Double t) !(Vec N4 Double t) deriving (Show, Eq)
+  data Mat N4 Double = Matrix4D !(Vec N4 Double ()) !(Vec N4 Double ()) !(Vec N4 Double ()) !(Vec N4 Double ()) deriving (Show, Eq)
   (Matrix4D v1 v2 v3 v4) ||+|| (Matrix4D u1 u2 u3 u4) = Matrix4D (v1|+|u1) (v2|+|u2) (v3|+|u3) (v4|+|u4)
   (Matrix4D v1 v2 v3 v4) ||*|| m = let (Matrix4D u1 u2 u3 u4) = transpose m
     in Matrix4D (Vec4D (v1 `dot` u1) (v1 `dot` u2) (v1 `dot` u3) (v1 `dot` u4))
@@ -476,7 +418,7 @@ instance Matrix N4 Double where
     Matrix4D (Vec4D x1 x2 x3 x4) (Vec4D y1 y2 y3 y4) (Vec4D z1 z2 z3 z4) (Vec4D w1 w2 w3 w4)
 
 instance Matrix N4 Float where
-  data Mat N4 Float t = Matrix4F !(Vec N4 Float t) !(Vec N4 Float t) !(Vec N4 Float t) !(Vec N4 Float t) deriving (Show, Eq)
+  data Mat N4 Float = Matrix4F !(Vec N4 Float ()) !(Vec N4 Float ()) !(Vec N4 Float ()) !(Vec N4 Float ()) deriving (Show, Eq)
   (Matrix4F v1 v2 v3 v4) ||+|| (Matrix4F u1 u2 u3 u4) = Matrix4F (v1|+|u1) (v2|+|u2) (v3|+|u3) (v4|+|u4)
   (Matrix4F v1 v2 v3 v4) ||*|| m = let (Matrix4F u1 u2 u3 u4) = transpose m
     in Matrix4F (Vec4F (v1 `dot` u1) (v1 `dot` u2) (v1 `dot` u3) (v1 `dot` u4))
@@ -494,7 +436,7 @@ instance Matrix N4 Float where
     Matrix4F (Vec4F x1 x2 x3 x4) (Vec4F y1 y2 y3 y4) (Vec4F z1 z2 z3 z4) (Vec4F w1 w2 w3 w4)
 
 instance Matrix N4 Int where
-  data Mat N4 Int t = Matrix4I !(Vec N4 Int t) !(Vec N4 Int t) !(Vec N4 Int t) !(Vec N4 Int t) deriving (Show, Eq)
+  data Mat N4 Int = Matrix4I !(Vec N4 Int ()) !(Vec N4 Int ()) !(Vec N4 Int ()) !(Vec N4 Int ()) deriving (Show, Eq)
   (Matrix4I v1 v2 v3 v4) ||+|| (Matrix4I u1 u2 u3 u4) = Matrix4I (v1|+|u1) (v2|+|u2) (v3|+|u3) (v4|+|u4)
   (Matrix4I v1 v2 v3 v4) ||*|| m = let (Matrix4I u1 u2 u3 u4) = transpose m
     in Matrix4I (Vec4I (v1 `dot` u1) (v1 `dot` u2) (v1 `dot` u3) (v1 `dot` u4))
