@@ -35,5 +35,5 @@ Library
   Extra-libraries: assimp
   Includes: assimp.h
   Include-dirs: 
-    assimp/include/
+    include/
     Graphics/Formats/
