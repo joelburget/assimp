@@ -21,10 +21,7 @@
 -}
 
 module Graphics.Formats.Assimp.Vec (
-    Color
-  , Direction
-  , Location
-  , Vec2D
+    Vec2D
   , Vec2I
   , Vec2F
   , Vec3D
@@ -76,37 +73,29 @@ data N2
 data N3
 data N4
 
--- Plain vector or color, intended to be used as a phantom type
--- example: Vec3D 1 2 3 :: Vec3D Color
---          Vec3D 1 2 3 :: Vec3D ()
--- TODO: remove () in lieu of Direction and Location
-data Color
-data Direction
-data Location
-
 class Num a => Vector n a where
-  data Vec n a :: * -> *
+  data Vec n a :: *
   -- | Add vectors
-  (|+|)   :: Vec n a t1 -> Vec n a t2 -> Vec n a t3
+  (|+|)   :: Vec n a -> Vec n a -> Vec n a
   -- | Subtract vectors
-  (|-|)   :: Vec n a t1 -> Vec n a t2 -> Vec n a t3
+  (|-|)   :: Vec n a -> Vec n a -> Vec n a
   x |-| y = x |+| (y |* (-1))
   -- | Multiply a vector on the left and a scalar on the right
-  (|*)    :: Vec n a t1 -> a -> Vec n a t2
+  (|*)    :: Vec n a -> a -> Vec n a
   (|*)    = flip (*|)
   -- | Multiply a scalar on the left and a vector on the right
-  (*|)    :: a -> Vec n a t1 -> Vec n a t2
+  (*|)    :: a -> Vec n a -> Vec n a
   (*|)    = flip (|*)
   -- | Multiply vectors componentwise
-  (|*|)   :: Vec n a t1 -> Vec n a t2 -> Vec n a t3
+  (|*|)   :: Vec n a -> Vec n a -> Vec n a
   -- | Dot product
-  dot     :: Vec n a t1 -> Vec n a t2 -> a
+  dot     :: Vec n a -> Vec n a -> a
   -- | Apply a function to each element
-  vmap    :: (a -> a) -> Vec n a t1 -> Vec n a t2
+  vmap    :: (a -> a) -> Vec n a -> Vec n a
   -- | The squared length of the vector
-  len2    :: Vec n a t -> a
+  len2    :: Vec n a -> a
   -- | Get an element, 0-indexed
-  vIndex  :: Vec n a t -> Int -> a
+  vIndex  :: Vec n a -> Int -> a
 
 infixl 6 |+|
 infixl 6 |-|
@@ -115,7 +104,7 @@ infixl 7 |*
 infixl 7 *|
 
 class Vector3d n a where
-  cross :: Vec n a t -> Vec n a t -> Vec n a t
+  cross :: Vec n a -> Vec n a -> Vec n a 
 
 class Num a => Matrix n a where
   -- Note: I'll be defining matrices as rows of vectors instead of columns of
@@ -130,10 +119,10 @@ class Num a => Matrix n a where
   -- | Multiply matrices
   (||*||)   :: Mat n a -> Mat n a -> Mat n a 
   -- | Multiply a matrix on the left and a vector on the right
-  (||*|)    :: Mat n a -> Vec n a t -> Vec n a t
+  (||*|)    :: Mat n a -> Vec n a -> Vec n a 
   m ||*| v  = v |*|| (transpose m)
   -- | Multiply a vector on the left and a matrix on the right
-  (|*||)    :: Vec n a t -> Mat n a -> Vec n a t
+  (|*||)    :: Vec n a -> Mat n a -> Vec n a 
   v |*|| m  = (transpose m) ||*| v
   -- | Multiply a vector on the left and a scalar on the right
   (||*)     :: Mat n a -> a -> Mat n a 
@@ -142,7 +131,7 @@ class Num a => Matrix n a where
   (*||)     :: a -> Mat n a -> Mat n a 
   (*||)     = flip (||*)
   -- | Get a row from a matrix, 0-indexed
-  mIndex    :: Mat n a -> Int -> Vec n a ()
+  mIndex    :: Mat n a -> Int -> Vec n a
   -- | Transpose a matrix
   transpose :: Mat n a -> Mat n a 
 
@@ -157,22 +146,22 @@ infixl 7 *||
 class Indexable a b where
   (!) :: a -> Int -> b
 
-instance Matrix n a => Indexable (Mat n a) (Vec n a ()) where
+instance Matrix n a => Indexable (Mat n a) (Vec n a) where
   (!) = mIndex
   {-# INLINE (!) #-}
 
-instance Vector n a => Indexable (Vec n a t) a where
+instance Vector n a => Indexable (Vec n a) a where
   (!) = vIndex
   {-# INLINE (!) #-}
 
-len :: (Floating a, Vector n a) => Vec n a t -> a
+len :: (Floating a, Vector n a) => Vec n a -> a
 len = sqrt . len2
 
-normalize :: (Floating a, Vector n a) => Vec n a t -> Vec n a t
+normalize :: (Floating a, Vector n a) => Vec n a -> Vec n a
 normalize v = v |* (1 / len v)
 
 -- Clearly this is intended to be used with colors
-avgColor :: (Vector n a, Fractional a) => [Vec n a Color] -> Vec n a Color
+avgColor :: (Vector n a, Fractional a) => [Vec n a] -> Vec n a
 avgColor xs = (foldl1' (|+|) xs) 
   |* (1 / ((fromInteger . toInteger) (length xs)))
 
@@ -216,7 +205,7 @@ type Matrix4I = Mat N4 Int
 
 #define InstanceVec2(typ, constructor)                                      \
 instance Vector N2 typ where                                                \
-{ data Vec N2 typ t = constructor !typ !typ deriving (Show, Eq)             \
+{ data Vec N2 typ = constructor !typ !typ deriving (Show, Eq)             \
 ; (constructor x1 y1) |+| (constructor x2 y2) = constructor (x1+x2) (y1+y2) \
 ; (constructor x1 y1) |-| (constructor x2 y2) = constructor (x1-x2) (y1-y2) \
 ; (constructor x y) |* n = constructor (n*x) (n*y)                          \
@@ -243,7 +232,7 @@ InstanceVec2(Int, Vec2I)
 -- Note we also define cross here
 #define InstanceVec3(typ, constructor)                               \
 instance Vector N3 typ where                                         \
-{ data Vec N3 typ t = constructor !typ !typ !typ deriving (Show, Eq) \
+{ data Vec N3 typ = constructor !typ !typ !typ deriving (Show, Eq) \
 ; (constructor x1 y1 z1) |+| (constructor x2 y2 z2) =                \
     constructor (x1+x2) (y1+y2) (z1+z2)                              \
 ; (constructor x1 y1 z1) |-| (constructor x2 y2 z2) =                \
@@ -279,7 +268,7 @@ InstanceVec3(Int, Vec3I)
 
 #define InstanceVec4(typ, constructor)                                    \
 instance Vector N4 typ where                                              \
-{ data Vec N4 typ t = constructor !typ !typ !typ !typ deriving (Show, Eq) \
+{ data Vec N4 typ = constructor !typ !typ !typ !typ deriving (Show, Eq) \
 ; (constructor x1 y1 z1 w1) |+| (constructor x2 y2 z2 w2) =               \
     constructor (x1 + x2) (y1 + y2) (z1 + z2) (w1 + w2)                   \
 ; (constructor x1 y1 z1 w1) |-| (constructor x2 y2 z2 w2) =               \
@@ -311,7 +300,7 @@ InstanceVec4(Int, Vec4I)
 
 #define InstanceMatrix2(typ, constructor, subconstructor)                             \
 instance Matrix N2 typ where                                                          \
-{ data Mat N2 typ = constructor !(Vec N2 typ ()) !(Vec N2 typ ()) deriving (Show, Eq) \
+{ data Mat N2 typ = constructor !(Vec N2 typ) !(Vec N2 typ) deriving (Show, Eq) \
 ; (constructor v1 v2) ||+|| (constructor u1 u2) = constructor (v1|+|u1) (v2|+|u2)     \
 ; (constructor v1 v2) ||*|| m = let (constructor u1 u2) = transpose m                 \
     in constructor (subconstructor (v1 `dot` u1) (v1 `dot` u2))                       \
@@ -332,9 +321,9 @@ InstanceMatrix2(Int, Matrix2I, Vec2I)
 #define InstanceMatrix3(typ, constructor, subconstructor)                     \
 instance Matrix N3 typ where                                                  \
 { data Mat N3 typ = constructor                                               \
-  !(Vec N3 typ ())                                                            \
-  !(Vec N3 typ ())                                                            \
-  !(Vec N3 typ ())                                                            \
+  !(Vec N3 typ)                                                            \
+  !(Vec N3 typ)                                                            \
+  !(Vec N3 typ)                                                            \
     deriving (Show, Eq)                                                       \
 ; (constructor v1 v2 v3) ||+|| (constructor u1 u2 u3) =                       \
     constructor (v1|+|u1) (v2|+|u2) (v3|+|u3)                                 \
@@ -364,10 +353,10 @@ InstanceMatrix3(Int, Matrix3I, Vec3I)
 #define InstanceMatrix4(typ, constructor, subconstructor)                                   \
 instance Matrix N4 typ where                                                                \
 { data Mat N4 typ = constructor                                                             \
-  !(Vec N4 typ ())                                                                          \
-  !(Vec N4 typ ())                                                                          \
-  !(Vec N4 typ ())                                                                          \
-  !(Vec N4 typ ())                                                                          \
+  !(Vec N4 typ)                                                                          \
+  !(Vec N4 typ)                                                                          \
+  !(Vec N4 typ)                                                                          \
+  !(Vec N4 typ)                                                                          \
     deriving (Show, Eq)                                                                     \
 ; (constructor v1 v2 v3 v4) ||+|| (constructor u1 u2 u3 u4) =                               \
     constructor (v1|+|u1) (v2|+|u2) (v3|+|u3) (v4|+|u4)                                     \
