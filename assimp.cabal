@@ -23,7 +23,6 @@ Cabal-version:       >=1.2
 Library
   Exposed-modules: Graphics.Formats.Assimp
   Other-modules:
-    Graphics.Formats.Assimp.Vec
     Graphics.Formats.Assimp.Types
     Graphics.Formats.Assimp.Storable
     Graphics.Formats.Assimp.Fun
