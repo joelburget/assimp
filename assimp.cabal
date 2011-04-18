@@ -29,7 +29,7 @@ Library
     Graphics.Formats.Assimp.Fun
     C2HS
   ghc-options: -Wall -O
-  Build-depends: base > 3 && < 5, haskell98
+  Build-depends: base > 3 && < 5, haskell98, vect >= 0.4.6 && < 0.5
   Build-tools: c2hs, hsc2hs
   Extensions: ForeignFunctionInterface
   Extra-libraries: assimp

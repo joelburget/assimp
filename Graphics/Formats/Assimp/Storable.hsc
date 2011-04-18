@@ -12,9 +12,9 @@ import Foreign.Marshal.Array
 import Control.Monad (liftM, liftM2, (>>=), join)
 import Control.Applicative ((<$>), (<*>))
 import Data.Bits ((.&.))
+import Data.Vect.Float (Vec2(..), Vec3(..), Vec4(..), Mat3(..), Mat4(..))
 
 import Graphics.Formats.Assimp.Types
-import Graphics.Formats.Assimp.Vec
 
 #include "../../assimp/include/assimp.h"        // Plain-C interface
 #include "../../assimp/include/aiScene.h"       // Output data structure
@@ -55,8 +55,8 @@ instance Storable Ray where
   sizeOf _ = #size aiRay
   alignment _ = #alignment aiRay
   peek p = do
-    pos <- (#peek aiRay, pos) p
-    dir <- (#peek aiRay, dir) p
+    (Vec3F pos) <- (#peek aiRay, pos) p
+    (Vec3F dir) <- (#peek aiRay, dir) p
     return $ Ray pos dir
   poke p (Ray pos dir) = do
     (#poke aiRay, pos) p pos
@@ -68,8 +68,8 @@ instance Storable Vec2F where
   peek p = do
     x <- (#peek aiVector2D, x) p
     y <- (#peek aiVector2D, y) p
-    return $ Vec2F x y
-  poke p (Vec2F x y) = do
+    return $ Vec2F $ Vec2 x y
+  poke p (Vec2F (Vec2 x y)) = do
     (#poke aiVector2D, x) p x
     (#poke aiVector2D, y) p y
 
@@ -80,8 +80,8 @@ instance Storable Vec3F where
     x <- (#peek aiVector3D, x) p
     y <- (#peek aiVector3D, y) p
     z <- (#peek aiVector3D, z) p
-    return $ Vec3F x y z
-  poke p (Vec3F x y z) = do
+    return $ Vec3F $ Vec3 x y z
+  poke p (Vec3F (Vec3 x y z)) = do
     (#poke aiVector3D, x) p x
     (#poke aiVector3D, y) p y
     (#poke aiVector3D, z) p z
@@ -93,8 +93,8 @@ instance Storable Color3F where
     r <- (#peek aiColor3D, r) p
     g <- (#peek aiColor3D, g) p
     b <- (#peek aiColor3D, b) p
-    return $ Vec3F r g b
-  poke p (Vec3F r g b) = do
+    return $ Color3F $ Vec3 r g b
+  poke p (Color3F (Vec3 r g b)) = do
     (#poke aiColor3D, r) p r
     (#poke aiColor3D, g) p g
     (#poke aiColor3D, b) p b
@@ -107,8 +107,8 @@ instance Storable Color4F where
     g <- (#peek aiColor4D, g) p
     b <- (#peek aiColor4D, b) p
     a <- (#peek aiColor4D, a) p
-    return $ Vec4F r g b a
-  poke p (Vec4F r g b a) = do
+    return $ Color4F $ Vec4 r g b a
+  poke p (Color4F (Vec4 r g b a)) = do
     (#poke aiColor4D, r) p r
     (#poke aiColor4D, g) p g
     (#poke aiColor4D, b) p b
@@ -140,12 +140,10 @@ instance Storable MemoryInfo where
 instance Storable Quaternion where
   sizeOf _ = #size aiQuaternion
   alignment _ = #alignment aiQuaternion
-  peek p = do
-    w <- (#peek aiQuaternion, w) p
-    x <- (#peek aiQuaternion, x) p
-    y <- (#peek aiQuaternion, y) p
-    z <- (#peek aiQuaternion, z) p
-    return $ Quaternion w x y z
+  peek p = Quaternion <$> (#peek aiQuaternion, w) p
+                      <*> (#peek aiQuaternion, w) p
+                      <*> (#peek aiQuaternion, w) p
+                      <*> (#peek aiQuaternion, w) p
   poke p (Quaternion w x y z) = do
     (#poke aiQuaternion, w) p w
     (#poke aiQuaternion, x) p x
@@ -168,7 +166,7 @@ instance Storable AiString where
         -- the pointer, so we have to create a pointer.
         str <- peekCStringLen (p `plusPtr` (#offset aiString, data), len)
         return $ AiString str
-          
+
   poke p (AiString dat) = do
     (#poke aiString, length) p $ length dat
     str <- newCString $ dat
@@ -177,7 +175,7 @@ instance Storable AiString where
 aiStringToString :: AiString -> String
 aiStringToString (AiString s) = s
 
-instance Storable Matrix3F where
+instance Storable Mat3F where
   sizeOf _ = #size aiMatrix3x3
   alignment _ = #alignment aiMatrix3x3
   peek p = do
@@ -190,13 +188,13 @@ instance Storable Matrix3F where
     c1 <- (#peek aiMatrix3x3, c1) p
     c2 <- (#peek aiMatrix3x3, c2) p
     c3 <- (#peek aiMatrix3x3, c3) p
-    return $ Matrix3F
-      (Vec3F a1 a2 a3)
-      (Vec3F b1 b2 b3)
-      (Vec3F c1 c2 c3)
+    return $ Mat3F $ Mat3
+      (Vec3 a1 a2 a3)
+      (Vec3 b1 b2 b3)
+      (Vec3 c1 c2 c3)
   poke = undefined
 
-instance Storable Matrix4F where
+instance Storable Mat4F where
   sizeOf _ = #size aiMatrix4x4
   alignment _ = #alignment aiMatrix4x4
   peek p = do
@@ -216,11 +214,11 @@ instance Storable Matrix4F where
     d2 <- (#peek aiMatrix4x4, d2) p
     d3 <- (#peek aiMatrix4x4, d3) p
     d4 <- (#peek aiMatrix4x4, d4) p
-    return $ Matrix4F
-      (Vec4F a1 a2 a3 a4)
-      (Vec4F b1 b2 b3 b4)
-      (Vec4F c1 c2 c3 c4)
-      (Vec4F d1 d2 d3 d4)
+    return $ Mat4F $ Mat4
+      (Vec4 a1 a2 a3 a4)
+      (Vec4 b1 b2 b3 b4)
+      (Vec4 c1 c2 c3 c4)
+      (Vec4 d1 d2 d3 d4)
   poke = undefined
 
 instance Storable Node where
@@ -301,28 +299,33 @@ instance Storable Mesh where
   peek p = do
     -- Note for some reason I had to shift the bits right by 1 but I don't
     -- think that should have been necessary.
-    mPrimitiveTypes <- liftM (toEnumList . (flip shiftR 1)) 
-                              ((#peek aiMesh, mPrimitiveTypes) p :: IO CUInt)
-    mNumVs <- liftM fromIntegral $ 
-                ((#peek aiMesh, mNumVertices) p :: IO CUInt)
-    mVertices    <- (#peek aiMesh, mVertices) p        >>= peekArray  mNumVs
-    mNormals     <- (#peek aiMesh, mNormals) p         >>= peekArray' mNumVs
-    mTangents    <- (#peek aiMesh, mTangents) p        >>= peekArray' mNumVs
-    mBitangents  <- (#peek aiMesh, mBitangents) p      >>= peekArray' mNumVs
-    mColors      <- (#peek aiMesh, mColors) p          >>= peekArray' mNumVs
-    mTextureCoords <- (#peek aiMesh, mTextureCoords) p >>= peekArray' mNumVs
+    mPrimitiveTypes  <- liftM (toEnumList . (flip shiftR 1))
+                        ((#peek aiMesh, mPrimitiveTypes) p :: IO CUInt)
+    mNumVs           <- liftM fromIntegral
+                        $ ((#peek aiMesh, mNumVertices) p :: IO CUInt)
+    mVertices        <- liftM (map (\(Vec3F x) -> x))   
+                        $ (#peek aiMesh, mVertices) p      >>= peekArray  mNumVs
+    mNormals         <- liftM (map (\(Vec3F x) -> x))   
+                        $ (#peek aiMesh, mNormals) p       >>= peekArray' mNumVs
+    mTangents        <- liftM (map (\(Vec3F x) -> x))   
+                        $ (#peek aiMesh, mTangents) p      >>= peekArray' mNumVs
+    mBitangents      <- liftM (map (\(Vec3F x) -> x))   
+                        $ (#peek aiMesh, mBitangents) p    >>= peekArray' mNumVs
+    mColors          <- liftM (map (\(Color4F x) -> x)) 
+                        $ (#peek aiMesh, mColors) p        >>= peekArray' mNumVs
+    mTextureCoords   <- liftM (map (\(Vec3F x) -> x))   
+                        $ (#peek aiMesh, mTextureCoords) p >>= peekArray' mNumVs
     mNumUVComponents <- (#peek aiMesh, mNumUVComponents) p
-    mNumFaces <- liftM fromIntegral ((#peek aiMesh, mNumFaces) p :: IO CUInt)
-    mFaces <- (#peek aiMesh, mFaces) p >>= peekArray' mNumFaces
-    -- mBones <- join $ liftM2 peekArrayPtr ((#peek aiMesh, mNumBones) p) 
-    --                                      ((#peek aiMesh, mBones) p)
-    mBones <- join $ peekArrayPtr <$> ((#peek aiMesh, mNumBones) p) 
-                                  <*> ((#peek aiMesh, mBones) p)
-    mMaterialIndex <- (#peek aiMesh, mMaterialIndex) p
-    mName <- liftM aiStringToString $ (#peek aiMesh, mName) p
-    return $ Mesh 
-               mPrimitiveTypes mVertices mNormals mTangents mBitangents 
-               mColors mTextureCoords mNumUVComponents mFaces mBones 
+    mNumFaces        <- liftM fromIntegral 
+                        ((#peek aiMesh, mNumFaces) p :: IO CUInt)
+    mFaces           <- (#peek aiMesh, mFaces) p >>= peekArray' mNumFaces
+    mBones           <- join $ peekArrayPtr <$> ((#peek aiMesh, mNumBones) p)
+                                            <*> ((#peek aiMesh, mBones) p)
+    mMaterialIndex   <- (#peek aiMesh, mMaterialIndex) p
+    mName            <- liftM aiStringToString $ (#peek aiMesh, mName) p
+    return $ Mesh
+               mPrimitiveTypes mVertices mNormals mTangents mBitangents
+               mColors mTextureCoords mNumUVComponents mFaces mBones
                mMaterialIndex mName
   poke = undefined
 
@@ -360,8 +363,8 @@ instance Storable Material where
   sizeOf _ = #size aiMaterial
   alignment _ = #alignment aiMaterial
   peek p = do
-    mProperties <- join $ liftM2 peekArrayPtr 
-      (liftM fromIntegral ((#peek aiMaterial, mNumProperties) p :: IO CUInt)) 
+    mProperties <- join $ liftM2 peekArrayPtr
+      (liftM fromIntegral ((#peek aiMaterial, mNumProperties) p :: IO CUInt))
       ((#peek aiMaterial, mProperties) p)
     return $ Material mProperties
   poke p (Material mProperties) = do
@@ -389,19 +392,19 @@ instance Storable Light where
   sizeOf _ = #size aiLight
   alignment _ = #alignment aiLight
   peek p = do
-    mName                 <- liftM aiStringToString $ (#peek aiLight, mName) p
-    mType                 <- liftM toEnum $ (#peek aiLight, mType) p
-    mPosition             <- (#peek aiLight, mPosition) p
-    mDirection            <- (#peek aiLight, mDirection) p
-    mAttenuationConstant  <- (#peek aiLight, mAttenuationConstant) p
-    mAttenuationLinear    <- (#peek aiLight, mAttenuationLinear) p
-    mAttenuationQuadratic <- (#peek aiLight, mAttenuationQuadratic) p
-    mColorDiffuse         <- (#peek aiLight, mColorDiffuse) p
-    mColorSpecular        <- (#peek aiLight, mColorSpecular) p
-    mColorAmbient         <- (#peek aiLight, mColorAmbient) p
-    mAngleInnerCone       <- (#peek aiLight, mAngleInnerCone) p
-    mAngleOuterCone       <- (#peek aiLight, mAngleOuterCone) p
-    return $ Light 
+    mName                    <- liftM aiStringToString $ (#peek aiLight, mName) p
+    mType                    <- liftM toEnum $ (#peek aiLight, mType) p
+    (Vec3F mPosition)        <- (#peek aiLight, mPosition) p
+    (Vec3F mDirection)       <- (#peek aiLight, mDirection) p
+    mAttenuationConstant     <- (#peek aiLight, mAttenuationConstant) p
+    mAttenuationLinear       <- (#peek aiLight, mAttenuationLinear) p
+    mAttenuationQuadratic    <- (#peek aiLight, mAttenuationQuadratic) p
+    (Color3F mColorDiffuse)  <- (#peek aiLight, mColorDiffuse) p
+    (Color3F mColorSpecular) <- (#peek aiLight, mColorSpecular) p
+    (Color3F mColorAmbient)  <- (#peek aiLight, mColorAmbient) p
+    mAngleInnerCone          <- (#peek aiLight, mAngleInnerCone) p
+    mAngleOuterCone          <- (#peek aiLight, mAngleOuterCone) p
+    return $ Light
                mName mType mPosition mDirection mAttenuationConstant
                mAttenuationLinear mAttenuationQuadratic mColorDiffuse
                mColorSpecular mColorAmbient mAngleInnerCone mAngleOuterCone
@@ -414,7 +417,7 @@ instance Storable Texture where
     mWidth <- (#peek aiTexture, mWidth) p
     mHeight <- (#peek aiTexture, mHeight) p
     -- Should achFormatHint be included?
-    achFormatHint <- (#peek aiTexture, achFormatHint) p >>= peekCString 
+    achFormatHint <- (#peek aiTexture, achFormatHint) p >>= peekCString
     pcData' <- (#peek aiTexture, pcData) p
     pcData <- if mHeight == 0
               then peekArray (fromIntegral mWidth) pcData'
@@ -433,9 +436,9 @@ instance Storable Camera where
   alignment _ = #alignment aiCamera
   peek p = do
     mName <- liftM aiStringToString $ (#peek aiCamera, mName) p
-    mPosition <- (#peek aiCamera, mPosition) p
-    mUp <- (#peek aiCamera, mUp) p
-    mLookAt <- (#peek aiCamera, mLookAt) p
+    (Vec3F mPosition) <- (#peek aiCamera, mPosition) p
+    (Vec3F mUp) <- (#peek aiCamera, mUp) p
+    (Vec3F mLookAt) <- (#peek aiCamera, mLookAt) p
     mHorizontalFOV <- (#peek aiCamera, mHorizontalFOV) p
     mClipPlaneNear <- (#peek aiCamera, mClipPlaneNear) p
     mClipPlaneFar <- (#peek aiCamera, mClipPlaneFar) p
@@ -471,11 +474,11 @@ instance Storable Scene where
     mLights        <- (#peek aiScene, mLights) p >>= peekArrayPtr (fromIntegral mNumLights)
     mNumCameras    <- (#peek aiScene, mNumCameras) p :: IO CUInt
     mCameras       <- (#peek aiScene, mCameras) p >>= peekArrayPtr (fromIntegral mNumCameras)
-    return $ Scene mFlags mRootNode mMeshes mMaterials mAnimations mTextures 
+    return $ Scene mFlags mRootNode mMeshes mMaterials mAnimations mTextures
                    mLights mCameras
-  poke p (Scene flags mRootNode meshes materials 
+  poke p (Scene flags mRootNode meshes materials
                 animations textures lights cameras) = do
-    -- (#poke aiScene, mFlags) p $ fromEnum flags 
+    -- (#poke aiScene, mFlags) p $ fromEnum flags
     (#poke aiScene, mRootNode) p mRootNode
     (#poke aiScene, mNumMeshes) p $ length meshes
     newArray meshes >>= (#poke aiScene, mMeshes) p

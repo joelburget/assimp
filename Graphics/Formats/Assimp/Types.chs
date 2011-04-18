@@ -19,6 +19,13 @@ module Graphics.Formats.Assimp.Types (
   , PropertyTypeInfo(..)
   , Plane3d(..)
   , Ray(..)
+  , Vec2F(Vec2F)
+  , Vec3F(Vec3F)
+  , Vec4F(Vec4F)
+  , Mat3F(Mat3F)
+  , Mat4F(Mat4F)
+  , Color3F(Color3F)
+  , Color4F(Color4F)
   , MemoryInfo(..)
   , Quaternion(..)
   , AiString(..)
@@ -44,7 +51,7 @@ module Graphics.Formats.Assimp.Types (
 import C2HS
 import Data.Bits ((.|.))
 
-import Graphics.Formats.Assimp.Vec
+import Data.Vect.Float
 
 -- Remove the force32bit enums
 #define SWIG
@@ -158,17 +165,25 @@ data Plane3d = Plane3d
 {#pointer *aiPlane as PlanePtr -> Plane3d#}
 
 data Ray = Ray 
-  { rayPos :: Vec3F
-  , rayDir :: Vec3F
+  { rayPos :: Vec3
+  , rayDir :: Vec3
   } deriving (Show)
 {#pointer *aiRay as RayPtr -> Ray#}
 
-{#pointer *aiColor3D as Color3FPtr -> Color3F#}
-{#pointer *aiColor4D as Color4FPtr -> Color4F#}
-{#pointer *aiVector2D as Vec2FPtr -> Vec2F#}
-{#pointer *aiVector3D as Vec3FPtr -> Vec3F#}
-{#pointer *aiMatrix3x3 as Matrix3FPtr -> Matrix3F#}
-{#pointer *aiMatrix4x4 as Matrix4FPtr -> Matrix4F#}
+newtype Vec2F = Vec2F Vec2
+newtype Vec3F = Vec3F Vec3
+newtype Vec4F = Vec4F Vec4
+newtype Mat3F = Mat3F Mat3
+newtype Mat4F = Mat4F Mat4
+newtype Color3F = Color3F Vec3
+newtype Color4F = Color4F Vec4
+
+{#pointer *aiColor3D as Color3Ptr -> Color3F#}
+{#pointer *aiColor4D as Color4Ptr -> Color4F#}
+{#pointer *aiVector2D as Vec2Ptr -> Vec2#}
+{#pointer *aiVector3D as Vec3Ptr -> Vec3#}
+{#pointer *aiMatrix3x3 as Mat3Ptr -> Mat3#}
+{#pointer *aiMatrix4x4 as Mat4Ptr -> Mat4#}
 
 data MemoryInfo = MemoryInfo 
   { memoryInfoTextures   :: CUInt
@@ -198,7 +213,7 @@ newtype AiString = AiString String deriving (Show)
 
 data Node = Node
   { nodeName       :: String
-  , transformation :: Matrix4F
+  , transformation :: Mat4
   , parent         :: Maybe Node
   , children       :: [Node]
   , nodeMeshes     :: [CUInt] -- Holds indices defining the node
@@ -219,18 +234,18 @@ data VertexWeight = VertexWeight
 data Bone = Bone
   { boneName      :: String
   , weights       :: [VertexWeight]
-  , offpokeMatrix :: Matrix4F
+  , offpokeMatrix :: Mat4
   } deriving (Show)
 {#pointer *aiBone as BonePtr -> Bone#}
 
 data Mesh = Mesh
   { primitiveTypes  :: [PrimitiveType]
-  , vertices        :: [Vec3F]
-  , normals         :: [Vec3F]
-  , tangents        :: [Vec3F]
-  , bitangents      :: [Vec3F]
-  , colors          :: [Color4F]
-  , textureCoords   :: [Vec3F]
+  , vertices        :: [Vec3]
+  , normals         :: [Vec3]
+  , tangents        :: [Vec3]
+  , bitangents      :: [Vec3]
+  , colors          :: [Vec4]
+  , textureCoords   :: [Vec3]
   , numUVComponents :: CUInt
   , faces           :: [Face]
   , bones           :: [Bone]
@@ -282,22 +297,22 @@ data Texture = Texture
 {#pointer *aiTexture as TexturePtr -> Texture#}
 
 data UVTransform = UVTransform 
-  { translation :: Vec2F
-  , scaling     :: Vec2F
+  { translation :: Vec2
+  , scaling     :: Vec2
   , rotation    :: Float
   } deriving (Show)
 
-data Light = Light 
+data Light = Light
   { lightName            :: String
   , mType                :: LightSourceType
-  , lightPosition        :: Vec3F
-  , direction            :: Vec3F
+  , lightPosition        :: Vec3
+  , direction            :: Vec3
   , attenuationConstant  :: Float
   , attenuationLinear    :: Float
   , attenuationQuadratic :: Float
-  , colorDiffuse         :: Color3F
-  , colorSpecular        :: Color3F
-  , colorAmbient         :: Color3F
+  , colorDiffuse         :: Vec3
+  , colorSpecular        :: Vec3
+  , colorAmbient         :: Vec3
   , angleInnerCone       :: Float
   , angleOuterCone       :: Float
   } deriving (Show)
@@ -305,9 +320,9 @@ data Light = Light
 
 data Camera = Camera 
   { cameraName     :: String
-  , cameraPosition :: Vec3F
-  , up             :: Vec3F
-  , lookAt         :: Vec3F
+  , cameraPosition :: Vec3
+  , up             :: Vec3
+  , lookAt         :: Vec3
   , horizontalFOV  :: Float
   , clipPlaneNear  :: Float
   , clipPlaneFar   :: Float
@@ -316,7 +331,7 @@ data Camera = Camera
 {#pointer *aiCamera as CameraPtr -> Camera#}
 
 class Position a where
-  position :: a -> Vec3F
+  position :: a -> Vec3
 
 instance Position Camera where
   position = cameraPosition
