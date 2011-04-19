@@ -54,14 +54,14 @@ All data structures mirror those in the original library. See [the
 documentation](http://assimp.sourceforge.net/lib_html/index.html) for
 more information.
 
-Post-processing flags.
-    > processing = CalcTangentSpace
-    >          .|. Triangulate
-    >          .|. JoinIdenticalVertices
-    >          .|. SortByPType
+    -- Post-processing flags.
+    processing = CalcTangentSpace
+             .|. Triangulate
+             .|. JoinIdenticalVertices
+             .|. SortByPType
 
-Just call `importFile` with the name of the file and the
-post-processing flags.
-    > main = do
-    >   args <- getArgs
-    >   scene <- importFile "model.ply" processing
+    -- Just call `importFile` with the name of the file and the
+    -- post-processing flags.
+    main = do
+      args <- getArgs
+      scene <- importFile "model.ply" processing
