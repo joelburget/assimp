@@ -1,9 +1,7 @@
 Assimp
 ======
 
-NOTE: This is unfinished. It won't even compile yet.
-
-FFI bindings for Assimp - asset import library. Supports the following formats:
+FFI bindings for [Assimp](http://assimp.sourceforge.net) - asset import library. Supports the following formats:
 
 - Collada ( *.dae;*.xml )
 - Blender ( *.blend ) 3
@@ -48,3 +46,22 @@ FFI bindings for Assimp - asset import library. Supports the following formats:
 2: Indicates very limited support - many of the format's features don't map to Assimp's data structures.
 
 3: These formats support animations, but ASSIMP doesn't yet support them (or they're buggy)
+
+Example
+-------
+
+All data structures mirror those in the original library. See [the
+documentation](http://assimp.sourceforge.net/lib_html/index.html) for
+more information.
+
+Post-processing flags.
+> processing = CalcTangentSpace
+>          .|. Triangulate
+>          .|. JoinIdenticalVertices
+>          .|. SortByPType
+
+Just call `importFile` with the name of the file and the
+post-processing flags.
+> main = do
+>   args <- getArgs
+>   scene <- importFile "model.ply" processing
