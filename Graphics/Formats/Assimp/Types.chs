@@ -4,7 +4,7 @@ module Graphics.Formats.Assimp.Types (
     SceneFlags(..)
   , CompileFlags(..)
   , PostProcessSteps(..)
---   , Return(..)
+  , Return(..)
 --   , Origin(..)
 --  , DefaultLogStream(..)
   , PrimitiveType(..)
@@ -13,10 +13,12 @@ module Graphics.Formats.Assimp.Types (
   , TextureMapMode(..)
   , TextureMapping(..)
   , TextureType(..)
-  , ShadingMode(..)
+  , ShadingMode(..)       -- ?
   , TextureFlags(..)
   , BlendMode(..)
   , PropertyTypeInfo(..)
+  , MatKey(..)
+  , matKeyToTuple
   , Plane3d(..)
   , Ray(..)
   , Vec2F(Vec2F)
@@ -98,16 +100,16 @@ instance Show CompileFlags where
 
 data Return = ReturnSuccess
             | ReturnFailure
-            | ReturnOutofmemory
+            | ReturnOutOfMemory
             deriving (Show,Eq)
 instance Enum Return where
   fromEnum ReturnSuccess = 0
   fromEnum ReturnFailure = (-1)
-  fromEnum ReturnOutofmemory = (-3)
+  fromEnum ReturnOutOfMemory = (-3)
 
   toEnum 0 = ReturnSuccess
   toEnum (-1) = ReturnFailure
-  toEnum (-3) = ReturnOutofmemory
+  toEnum (-3) = ReturnOutOfMemory
   toEnum unmatched = error ("Return.toEnum: Cannot match " ++ show unmatched)
 
 --{#enum aiOrigin as Origin                     {} with prefix="aiOrigin_" deriving (Show, Eq)#}
@@ -156,6 +158,68 @@ instance Enum LightSourceType where
 {#enum aiTextureFlags as TextureFlags         {} with prefix="aiTextureFlags_" deriving (Show, Eq)#}
 {#enum aiBlendMode as BlendMode               {} with prefix="aiBlendMode_" deriving (Show, Eq)#}
 {#enum aiPropertyTypeInfo as PropertyTypeInfo {underscoreToCase} deriving (Show, Eq)#}
+
+data MatKey = KeyName
+            | KeyTwoSided
+            | KeyShadingModel
+            | KeyEnableWireframe
+            | KeyBlendFunc
+            | KeyOpacity
+            | KeyBumpScaling
+            | KeyShininess
+            | KeyReflectivity
+            | KeyShininessStrength
+            | KeyRefraction
+            | KeyColorDiffuse
+            | KeyColorAmbient
+            | KeyColorSpecular
+            | KeyColorEmissive
+            | KeyColorTransparent
+            | KeyColorReflective
+            | KeyGlobalBackgroundImage
+            | KeyTexture TextureType Word
+            | KeyUvWSrc TextureType Word
+            | KeyTexOp TextureType Word
+            | KeyMapping TextureType Word
+            | KeyTexBlend TextureType Word
+            | KeyMappingModeU TextureType Word
+            | KeyMappingModeV TextureType Word
+            | KeyTexMapAxis TextureType Word
+            | KeyUvTransform TextureType Word
+            | KeyTexFlags TextureType Word
+
+matKeyToTuple :: MatKey -> (String, Word, Word)
+matKeyToTuple KeyName = ("?mat.name", 0, 0)
+matKeyToTuple KeyTwoSided = ("$mat.twosided", 0, 0)
+matKeyToTuple KeyShadingModel = ("$mat.shadingm", 0, 0)
+matKeyToTuple KeyEnableWireframe = ("$mat.wireframe", 0, 0)
+matKeyToTuple KeyBlendFunc = ("$mat.blend", 0, 0)
+matKeyToTuple KeyOpacity = ("$mat.opacity", 0, 0)
+matKeyToTuple KeyBumpScaling = ("$mat.bumpscaling", 0, 0)
+matKeyToTuple KeyShininess = ("$mat.shininess", 0, 0)
+matKeyToTuple KeyReflectivity = ("$mat.reflectivity", 0, 0)
+matKeyToTuple KeyShininessStrength = ("$mat.shinpercent", 0, 0)
+matKeyToTuple KeyRefraction = ("$mat.refracti", 0, 0)
+matKeyToTuple KeyColorDiffuse = ("$clr.diffuse", 0, 0)
+matKeyToTuple KeyColorAmbient = ("$clr.ambient", 0, 0)
+matKeyToTuple KeyColorSpecular = ("$clr.specular", 0, 0)
+matKeyToTuple KeyColorEmissive = ("$clr.emissive", 0, 0)
+matKeyToTuple KeyColorTransparent = ("$clr.transparent", 0, 0)
+matKeyToTuple KeyColorReflective = ("$clr.reflective", 0, 0)
+matKeyToTuple KeyGlobalBackgroundImage = ("?bg.global", 0, 0)
+matKeyToTuple (KeyTexture tType i) = ("$tex.file", fromEnum' tType, i)
+matKeyToTuple (KeyUvWSrc tType i) = ("$tex.uvwsrc", fromEnum' tType, i)
+matKeyToTuple (KeyTexOp tType i) = ("$tex.op", fromEnum' tType, i)
+matKeyToTuple (KeyMapping tType i) = ("$tex.mapping", fromEnum' tType, i)
+matKeyToTuple (KeyTexBlend tType i) = ("$tex.blend", fromEnum' tType, i)
+matKeyToTuple (KeyMappingModeU tType i) = ("$tex.mapmodeu", fromEnum' tType, i)
+matKeyToTuple (KeyMappingModeV tType i) = ("$tex.mapmodev", fromEnum' tType, i)
+matKeyToTuple (KeyTexMapAxis tType i) = ("$tex.mapaxis", fromEnum' tType, i)
+matKeyToTuple (KeyUvTransform tType i) = ("$tex.uvtrafo", fromEnum' tType, i)
+matKeyToTuple (KeyTexFlags tType i) = ("$tex.flags", fromEnum' tType, i)
+
+fromEnum' :: TextureType -> Word
+fromEnum' = fromInteger . toInteger . fromEnum
 
 data Plane3d = Plane3d
   { planeA :: Float
