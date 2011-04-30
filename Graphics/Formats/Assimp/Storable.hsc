@@ -45,11 +45,7 @@ instance Storable Plane3d where
     c <- (#peek aiPlane, c) p
     d <- (#peek aiPlane, d) p
     return $ Plane3d a b c d
-  poke p (Plane3d a b c d) = do
-    (#poke aiPlane, a) p a
-    (#poke aiPlane, b) p b
-    (#poke aiPlane, c) p c
-    (#poke aiPlane, d) p d
+  poke = undefined
 
 instance Storable Ray where
   sizeOf _ = #size aiRay
@@ -58,9 +54,7 @@ instance Storable Ray where
     (Vec3F pos) <- (#peek aiRay, pos) p
     (Vec3F dir) <- (#peek aiRay, dir) p
     return $ Ray pos dir
-  poke p (Ray pos dir) = do
-    (#poke aiRay, pos) p pos
-    (#poke aiRay, dir) p dir
+  poke = undefined
 
 instance Storable Vec2F where
   sizeOf _ = #size aiVector2D
@@ -69,9 +63,7 @@ instance Storable Vec2F where
     x <- (#peek aiVector2D, x) p
     y <- (#peek aiVector2D, y) p
     return $ Vec2F $ Vec2 x y
-  poke p (Vec2F (Vec2 x y)) = do
-    (#poke aiVector2D, x) p x
-    (#poke aiVector2D, y) p y
+  poke = undefined
 
 instance Storable Vec3F where
   sizeOf _ = #size aiVector3D
@@ -81,10 +73,7 @@ instance Storable Vec3F where
     y <- (#peek aiVector3D, y) p
     z <- (#peek aiVector3D, z) p
     return $ Vec3F $ Vec3 x y z
-  poke p (Vec3F (Vec3 x y z)) = do
-    (#poke aiVector3D, x) p x
-    (#poke aiVector3D, y) p y
-    (#poke aiVector3D, z) p z
+  poke = undefined
 
 instance Storable Color3F where
   sizeOf _ = #size aiColor3D
@@ -94,10 +83,7 @@ instance Storable Color3F where
     g <- (#peek aiColor3D, g) p
     b <- (#peek aiColor3D, b) p
     return $ Color3F $ Vec3 r g b
-  poke p (Color3F (Vec3 r g b)) = do
-    (#poke aiColor3D, r) p r
-    (#poke aiColor3D, g) p g
-    (#poke aiColor3D, b) p b
+  poke = undefined
 
 instance Storable Color4F where
   sizeOf _ = #size aiColor4D
@@ -108,11 +94,7 @@ instance Storable Color4F where
     b <- (#peek aiColor4D, b) p
     a <- (#peek aiColor4D, a) p
     return $ Color4F $ Vec4 r g b a
-  poke p (Color4F (Vec4 r g b a)) = do
-    (#poke aiColor4D, r) p r
-    (#poke aiColor4D, g) p g
-    (#poke aiColor4D, b) p b
-    (#poke aiColor4D, a) p a
+  poke = undefined
 
 instance Storable MemoryInfo where
   sizeOf _ = #size aiMemoryInfo
@@ -127,15 +109,7 @@ instance Storable MemoryInfo where
     lights <- (#peek aiMemoryInfo, lights) p
     total <- (#peek aiMemoryInfo, total) p
     return $ MemoryInfo text materials meshes nodes animations cameras lights total
-  poke p (MemoryInfo te ma me no an ca li to) = do
-    (#poke aiMemoryInfo, textures) p te
-    (#poke aiMemoryInfo, materials) p ma
-    (#poke aiMemoryInfo, meshes) p me
-    (#poke aiMemoryInfo, nodes) p no
-    (#poke aiMemoryInfo, animations) p an
-    (#poke aiMemoryInfo, cameras) p ca
-    (#poke aiMemoryInfo, lights) p li
-    (#poke aiMemoryInfo, total) p to
+  poke = undefined
 
 instance Storable Quaternion where
   sizeOf _ = #size aiQuaternion
@@ -144,11 +118,7 @@ instance Storable Quaternion where
                       <*> (#peek aiQuaternion, w) p
                       <*> (#peek aiQuaternion, w) p
                       <*> (#peek aiQuaternion, w) p
-  poke p (Quaternion w x y z) = do
-    (#poke aiQuaternion, w) p w
-    (#poke aiQuaternion, x) p x
-    (#poke aiQuaternion, y) p y
-    (#poke aiQuaternion, z) p z
+  poke = undefined
 
 instance Storable AiString where
   sizeOf _ = #size aiString
@@ -167,10 +137,7 @@ instance Storable AiString where
         str <- peekCStringLen (p `plusPtr` (#offset aiString, data), len)
         return $ AiString str
 
-  poke p (AiString dat) = do
-    (#poke aiString, length) p $ length dat
-    str <- newCString $ dat
-    (#poke aiString, data) p str
+  poke = undefined
 
 aiStringToString :: AiString -> String
 aiStringToString (AiString s) = s
@@ -238,14 +205,7 @@ instance Storable Node where
     mMeshes' <- (#peek aiNode, mMeshes) p
     mMeshes <- peekArray (fromIntegral mNumMeshes) mMeshes'
     return $ Node mName mTransformation mParent mChildren mMeshes
-  poke p (Node name trans par chil mes) = do
-    (#poke aiNode, mName) p $ AiString name
-    (#poke aiNode, mTransformation) p trans
-    (#poke aiNode, mParent) p par
-    (#poke aiNode, mNumChildren) p $ length chil
-    newArray chil >>= (#poke aiNode, mChildren) p
-    (#poke aiNode, mNumMeshes) p $ length mes
-    newArray mes >>= (#poke aiNode, mMeshes) p
+  poke = undefined
 
 instance Storable Face where
   sizeOf _ = #size aiFace
@@ -255,9 +215,7 @@ instance Storable Face where
     mIndices <- (#peek aiFace, mIndices) p
     lst <- peekArray mNumIndices mIndices
     return $ Face lst
-  poke p (Face mIndices) = do
-    (#poke aiFace, mNumIndices) p $ length mIndices
-    newArray mIndices >>= ((#poke aiFace, mIndices) p)
+  poke = undefined
 
 instance Storable VertexWeight where
   sizeOf _ = #size aiVertexWeight
@@ -266,9 +224,7 @@ instance Storable VertexWeight where
     mV <- (#peek aiVertexWeight, mVertexId) p
     mW <- (#peek aiVertexWeight, mWeight) p
     return $ VertexWeight mV mW
-  poke p (VertexWeight mV mW) = do
-    (#poke aiVertexWeight, mVertexId) p mV
-    (#poke aiVertexWeight, mWeight) p mW
+  poke = undefined
 
 instance Storable Bone where
   sizeOf _ = #size aiBone
@@ -280,11 +236,7 @@ instance Storable Bone where
     lst <- peekArray mNW mW
     mO <- (#peek aiBone, mOffsetMatrix) p
     return $ Bone mN lst mO
-  poke p (Bone mN mW mO) = do
-    (#poke aiBone, mName) p $ AiString mN
-    (#poke aiBone, mNumWeights) p $ length mW
-    newArray mW >>= ((#poke aiBone, mWeights) p)
-    (#poke aiBone, mOffsetMatrix) p mO
+  poke = undefined
 
 toEnumList :: Enum a => CUInt -> [a]
 toEnumList ls =
@@ -340,24 +292,19 @@ instance Storable MaterialProperty where
     mData <- (#peek aiMaterialProperty, mData) p >>= peekCString
     -- return $ MaterialProperty mKey mSemantic mIndex mType mData
     return $ MaterialProperty mKey mSemantic mIndex mData
-  poke p (MaterialProperty mKey mSemantic mIndex mData) = do
-    (#poke aiMaterialProperty, mKey) p $ AiString mKey
-    (#poke aiMaterialProperty, mSemantic) p $ fromEnum mSemantic
-    (#poke aiMaterialProperty, mIndex) p mIndex
-    -- (#poke aiMaterialProperty, mType) p $ fromEnum mType
-    (#poke aiMaterialProperty, mData) p $ AiString mData
+  poke = undefined
 
 instance Storable NodeAnim where
   sizeOf _ = #size aiNodeAnim
   alignment _ = #alignment aiNodeAnim
   peek _ = return $ NodeAnim 0
-  poke _ _ = return ()
+  poke = undefined
 
 instance Storable MeshAnim where
   sizeOf _ = #size aiMeshAnim
   alignment _ = #alignment aiMeshAnim
   peek _ = return $ MeshAnim 0
-  poke _ _ = return ()
+  poke = undefined
 
 instance Storable Material where
   sizeOf _ = #size aiMaterial
@@ -367,10 +314,7 @@ instance Storable Material where
       (liftM fromIntegral ((#peek aiMaterial, mNumProperties) p :: IO CUInt))
       ((#peek aiMaterial, mProperties) p)
     return $ Material mProperties
-  poke p (Material mProperties) = do
-    (#poke aiMaterial, mNumProperties) p $ length mProperties
-    (#poke aiMaterial, mNumAllocated) p $ length mProperties
-    newArray mProperties >>= (#poke aiMaterial, mProperties) p
+  poke = undefined
 
 instance Storable Animation where
   sizeOf _ = #size aiAnimation
@@ -444,15 +388,7 @@ instance Storable Camera where
     mClipPlaneFar <- (#peek aiCamera, mClipPlaneFar) p
     mAspect <- (#peek aiCamera, mAspect) p
     return $ Camera mName mPosition mUp mLookAt mHorizontalFOV mClipPlaneNear mClipPlaneFar mAspect
-  poke p (Camera mName mPosition mUp mLookAt mHorizontalFOV mClipPlaneNear mClipPlaneFar mAspect) = do
-    (#poke aiCamera, mName) p $ AiString mName
-    (#poke aiCamera, mPosition) p mPosition
-    (#poke aiCamera, mUp) p mUp
-    (#poke aiCamera, mLookAt) p mLookAt
-    (#poke aiCamera, mHorizontalFOV) p mHorizontalFOV
-    (#poke aiCamera, mClipPlaneNear) p mClipPlaneNear
-    (#poke aiCamera, mClipPlaneFar) p mClipPlaneFar
-    (#poke aiCamera, mAspect) p mAspect
+  poke = undefined
 
 instance Storable Scene where
   sizeOf _ = #size aiScene
@@ -476,19 +412,4 @@ instance Storable Scene where
     mCameras       <- (#peek aiScene, mCameras) p >>= peekArrayPtr (fromIntegral mNumCameras)
     return $ Scene mFlags mRootNode mMeshes mMaterials mAnimations mTextures
                    mLights mCameras
-  poke p (Scene flags mRootNode meshes materials
-                animations textures lights cameras) = do
-    -- (#poke aiScene, mFlags) p $ fromEnum flags
-    (#poke aiScene, mRootNode) p mRootNode
-    (#poke aiScene, mNumMeshes) p $ length meshes
-    newArray meshes >>= (#poke aiScene, mMeshes) p
-    (#poke aiScene, mNumMaterials) p $ length materials
-    newArray materials >>= (#poke aiScene, mMaterials) p
-    (#poke aiScene, mNumAnimations) p $ length animations
-    newArray animations >>= (#poke aiScene, mAnimations) p
-    (#poke aiScene, mNumTextures) p $ length textures
-    newArray textures >>= (#poke aiScene, mTextures) p
-    (#poke aiScene, mNumLights) p $ length lights
-    newArray lights >>= (#poke aiScene, mLights) p
-    (#poke aiScene, mNumCameras) p $ length cameras
-    newArray cameras >>= (#poke aiScene, mCameras) p
+  poke = undefined
