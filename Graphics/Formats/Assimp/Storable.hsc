@@ -16,9 +16,9 @@ import Data.Vect.Float (Vec2(..), Vec3(..), Vec4(..), Mat3(..), Mat4(..))
 
 import Graphics.Formats.Assimp.Types
 
-#include "../../assimp/include/assimp.h"        // Plain-C interface
-#include "../../assimp/include/aiScene.h"       // Output data structure
-#include "../../assimp/include/aiPostProcess.h" // Post processing flags
+#include "assimp.h"        // Plain-C interface
+#include "aiScene.h"       // Output data structure
+#include "aiPostProcess.h" // Post processing flags
 #include "./typedefs.h"
 
 #include <stddef.h>

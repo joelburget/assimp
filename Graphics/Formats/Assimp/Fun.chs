@@ -1,9 +1,9 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module Graphics.Formats.Assimp.Fun (
     importFile
   , applyPostProcessing
---  , releaseImport
   , getErrorString
   , isExtensionSupported
   , setImportPropertyInteger
@@ -11,6 +11,8 @@ module Graphics.Formats.Assimp.Fun (
   , getVersionMinor
   , getVersionMajor
   , getVersionRevision
+  , get
+  , getArray
   ) where
 
 import C2HS
@@ -20,6 +22,8 @@ import Foreign.Storable ()
 import Foreign.Marshal.Array (peekArray)
 import Control.Monad (liftM)
 import Unsafe.Coerce (unsafeCoerce)
+import Data.Vect (Vec3(Vec3), Vec4(Vec4))
+import Control.Applicative ((<$>), (<*>))
 
 import Graphics.Formats.Assimp.Types
 import Graphics.Formats.Assimp.Storable
@@ -78,45 +82,93 @@ importFile str psteps = do
 --{# fun aiSetImportPropertyString as ^
 --  {`String', `String'} -> `()'#}
 
--- aiGetLegalString
+{#fun unsafe aiGetLegalString as getLegalString
+  {} -> `String'#}
+
 {#fun unsafe aiGetVersionMinor as getVersionMinor
-  {} -> `Int'#}
+  {} -> `Word' unsafeCoerce#}
+
 {#fun unsafe aiGetVersionMajor as getVersionMajor
-  {} -> `Int'#}
+  {} -> `Word' unsafeCoerce#}
+
 {#fun unsafe aiGetVersionRevision as getVersionRevision
-  {} -> `Int'#}
--- aiGetCompileFlags
+  {} -> `Word' unsafeCoerce#}
+
+{#fun unsafe aiGetCompileFlags as getCompileFlags
+  {} -> `CompileFlags' convert#}
+  where convert = toEnum . cIntConv
+
+class ArrayGetter a where
+  getArray :: Material -> MatKey -> Word -> IO (Either String [a])
+
+class SingleGetter a where
+  get :: Material -> MatKey -> IO (Either String a)
+
+instance ArrayGetter Float where
+  getArray = getMaterialFloatArray
+
+instance ArrayGetter Int where
+  getArray = getMaterialIntArray
+
+instance SingleGetter Float where
+  get = getMaterialFloat
+
+instance SingleGetter Int where
+  get = getMaterialInt
+
+instance SingleGetter Vec3 where
+-- Also another case?
+  get mat key = (liftM . liftM) (\(Vec4 r g b a) -> Vec3 r g b) 
+    (getMaterialColor mat key)
+
+instance SingleGetter Vec4 where
+  get = getMaterialColor
+
+instance SingleGetter String where
+  get = getMaterialString
 
 mWord = fromInteger . toInteger
 mRet  = toEnum . fromInteger . toInteger
 
 -------------------------------------------------------------------------------
 
-getMaterialProperty :: Material -> MatKey -> IO (Either String MaterialProperty)
+{- |
+ - Retrieve a material property with a specific key from the material
+ -}
+getMaterialProperty :: Material -- ^ The material
+                    -> MatKey   -- ^ A key
+                    -> IO (Either String MaterialProperty)
 getMaterialProperty mat key = do
   let (mKey, mType, mIndex) = matKeyToTuple key
   (ret, prop) <- getMaterialProperty' mat mKey mType mIndex
   case ret of
-    ReturnSuccess     -> return prop
+    ReturnSuccess     -> peekM prop
     ReturnFailure     -> return $ Left "Failed"
     ReturnOutOfMemory -> return $ Left "Out of memory."
+  where
+    peekM :: Ptr MaterialProperty -> IO (Either String MaterialProperty)
+    peekM p = 
+      if p == nullPtr
+      then return $ Left "No property found"
+      else liftM Right $ peek p
 
 {#fun unsafe aiGetMaterialProperty as getMaterialProperty'
   {with'*  `Material',
            `String'  ,
    mWord   `Word'    ,
    mWord   `Word'    ,
-   alloca- `Either String MaterialProperty' peekM*} -> `Return' mRet#}
-  where
-    peekM :: Ptr (Ptr ()) -> IO (Either String MaterialProperty)
-    peekM p = 
-      if p == nullPtr 
-      then return $ Left "No property found"
-      else liftM Right $ peek p >>= peek'
+   alloca- `Ptr MaterialProperty' peek'*} -> `Return' mRet#}
 
 -------------------------------------------------------------------------------
-    
-getMaterialFloatArray :: Material -> MatKey -> Word -> IO (Either String [Float])
+{- |
+ - Retrieve an array of float values with a specific key from the material
+ - Example:
+ - > getMaterialFloatArray mat (KeyUvTransform Diffuse 0) 4
+ -}
+getMaterialFloatArray :: Material -- ^ The material
+                      -> MatKey   -- ^ A key
+                      -> Word     -- ^ Max number of values to retrieve
+                      -> IO (Either String [Float])
 getMaterialFloatArray mat key max = do
   let (mKey, mType, mIndex) = matKeyToTuple key
   (ret, arr, max) <- getMaterialFloatArray' mat mKey mType mIndex max
@@ -139,16 +191,111 @@ getMaterialFloatArray mat key max = do
 getMaterialFloat :: Material -> MatKey -> IO (Either String Float)
 getMaterialFloat mat key = do
   arr <- getMaterialFloatArray mat key 1
-  case arr of
-    Left err  -> return . Left $ err
-    Right ans -> return . Right . head $ ans
+  return $ case arr of
+    Left err  -> Left err
+    Right ans -> Right $ head ans
 
--- aiGetMaterialIntegerArray
--- aiGetMaterialInteger
--- aiGetMaterialColor
--- aiGetMaterialString
--- aiGetMaterialTextureCount
--- aiGetMaterialTexture
+-------------------------------------------------------------------------------
+
+getMaterialIntArray :: Material -> MatKey -> Word -> IO (Either String [Int])
+getMaterialIntArray mat key max = do
+  let (mKey, mType, mIndex) = matKeyToTuple key
+  (ret, arr, max) <- getMaterialIntArray' mat mKey mType mIndex max
+  case ret of
+    ReturnSuccess     -> liftM (Right . (map unsafeCoerce)) 
+                           $ peekArray (fromIntegral max) arr 
+    ReturnFailure     -> return $ Left "Failed"
+    ReturnOutOfMemory -> return $ Left "Out of memory."
+
+{#fun unsafe aiGetMaterialIntegerArray as getMaterialIntArray'
+  {with'*  `Material'   ,
+           `String'     ,
+   mWord   `Word'       ,
+   mWord   `Word'       ,
+   alloca- `Ptr CInt' id,
+   with'*  `Word'  peek'*} -> `Return' mRet#}
+
+-------------------------------------------------------------------------------
+
+getMaterialInt :: Material -> MatKey -> IO (Either String Int)
+getMaterialInt mat key = do
+  arr <- getMaterialIntArray mat key 1
+  return $ case arr of
+    Left err  -> Left err
+    Right ans -> Right $ head ans
+
+-------------------------------------------------------------------------------
+
+getMaterialColor :: Material -> MatKey -> IO (Either String Vec4)
+getMaterialColor mat key = do
+  let (mKey, mType, mIndex) = matKeyToTuple key
+  (ret, vec) <- getMaterialColor' mat mKey mType mIndex
+  return $ case ret of
+    ReturnSuccess     -> Right vec
+    ReturnFailure     -> Left "Failed"
+    ReturnOutOfMemory -> Left "Out of memory."
+
+-- Can't get this to work :(
+-- {#fun unsafe aiGetMaterialColor as getMaterialColor'
+--   {with'* `Material',
+--           `String'  ,
+--    mWord  `Word'    ,
+--    mWord  `Word'    ,
+--    alloca- `Vec4' peek'*} -> `Return' mRet#}
+
+getMaterialColor' :: Material -> String -> Word -> Word -> IO (Return, Vec4)
+getMaterialColor' a1 a2 a3 a4 =
+  with a1 $ \a1' -> 
+  withCString a2 $ \a2' -> 
+  alloca $ \a5' -> 
+  getMaterialColor''_ a1' a2' (mWord a3) (mWord a4) a5' >>= \res ->
+  peek a5' >>= \a5'' -> 
+  return (mRet res, a5'')
+
+foreign import ccall unsafe "Graphics/Formats/Assimp/Fun.chs.h aiGetMaterialColor"
+  getMaterialColor''_ :: Ptr Material -> Ptr CChar -> CUInt -> CUInt -> Ptr Vec4 -> IO CInt
+
+-------------------------------------------------------------------------------
+
+getMaterialString :: Material -> MatKey -> IO (Either String String)
+getMaterialString mat key = do
+  let (mKey, mType, mIndex) = matKeyToTuple key
+  (ret, (AiString str)) <- getMaterialString' mat mKey mType mIndex
+  return $ case ret of
+    ReturnSuccess     -> Right str
+    ReturnFailure     -> Left "Failed"
+    ReturnOutOfMemory -> Left "Out of memory."
+    
+-- {#fun unsafe aiGetMaterialString as getMaterialString
+--   {with'*  `Material',
+--            `String'  ,
+--    mWord   `Word'    ,
+--    mWord   `Word'    ,
+--    alloca- `AiString' peek'*} -> `Return' mRet#}
+
+getMaterialString' :: Material -> String -> Word -> Word -> IO (Return, AiString)
+getMaterialString' a1 a2 a3 a4 =
+  with a1 $ \a1' -> 
+  withCString a2 $ \a2' -> 
+  alloca $ \a5' -> 
+  getMaterialString''_ a1' a2' (mWord a3) (mWord a4) a5' >>= \res ->
+  peek a5' >>= \a5'' -> 
+  return (mRet res, a5'')
+
+foreign import ccall unsafe "Graphics/Formats/Assimp/Fun.chs.h aiGetMaterialString"
+  getMaterialString''_ :: Ptr Material -> Ptr CChar -> CUInt -> CUInt -> Ptr AiString -> IO CInt
+
+-------------------------------------------------------------------------------
+
+{#fun unsafe aiGetMaterialTextureCount as getTextureCount
+  {with'*  `Material',
+   f `TextureType'} -> `Word' unsafeCoerce#}
+  where
+    f :: TextureType -> CInt
+    f = cIntConv . fromEnum
+
+-------------------------------------------------------------------------------
+
 
 -- I'm not sure whether or not I will implement these or not. I guess I'll
 -- check the source to see if they're pure. They could easily be implemented in
