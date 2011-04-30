@@ -31,20 +31,15 @@ peekArray' n ptr = if ptr == nullPtr
                    else peekArray n ptr
 
 peekArrayPtr :: (Storable a) => Int -> (Ptr (Ptr a)) -> IO [a]
-peekArrayPtr n p = do
-  arr' <- peekArray' (fromIntegral n) p
-  arr  <- mapM peek arr'
-  return arr
+peekArrayPtr n p = peekArray' (fromIntegral n) p >>= mapM peek
 
 instance Storable Plane3d where
   sizeOf _ = #size aiPlane
   alignment _ = #alignment aiPlane
-  peek p = do
-    a <- (#peek aiPlane, a) p
-    b <- (#peek aiPlane, b) p
-    c <- (#peek aiPlane, c) p
-    d <- (#peek aiPlane, d) p
-    return $ Plane3d a b c d
+  peek p = Plane3d <$> (#peek aiPlane, a) p
+                   <*> (#peek aiPlane, b) p
+                   <*> (#peek aiPlane, c) p
+                   <*> (#peek aiPlane, d) p
   poke = undefined
 
 instance Storable Ray where
@@ -59,41 +54,33 @@ instance Storable Ray where
 instance Storable Vec2F where
   sizeOf _ = #size aiVector2D
   alignment _ = #alignment aiVector2D
-  peek p = do
-    x <- (#peek aiVector2D, x) p
-    y <- (#peek aiVector2D, y) p
-    return $ Vec2F $ Vec2 x y
+  peek p = Vec2F <$> (Vec2 <$> (#peek aiVector2D, x) p
+                           <*> (#peek aiVector2D, y) p)
   poke = undefined
 
 instance Storable Vec3F where
   sizeOf _ = #size aiVector3D
   alignment _ = #alignment aiVector3D
-  peek p = do
-    x <- (#peek aiVector3D, x) p
-    y <- (#peek aiVector3D, y) p
-    z <- (#peek aiVector3D, z) p
-    return $ Vec3F $ Vec3 x y z
+  peek p = Vec3F <$> (Vec3 <$> (#peek aiVector3D, x) p
+                           <*> (#peek aiVector3D, y) p
+                           <*> (#peek aiVector3D, z) p)
   poke = undefined
 
 instance Storable Color3F where
   sizeOf _ = #size aiColor3D
   alignment _ = #alignment aiColor3D
-  peek p = do
-    r <- (#peek aiColor3D, r) p
-    g <- (#peek aiColor3D, g) p
-    b <- (#peek aiColor3D, b) p
-    return $ Color3F $ Vec3 r g b
+  peek p = Color3F <$> (Vec3 <$> (#peek aiColor3D, r) p
+                             <*> (#peek aiColor3D, g) p
+                             <*> (#peek aiColor3D, b) p)
   poke = undefined
 
 instance Storable Color4F where
   sizeOf _ = #size aiColor4D
   alignment _ = #alignment aiColor4D
-  peek p = do
-    r <- (#peek aiColor4D, r) p
-    g <- (#peek aiColor4D, g) p
-    b <- (#peek aiColor4D, b) p
-    a <- (#peek aiColor4D, a) p
-    return $ Color4F $ Vec4 r g b a
+  peek p = Color4F <$> (Vec4 <$> (#peek aiColor4D, r) p
+                             <*> (#peek aiColor4D, g) p
+                             <*> (#peek aiColor4D, b) p
+                             <*> (#peek aiColor4D, a) p)
   poke = undefined
 
 instance Storable MemoryInfo where
@@ -136,7 +123,6 @@ instance Storable AiString where
         -- the pointer, so we have to create a pointer.
         str <- peekCStringLen (p `plusPtr` (#offset aiString, data), len)
         return $ AiString str
-
   poke = undefined
 
 aiStringToString :: AiString -> String
@@ -220,10 +206,8 @@ instance Storable Face where
 instance Storable VertexWeight where
   sizeOf _ = #size aiVertexWeight
   alignment _ = #alignment aiVertexWeight
-  peek p = do
-    mV <- (#peek aiVertexWeight, mVertexId) p
-    mW <- (#peek aiVertexWeight, mWeight) p
-    return $ VertexWeight mV mW
+  peek p = VertexWeight <$> (#peek aiVertexWeight, mVertexId) p
+                        <*> (#peek aiVertexWeight, mWeight) p
   poke = undefined
 
 instance Storable Bone where
