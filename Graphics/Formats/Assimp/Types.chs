@@ -46,13 +46,10 @@ module Graphics.Formats.Assimp.Types (
   , Scene(..)
   , Texture(..)
   , Texel(..)
-  , (.|.)
   , position
   ) where
 
 import C2HS
-import Data.Bits ((.|.))
-import Data.Word (Word)
 
 import Data.Vect.Float
 
@@ -67,8 +64,6 @@ import Data.Vect.Float
 
 {#context lib="assimp"#}
 {#context prefix="ai"#}
-
--- PostProcessSteps
 
 {#enum define SceneFlags {AI_SCENE_FLAGS_INCOMPLETE         as FlagsIncomplete
                         , AI_SCENE_FLAGS_VALIDATED          as FlagsValidated
@@ -177,18 +172,18 @@ data MatKey = KeyName
             | KeyColorTransparent
             | KeyColorReflective
             | KeyGlobalBackgroundImage
-            | KeyTexture TextureType Word
-            | KeyUvWSrc TextureType Word
-            | KeyTexOp TextureType Word
-            | KeyMapping TextureType Word
-            | KeyTexBlend TextureType Word
-            | KeyMappingModeU TextureType Word
-            | KeyMappingModeV TextureType Word
-            | KeyTexMapAxis TextureType Word
-            | KeyUvTransform TextureType Word
-            | KeyTexFlags TextureType Word
+            | KeyTexture TextureType CUInt
+            | KeyUvWSrc TextureType CUInt
+            | KeyTexOp TextureType CUInt
+            | KeyMapping TextureType CUInt
+            | KeyTexBlend TextureType CUInt
+            | KeyMappingModeU TextureType CUInt
+            | KeyMappingModeV TextureType CUInt
+            | KeyTexMapAxis TextureType CUInt
+            | KeyUvTransform TextureType CUInt
+            | KeyTexFlags TextureType CUInt
 
-matKeyToTuple :: MatKey -> (String, Word, Word)
+matKeyToTuple :: MatKey -> (String, CUInt, CUInt)
 matKeyToTuple KeyName = ("?mat.name", 0, 0)
 matKeyToTuple KeyTwoSided = ("$mat.twosided", 0, 0)
 matKeyToTuple KeyShadingModel = ("$mat.shadingm", 0, 0)
@@ -218,7 +213,7 @@ matKeyToTuple (KeyTexMapAxis tType i) = ("$tex.mapaxis", fromEnum' tType, i)
 matKeyToTuple (KeyUvTransform tType i) = ("$tex.uvtrafo", fromEnum' tType, i)
 matKeyToTuple (KeyTexFlags tType i) = ("$tex.flags", fromEnum' tType, i)
 
-fromEnum' :: TextureType -> Word
+fromEnum' :: TextureType -> CUInt
 fromEnum' = fromInteger . toInteger . fromEnum
 
 data Plane3d = Plane3d
@@ -251,14 +246,14 @@ newtype Color4F = Color4F Vec4
 {#pointer *aiMatrix4x4 as Mat4Ptr -> Mat4#}
 
 data MemoryInfo = MemoryInfo 
-  { memoryInfoTextures   :: Word
-  , memoryInfoMaterials  :: Word
-  , memoryInfoMeshes     :: Word
-  , memoryInfoNodes      :: Word
-  , memoryInfoAnimations :: Word
-  , memoryInfoCameras    :: Word
-  , memoryInfoLights     :: Word
-  , memoryInfoTotal      :: Word
+  { memoryInfoTextures   :: CUInt
+  , memoryInfoMaterials  :: CUInt
+  , memoryInfoMeshes     :: CUInt
+  , memoryInfoNodes      :: CUInt
+  , memoryInfoAnimations :: CUInt
+  , memoryInfoCameras    :: CUInt
+  , memoryInfoLights     :: CUInt
+  , memoryInfoTotal      :: CUInt
   } deriving (Show)
 {#pointer *aiMemoryInfo as MemoryInfoPtr -> MemoryInfo#}
 
@@ -281,17 +276,18 @@ data Node = Node
   , transformation :: Mat4
   , parent         :: Maybe Node
   , children       :: [Node]
-  , nodeMeshes     :: [Word] -- Holds indices defining the node
+  , nodeMeshes     :: [CUInt] -- Holds indices defining the node
   } deriving (Show)
 {#pointer *aiNode as NodePtr -> Node#}
 
 data Face = Face
-  { indices :: [Word] -- Holds indices defining the face
+  { indices :: [CUInt] -- Holds indices defining the face
+  --, debug :: String
   } deriving (Show)
 {#pointer *aiFace as FacePtr -> Face#}
 
 data VertexWeight = VertexWeight
-  { vertexId :: Word
+  { vertexId :: CUInt
   , weight   :: CFloat
   } deriving (Show)
 {#pointer *aiVertexWeight as VertexWeightPtr -> VertexWeight#}
@@ -311,10 +307,10 @@ data Mesh = Mesh
   , bitangents      :: [Vec3]
   , colors          :: [Vec4]
   , textureCoords   :: [Vec3]
-  , numUVComponents :: Word
+  , numUVComponents :: CUInt
   , faces           :: [Face]
   , bones           :: [Bone]
-  , materialIndex   :: Word
+  , materialIndex   :: CUInt
   , meshName        :: String
   } deriving (Show)
 {#pointer *aiMesh as MeshPtr -> Mesh#}
@@ -322,7 +318,7 @@ data Mesh = Mesh
 data MaterialProperty = MaterialProperty 
   { key      :: String
   , semantic :: TextureType
-  , index    :: Word
+  , index    :: CUInt
   , mData    :: String
   } deriving (Show)
 {#pointer *aiMaterialProperty as MaterialPropertyPtr -> MaterialProperty#}
@@ -354,8 +350,8 @@ data Texel = Texel
   } deriving (Show)
 
 data Texture = Texture 
-  { width         :: Word
-  , height        :: Word
+  { width         :: CUInt
+  , height        :: CUInt
   , achFormatHint :: String
   , pcData        :: [Texel]
   } deriving (Show)

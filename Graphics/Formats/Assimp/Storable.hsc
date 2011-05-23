@@ -87,14 +87,14 @@ instance Storable MemoryInfo where
   sizeOf _ = #size aiMemoryInfo
   alignment _ = #alignment aiMemoryInfo
   peek p = do
-    text <- (#peek aiMemoryInfo, textures) p
-    materials <- (#peek aiMemoryInfo, materials) p
-    meshes <- (#peek aiMemoryInfo, meshes) p
-    nodes <- (#peek aiMemoryInfo, nodes) p
+    text       <- (#peek aiMemoryInfo, textures) p
+    materials  <- (#peek aiMemoryInfo, materials) p
+    meshes     <- (#peek aiMemoryInfo, meshes) p
+    nodes      <- (#peek aiMemoryInfo, nodes) p
     animations <- (#peek aiMemoryInfo, animations) p
-    cameras <- (#peek aiMemoryInfo, cameras) p
-    lights <- (#peek aiMemoryInfo, lights) p
-    total <- (#peek aiMemoryInfo, total) p
+    cameras    <- (#peek aiMemoryInfo, cameras) p
+    lights     <- (#peek aiMemoryInfo, lights) p
+    total      <- (#peek aiMemoryInfo, total) p
     return $ MemoryInfo text materials meshes nodes animations cameras lights total
   poke = undefined
 
@@ -197,9 +197,9 @@ instance Storable Face where
   sizeOf _ = #size aiFace
   alignment _ = #alignment aiFace
   peek p = do
-    mNumIndices <- liftM fromIntegral ((#peek aiFace, mNumIndices) p :: IO CUInt) :: IO Int
+    mNumIndices <- (#peek aiFace, mNumIndices) p :: IO CUInt
     mIndices <- (#peek aiFace, mIndices) p
-    lst <- peekArray mNumIndices mIndices
+    lst <- peekArray (fromIntegral mNumIndices) mIndices
     return $ Face lst
   poke = undefined
 
@@ -254,7 +254,7 @@ instance Storable Mesh where
     mNumUVComponents <- (#peek aiMesh, mNumUVComponents) p
     mNumFaces        <- liftM fromIntegral 
                         ((#peek aiMesh, mNumFaces) p :: IO CUInt)
-    mFaces           <- (#peek aiMesh, mFaces) p >>= peekArray' mNumFaces
+    mFaces           <- (#peek aiMesh, mFaces) p >>= peekArray mNumFaces
     mBones           <- join $ peekArrayPtr <$> ((#peek aiMesh, mNumBones) p)
                                             <*> ((#peek aiMesh, mBones) p)
     mMaterialIndex   <- (#peek aiMesh, mMaterialIndex) p
