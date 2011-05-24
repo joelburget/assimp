@@ -3,6 +3,10 @@ Version:             0.1
 Synopsis:            The Assimp asset import library
 
 Description:
+    Important: Install with
+    @cabal install --extra-include-dirs /usr/local/include/assimp/@
+    Of course use the location of the include files on your system.
+
     This library provides FFI bindings to the Assimp asset import
     library. It requires Assimp to already be installed. For more
     information about Assimp see the assimp website at
@@ -10,7 +14,36 @@ Description:
 
     This release corresponds to Assimp 2.0. When this package stabilizes I
     intend to track new releases of Assimp by also releasing new versions with
-    the same version number.
+    the same version number, but this should be considered a beta release.
+    Importing models is currently working. Textures and animations are
+    untested.
+
+    Here is a sample program that imports a scene and then outputs the
+    information contained in it.
+
+    > module Main where
+    > 
+    > import System (getArgs)
+    > import Graphics.Formats.Assimp
+    > 
+    > -- Defines the preprocessing we want assimp to perform
+    > processing = [ CalcTangentSpace
+    >              , Triangulate
+    >              , JoinIdenticalVertices
+    >              , SortByPType
+    >              ]
+    > 
+    > main = do
+    >   args <- getArgs
+    >   scene <- importFile (head args) processing
+    >   print scene                   -- Outputs all information in the scene
+    >   getVersionMajor >>= print     -- Print the major version of assimp
+    >   getVersionMinor >>= print     -- Print the minor version of assimp
+    >   getVersionRevision >>= print  -- Print the version revision of assimp
+
+    See https://github.com/joelburget/Cologne/blob/master/Cologne/AssimpImport.hs
+    for more.
+    
 License:             BSD3
 License-file:        LICENSE
 Author:              Joel Burget
@@ -18,7 +51,7 @@ Maintainer:          joelburget@gmail.com
 Copyright:           Joel Burget 2011
 Category:            Graphics
 Build-type:          Simple
-Cabal-version:       >=1.2
+Cabal-version:       >= 1.6
 
 Library
   Exposed-modules: Graphics.Formats.Assimp
@@ -27,12 +60,16 @@ Library
     Graphics.Formats.Assimp.Storable
     Graphics.Formats.Assimp.Fun
     C2HS
-  ghc-options: -Wall -O
-  Build-depends: base > 3 && < 5, haskell98, vect >= 0.4.6 && < 0.5
+  ghc-options: -Wall
+  Build-depends: base      >= 4     && < 5
+               , haskell98
+               , vect      >= 0.4.6 && < 0.5
   Build-tools: c2hs, hsc2hs
   Extensions: ForeignFunctionInterface
   Extra-libraries: assimp
-  Includes: assimp.h
   Include-dirs: 
-    include/
     Graphics/Formats/
+
+Source-repository head
+  type:     git
+  location: git@github.com:joelburget/assimp.git

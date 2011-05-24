@@ -1,5 +1,16 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
-{-# LANGUAGE EmptyDataDecls #-}
+
+-- |
+-- Module : Graphics.Formats.Assimp.Storable
+-- Copyright : (c) Joel Burget 2011
+-- License BSD3
+--
+-- Maintainer : Joel Burget <joelburget@gmail.com>
+-- Stability : experimental
+-- Portability : non-portable
+--
+-- Data types for (nearly) every type used in assimp.
+
 module Graphics.Formats.Assimp.Types (
     SceneFlags(..)
   , CompileFlags(..)
@@ -257,8 +268,8 @@ data MemoryInfo = MemoryInfo
   } deriving (Show)
 {#pointer *aiMemoryInfo as MemoryInfoPtr -> MemoryInfo#}
 
-data LogStream
-{#pointer *aiLogStream as LogStreamPtr -> LogStream#}
+-- data LogStream
+-- {#pointer *aiLogStream as LogStreamPtr -> LogStream#}
 
 data Quaternion = Quaternion 
   { quaternionW :: Float

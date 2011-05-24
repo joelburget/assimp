@@ -2,33 +2,44 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE BangPatterns #-}
 
+-- |
+-- Module : Graphics.Formats.Assimp.Fun
+-- Copyright : (c) Joel Burget 2011
+-- License BSD3
+--
+-- Maintainer : Joel Burget <joelburget@gmail.com>
+-- Stability : experimental
+-- Portability : non-portable
+--
+-- Defines functions for interacting with assimp
+
 module Graphics.Formats.Assimp.Fun (
+  -- * Basics
     importFile
   , applyPostProcessing
-  , getErrorString
-  , isExtensionSupported
-  , setImportPropertyInteger
-  , setImportPropertyFloat
+  -- * Version information
   , getVersionMinor
   , getVersionMajor
   , getVersionRevision
+  , isExtensionSupported
+  -- * Accessing materials
   , get
   , getArray
+  -- * Currently unused
+  , getErrorString
+  , setImportPropertyInteger
+  , setImportPropertyFloat
   ) where
 
 import C2HS
-import Data.Either (Either(Left,Right))
 import Foreign.Storable ()
-import Foreign.Marshal.Array (peekArray)
 import Control.Monad (liftM)
 import Unsafe.Coerce (unsafeCoerce)
 import Data.Vect (Vec3(Vec3), Vec4(Vec4))
-import Control.Applicative ((<$>), (<*>))
-import Data.Bits ((.|.))
 import Data.List (foldl1')
 
 import Graphics.Formats.Assimp.Types
-import Graphics.Formats.Assimp.Storable
+import Graphics.Formats.Assimp.Storable ()
 
 #include "assimp.h"
 #include "aiVersion.h"

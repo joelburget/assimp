@@ -1,17 +1,25 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
-{-# LANGUAGE TypeSynonymInstances #-}
+
+-- |
+-- Module : Graphics.Formats.Assimp.Storable
+-- Copyright : (c) Joel Burget 2011
+-- License BSD3
+--
+-- Maintainer : Joel Burget <joelburget@gmail.com>
+-- Stability : experimental
+-- Portability : non-portable
+--
+-- Storable instances for all data types, we leave @poke@ undefined because
+-- it is not ever used
 
 module Graphics.Formats.Assimp.Storable where
 
 import C2HS
 import Prelude hiding (replicate)
 import Foreign.Storable
-import Foreign.C.String
-import Foreign.Marshal.Array
-import Control.Monad (liftM, liftM2, (>>=), join)
+import Control.Monad (liftM, liftM2, join)
 import Control.Applicative ((<$>), (<*>))
-import Data.Bits ((.&.))
 import Data.Vect.Float (Vec2(..), Vec3(..), Vec4(..), Mat3(..), Mat4(..))
 
 import Graphics.Formats.Assimp.Types
@@ -95,7 +103,8 @@ instance Storable MemoryInfo where
     cameras    <- (#peek aiMemoryInfo, cameras) p
     lights     <- (#peek aiMemoryInfo, lights) p
     total      <- (#peek aiMemoryInfo, total) p
-    return $ MemoryInfo text materials meshes nodes animations cameras lights total
+    return $ MemoryInfo text materials meshes nodes animations cameras lights 
+                        total
   poke = undefined
 
 instance Storable Quaternion where
@@ -111,7 +120,6 @@ instance Storable AiString where
   sizeOf _ = #size aiString
   alignment _ = #alignment aiString
   peek p = do
-    l <- (#peek aiString, length) p :: IO CUInt
     start <- ((#peek aiString, data) p) :: IO (Ptr CChar)
     if start == nullPtr
       then return $ AiString ""
@@ -178,18 +186,20 @@ instance Storable Node where
   sizeOf _ = #size aiNode
   alignment _ = #alignment aiNode
   peek p = do
-    mName <- liftM aiStringToString $ (#peek aiNode, mName) p
+    mName           <- liftM aiStringToString $ (#peek aiNode, mName) p
     mTransformation <- (#peek aiNode, mTransformation) p
-    -- mParentPtr <- (#peek aiNode, mParent) p
-    -- mParent <- if mParentPtr == nullPtr then return Nothing else return peek mParentPtr
-    let mParent = Nothing -- Temporary workaround so we don't end up in an infinite loop
-    mNumChildren <- (#peek aiNode, mNumChildren) p :: IO CUInt
-    mChildrenP' <- (#peek aiNode, mChildren) p :: IO (Ptr (Ptr Node))
-    mChildrenP'' <- peekArray' (fromIntegral mNumChildren) mChildrenP' :: IO [Ptr Node]
-    mChildren <- mapM peek mChildrenP''
-    mNumMeshes <- (#peek aiNode, mNumMeshes) p :: IO CUInt
-    mMeshes' <- (#peek aiNode, mMeshes) p
-    mMeshes <- peekArray (fromIntegral mNumMeshes) mMeshes'
+    -- mParent      <- if mParentPtr == nullPtr 
+    --                 then return Nothing 
+    --                 else (#peek aiNode, mParent) p
+    -- Temporary workaround so we don't end up in an infinite loop
+    let mParent = Nothing 
+    mNumChildren    <- (#peek aiNode, mNumChildren) p :: IO CUInt
+    mChildrenP''    <- (#peek aiNode ,mChildren) p >>=
+                         peekArray' (fromIntegral mNumChildren)
+    mChildren       <- mapM peek mChildrenP''
+    mNumMeshes      <- (#peek aiNode, mNumMeshes) p :: IO CUInt
+    mMeshes         <- (#peek aiNode, mMeshes) p >>=
+                         peekArray (fromIntegral mNumMeshes)
     return $ Node mName mTransformation mParent mChildren mMeshes
   poke = undefined
 
@@ -270,7 +280,8 @@ instance Storable MaterialProperty where
   alignment _ = #alignment aiMaterialProperty
   peek p = do
     mKey <- liftM aiStringToString $ (#peek aiMaterialProperty, mKey) p
-    mSemantic <- liftM (cToEnum :: CUInt -> TextureType) $ (#peek aiMaterialProperty, mSemantic) p
+    mSemantic <- liftM (cToEnum :: CUInt -> TextureType) $ 
+                   (#peek aiMaterialProperty, mSemantic) p
     mIndex <- (#peek aiMaterialProperty, mIndex) p
     -- mType <- liftM toEnum $ (#peek aiMaterialProperty, mType) p
     mData <- (#peek aiMaterialProperty, mData) p >>= peekCString
@@ -356,7 +367,7 @@ instance Storable Texture where
 instance Storable Texel where
   sizeOf _ = #size aiTexel
   alignment _ = #alignment aiTexel
-  peek p = return $ Texel 0
+  peek _ = return $ Texel 0
   poke = undefined
 
 instance Storable Camera where
@@ -371,7 +382,8 @@ instance Storable Camera where
     mClipPlaneNear <- (#peek aiCamera, mClipPlaneNear) p
     mClipPlaneFar <- (#peek aiCamera, mClipPlaneFar) p
     mAspect <- (#peek aiCamera, mAspect) p
-    return $ Camera mName mPosition mUp mLookAt mHorizontalFOV mClipPlaneNear mClipPlaneFar mAspect
+    return $ Camera mName mPosition mUp mLookAt mHorizontalFOV mClipPlaneNear 
+                    mClipPlaneFar mAspect
   poke = undefined
 
 instance Storable Scene where
@@ -381,19 +393,25 @@ instance Storable Scene where
     mFlags         <- liftM toEnumList $ ((#peek aiScene, mFlags) p :: IO CUInt)
     mRootNode      <- (#peek aiScene, mRootNode) p >>= peek
     mNumMeshes     <- (#peek aiScene, mNumMeshes) p :: IO CUInt
-    mMeshes'       <- (#peek aiScene, mMeshes) p >>= peekArray (fromIntegral mNumMeshes)
+    mMeshes'       <- (#peek aiScene, mMeshes) p >>= 
+                        peekArray (fromIntegral mNumMeshes)
     mMeshes        <- mapM peek mMeshes'
     mNumMaterials  <- (#peek aiScene, mNumMaterials) p :: IO CUInt
-    mMaterials'    <- (#peek aiScene, mMaterials) p >>= peekArray (fromIntegral mNumMaterials)
+    mMaterials'    <- (#peek aiScene, mMaterials) p >>= 
+                        peekArray (fromIntegral mNumMaterials)
     mMaterials     <- mapM peek mMaterials'
     mNumAnimations <- (#peek aiScene, mNumAnimations) p :: IO CUInt
-    mAnimations    <- (#peek aiScene, mAnimations) p >>= peekArrayPtr (fromIntegral mNumAnimations)
+    mAnimations    <- (#peek aiScene, mAnimations) p >>= 
+                        peekArrayPtr (fromIntegral mNumAnimations)
     mNumTextures   <- (#peek aiScene, mNumTextures) p :: IO CUInt
-    mTextures      <- (#peek aiScene, mTextures) p >>= peekArrayPtr (fromIntegral mNumTextures)
+    mTextures      <- (#peek aiScene, mTextures) p >>= 
+                        peekArrayPtr (fromIntegral mNumTextures)
     mNumLights     <- (#peek aiScene, mNumLights) p :: IO CUInt
-    mLights        <- (#peek aiScene, mLights) p >>= peekArrayPtr (fromIntegral mNumLights)
+    mLights        <- (#peek aiScene, mLights) p >>= 
+                        peekArrayPtr (fromIntegral mNumLights)
     mNumCameras    <- (#peek aiScene, mNumCameras) p :: IO CUInt
-    mCameras       <- (#peek aiScene, mCameras) p >>= peekArrayPtr (fromIntegral mNumCameras)
+    mCameras       <- (#peek aiScene, mCameras) p >>= 
+                        peekArrayPtr (fromIntegral mNumCameras)
     return $ Scene mFlags mRootNode mMeshes mMaterials mAnimations mTextures
                    mLights mCameras
   poke = undefined
