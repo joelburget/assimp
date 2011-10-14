@@ -17,11 +17,6 @@ module Graphics.Formats.Assimp.Fun (
   -- * Basics
     importFile
   , applyPostProcessing
-  -- * Version information
-  , getVersionMinor
-  , getVersionMajor
-  , getVersionRevision
-  , isExtensionSupported
   -- * Accessing materials
   , get
   , getArray
@@ -42,7 +37,6 @@ import Graphics.Formats.Assimp.Types
 import Graphics.Formats.Assimp.Storable ()
 
 #include "assimp.h"
-#include "aiVersion.h"
 #include "aiMaterial.h"
 #include "typedefs.h"
 
@@ -81,9 +75,6 @@ importFile str psteps = do
 {#fun unsafe aiGetErrorString as getErrorString
   {} -> `String'#}
 
-{#fun unsafe aiIsExtensionSupported as isExtensionSupported
-  {`String'} -> `Bool'#}
-
 -- {#fun unsafe aiGetExtensionList as getExtensionList
 --   {alloca- `AiString' peek'*} -> `()'#}
 
@@ -97,22 +88,6 @@ importFile str psteps = do
 
 --{# fun aiSetImportPropertyString as ^
 --  {`String', `String'} -> `()'#}
-
-{#fun unsafe aiGetLegalString as getLegalString
-  {} -> `String'#}
-
-{#fun unsafe aiGetVersionMinor as getVersionMinor
-  {} -> `CUInt' unsafeCoerce#}
-
-{#fun unsafe aiGetVersionMajor as getVersionMajor
-  {} -> `CUInt' unsafeCoerce#}
-
-{#fun unsafe aiGetVersionRevision as getVersionRevision
-  {} -> `CUInt' unsafeCoerce#}
-
-{#fun unsafe aiGetCompileFlags as getCompileFlags
-  {} -> `CompileFlags' convert#}
-  where convert = toEnum . cIntConv
 
 class ArrayGetter a where
   getArray :: Material -> MatKey -> CUInt -> IO (Either String [a])
