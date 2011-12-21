@@ -1,7 +1,7 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 -- |
--- Module : Graphics.Formats.Assimp.Storable
+-- Module : Graphics.Formats.Assimp.Quaternion
 -- Copyright : (c) Joel Burget 2011
 -- License BSD3
 --
@@ -15,8 +15,12 @@ module Graphics.Formats.Assimp.Quaternion (
     Quaternion(..)
   ) where
 
-#include "assimp.h"
+#include "aiQuaternion.h"
 #include "typedefs.h"
+#let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
+
+import Foreign.Storable
+import Control.Applicative ((<$>), (<*>))
 
 data Quaternion = Quaternion 
   { quaternionW :: Float
@@ -24,7 +28,6 @@ data Quaternion = Quaternion
   , quaternionY :: Float
   , quaternionZ :: Float
   } deriving (Show)
-{#pointer *aiQuaternion as QuaternionPtr -> Quaternion#}
 
 instance Storable Quaternion where
   sizeOf _ = #size aiQuaternion

@@ -1,7 +1,7 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 -- |
--- Module : Graphics.Formats.Assimp.Storable
+-- Module : Graphics.Formats.Assimp.Vector
 -- Copyright : (c) Joel Burget 2011
 -- License BSD3
 --
@@ -17,21 +17,17 @@ module Graphics.Formats.Assimp.Vector (
   , Vec4F(Vec4F)
   ) where
 
-#include "assimp.h"
-#include "typedefs.h"
+#include <assimp.h>
+#include <typedefs.h>
+#let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 
 import Data.Vect.Float (Vec2(..), Vec3(..), Vec4(..))
 import Foreign.Storable
 import Control.Applicative
 
-newtype Vec2F = Vec2F Vec2
-newtype Vec3F = Vec3F Vec3
-newtype Vec4F = Vec4F Vec4
-
--- {#pointer *aiVector2D as Vec2Ptr -> Vec2#}
--- {#pointer *aiVector3D as Vec3Ptr -> Vec3#}
-type Vec2Ptr = Ptr Vec2
-type Vec3Ptr = Ptr Vec3
+newtype Vec2F = Vec2F Vec2 deriving Show
+newtype Vec3F = Vec3F Vec3 deriving Show
+newtype Vec4F = Vec4F Vec4 deriving Show
 
 instance Storable Vec2F where
   sizeOf _ = (#size aiVector2D)

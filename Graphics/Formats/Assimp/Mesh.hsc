@@ -1,7 +1,7 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 -- |
--- Module : Graphics.Formats.Assimp.Storable
+-- Module : Graphics.Formats.Assimp.Mesh
 -- Copyright : (c) Joel Burget 2011
 -- License BSD3
 --
@@ -20,7 +20,21 @@ module Graphics.Formats.Assimp.Mesh (
   ) where
 
 #include "assimp.h"
+#include "aiMesh.h"
 #include "typedefs.h"
+#let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
+
+import Foreign.Storable
+import Foreign.C.Types
+import Foreign.Marshal.Array
+import Data.Bits (shiftR)
+import Control.Monad (liftM, join)
+import Control.Applicative ((<$>), (<*>))
+import Graphics.Formats.Assimp.Types
+import Graphics.Formats.Assimp.Vector
+import Graphics.Formats.Assimp.Color4D
+import Graphics.Formats.Assimp.Matrix (Mat4F)
+import Graphics.Formats.Assimp.Material
 
 data PrimitiveType = PrimitiveTypePoint
                    | PrimitiveTypeLine
@@ -41,19 +55,18 @@ instance Enum PrimitiveType where
 
 data Mesh = Mesh
   { primitiveTypes  :: [PrimitiveType]
-  , vertices        :: [Vec3]
-  , normals         :: [Vec3]
-  , tangents        :: [Vec3]
-  , bitangents      :: [Vec3]
-  , colors          :: [Vec4]
-  , textureCoords   :: [Vec3]
+  , vertices        :: [Vec3F]
+  , normals         :: [Vec3F]
+  , tangents        :: [Vec3F]
+  , bitangents      :: [Vec3F]
+  , colors          :: [Color4F]
+  , textureCoords   :: [Vec3F]
   , numUVComponents :: CUInt
   , faces           :: [Face]
   , bones           :: [Bone]
   , materialIndex   :: CUInt
   , meshName        :: String
   } deriving (Show)
-{#pointer *aiMesh as MeshPtr -> Mesh#}
 
 instance Name Mesh where
   name = meshName
@@ -68,18 +81,12 @@ instance Storable Mesh where
                         ((#peek aiMesh, mPrimitiveTypes) p :: IO CUInt)
     mNumVs           <- liftM fromIntegral
                         $ ((#peek aiMesh, mNumVertices) p :: IO CUInt)
-    mVertices        <- liftM (map (\(Vec3F x) -> x))   
-                        $ (#peek aiMesh, mVertices) p      >>= peekArray  mNumVs
-    mNormals         <- liftM (map (\(Vec3F x) -> x))   
-                        $ (#peek aiMesh, mNormals) p       >>= peekArray' mNumVs
-    mTangents        <- liftM (map (\(Vec3F x) -> x))   
-                        $ (#peek aiMesh, mTangents) p      >>= peekArray' mNumVs
-    mBitangents      <- liftM (map (\(Vec3F x) -> x))   
-                        $ (#peek aiMesh, mBitangents) p    >>= peekArray' mNumVs
-    mColors          <- liftM (map (\(Color4F x) -> x)) 
-                        $ (#peek aiMesh, mColors) p        >>= peekArray' mNumVs
-    mTextureCoords   <- liftM (map (\(Vec3F x) -> x))   
-                        $ (#peek aiMesh, mTextureCoords) p >>= peekArray' mNumVs
+    mVertices        <- (#peek aiMesh, mVertices) p      >>= peekArray  mNumVs
+    mNormals         <- (#peek aiMesh, mNormals) p       >>= peekArray' mNumVs
+    mTangents        <- (#peek aiMesh, mTangents) p      >>= peekArray' mNumVs
+    mBitangents      <- (#peek aiMesh, mBitangents) p    >>= peekArray' mNumVs
+    mColors          <- (#peek aiMesh, mColors) p        >>= peekArray' mNumVs
+    mTextureCoords   <- (#peek aiMesh, mTextureCoords) p >>= peekArray' mNumVs
     mNumUVComponents <- (#peek aiMesh, mNumUVComponents) p
     mNumFaces        <- liftM fromIntegral 
                         ((#peek aiMesh, mNumFaces) p :: IO CUInt)
@@ -97,9 +104,8 @@ instance Storable Mesh where
 data Bone = Bone
   { boneName      :: String
   , weights       :: [VertexWeight]
-  , offpokeMatrix :: Mat4
+  , offpokeMatrix :: Mat4F
   } deriving (Show)
-{#pointer *aiBone as BonePtr -> Bone#}
 
 instance Name Bone where
   name = boneName
@@ -120,7 +126,6 @@ data Face = Face
   { indices :: [CUInt] -- Holds indices defining the face
   --, debug :: String
   } deriving (Show)
-{#pointer *aiFace as FacePtr -> Face#}
 
 instance Storable Face where
   sizeOf _ = #size aiFace
@@ -136,7 +141,6 @@ data VertexWeight = VertexWeight
   { vertexId :: CUInt
   , weight   :: CFloat
   } deriving (Show)
-{#pointer *aiVertexWeight as VertexWeightPtr -> VertexWeight#}
 
 instance Storable VertexWeight where
   sizeOf _ = #size aiVertexWeight

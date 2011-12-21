@@ -1,3 +1,13 @@
+{-# LANGUAGE ForeignFunctionInterface #-}
+
+-- |
+-- Module : Graphics.Formats.Assimp.Scene
+-- Copyright : (c) Joel Burget 2011
+-- License BSD3
+--
+-- Maintainer : Joel Burget <joelburget@gmail.com>
+-- Stability : experimental
+-- Portability : non-portable
 
 module Graphics.Formats.Assimp.Scene (
     SceneFlags(..)
@@ -5,14 +15,46 @@ module Graphics.Formats.Assimp.Scene (
   , Scene(..)
   ) where
 
+#include "typedefs.h"
 #include "aiScene.h"       // Output data structure
+#let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 
-{#enum define SceneFlags {AI_SCENE_FLAGS_INCOMPLETE         as FlagsIncomplete
-                        , AI_SCENE_FLAGS_VALIDATED          as FlagsValidated
-                        , AI_SCENE_FLAGS_VALIDATION_WARNING as FlagsValidationWarning
-                        , AI_SCENE_FLAGS_NON_VERBOSE_FORMAT as FlagsNonVerboseFormat
-                        , AI_SCENE_FLAGS_TERRAIN            as FlagsTerrain
-                        }#}
+import Foreign.Storable
+import Foreign.C
+import Foreign.Marshal.Array
+import Control.Monad (liftM)
+import Graphics.Formats.Assimp.Types
+import Graphics.Formats.Assimp.Vector
+import Graphics.Formats.Assimp.Matrix
+import Graphics.Formats.Assimp.Light
+import Graphics.Formats.Assimp.Camera
+import Graphics.Formats.Assimp.Mesh
+import Graphics.Formats.Assimp.Anim
+import Graphics.Formats.Assimp.Material
+import Graphics.Formats.Assimp.Texture
+
+data SceneFlags = FlagsIncomplete
+                | FlagsValidated
+                | FlagsValidationWarning
+                | FlagsNonVerboseFormat
+                | FlagsTerrain
+                deriving Eq
+
+instance Enum SceneFlags where
+  fromEnum FlagsIncomplete        = #const AI_SCENE_FLAGS_INCOMPLETE
+  fromEnum FlagsValidated         = #const AI_SCENE_FLAGS_VALIDATED
+  fromEnum FlagsValidationWarning = #const AI_SCENE_FLAGS_VALIDATION_WARNING
+  fromEnum FlagsNonVerboseFormat  = #const AI_SCENE_FLAGS_NON_VERBOSE_FORMAT
+  fromEnum FlagsTerrain           = #const AI_SCENE_FLAGS_TERRAIN
+
+  toEnum (#const AI_SCENE_FLAGS_INCOMPLETE)         = FlagsIncomplete
+  toEnum (#const AI_SCENE_FLAGS_VALIDATED)          = FlagsValidated
+  toEnum (#const AI_SCENE_FLAGS_VALIDATION_WARNING) = FlagsValidationWarning
+  toEnum (#const AI_SCENE_FLAGS_NON_VERBOSE_FORMAT) = FlagsNonVerboseFormat
+  toEnum (#const AI_SCENE_FLAGS_TERRAIN)            = FlagsTerrain
+  toEnum unmatched                                  = error $ 
+    "Return.toEnum: Cannot match " ++ show unmatched
+
 instance Show SceneFlags where
   show FlagsIncomplete        = "FlagsIncomplete"
   show FlagsValidated         = "FlagsValidated"
@@ -22,12 +64,11 @@ instance Show SceneFlags where
 
 data Node = Node
   { nodeName       :: String
-  , transformation :: Mat4
+  , transformation :: Mat4F
   , parent         :: Maybe Node
   , children       :: [Node]
   , nodeMeshes     :: [CUInt] -- Holds indices defining the node
   } deriving (Show)
-{#pointer *aiNode as NodePtr -> Node#}
 
 instance Name Node where
   name = nodeName
@@ -63,7 +104,6 @@ data Scene = Scene
   , lights     :: [Light]
   , cameras    :: [Camera]
   } deriving (Show)
-{#pointer *aiScene as ScenePtr -> Scene#}
 
 instance Storable Scene where
   sizeOf _ = #size aiScene

@@ -1,7 +1,7 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 -- |
--- Module : Graphics.Formats.Assimp.Storable
+-- Module : Graphics.Formats.Assimp.Texture
 -- Copyright : (c) Joel Burget 2011
 -- License BSD3
 --
@@ -17,7 +17,13 @@ module Graphics.Formats.Assimp.Texture (
   ) where
 
 #include "assimp.h"
+#include "aiTexture.h"
 #include "typedefs.h"
+#let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
+
+import Foreign.Storable
+import Foreign.C
+import Foreign.Marshal.Array
 
 data Texel = Texel 
   { dummy'Texel :: Int
@@ -35,7 +41,6 @@ data Texture = Texture
   , achFormatHint :: String
   , pcData        :: [Texel]
   } deriving (Show)
-{#pointer *aiTexture as TexturePtr -> Texture#}
 
 instance Storable Texture where
   sizeOf _ = #size aiTexture

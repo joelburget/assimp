@@ -1,7 +1,7 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 -- |
--- Module : Graphics.Formats.Assimp.Storable
+-- Module : Graphics.Formats.Assimp.Color4D
 -- Copyright : (c) Joel Burget 2011
 -- License BSD3
 --
@@ -12,26 +12,18 @@
 -- Corresponds to aiColor4D.h
 
 module Graphics.Formats.Assimp.Color4D (
-    Color3F(Color3F)
-  , Color4F(Color4F)
+    Color4F(Color4F)
   ) where
 
-#include "assimp.h"
+#include "aiColor4D.h"
 #include "typedefs.h"
+#let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 
-newtype Color3F = Color3F Vec3
-newtype Color4F = Color4F Vec4
+import Control.Applicative ((<$>), (<*>))
+import Foreign.Storable
+import Data.Vect.Float (Vec4(..))
 
-{#pointer *aiColor3D as Color3Ptr -> Color3F#}
-{#pointer *aiColor4D as Color4Ptr -> Color4F#}
-
-instance Storable Color3F where
-  sizeOf _ = #size aiColor3D
-  alignment _ = #alignment aiColor3D
-  peek p = Color3F <$> (Vec3 <$> (#peek aiColor3D, r) p
-                             <*> (#peek aiColor3D, g) p
-                             <*> (#peek aiColor3D, b) p)
-  poke = undefined
+newtype Color4F = Color4F Vec4 deriving Show
 
 instance Storable Color4F where
   sizeOf _ = #size aiColor4D

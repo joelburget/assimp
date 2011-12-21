@@ -1,7 +1,7 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 -- |
--- Module : Graphics.Formats.Assimp.Storable
+-- Module : Graphics.Formats.Assimp.Matrix
 -- Copyright : (c) Joel Burget 2011
 -- License BSD3
 --
@@ -16,16 +16,16 @@ module Graphics.Formats.Assimp.Matrix (
   , Mat4F(Mat4F)
   ) where
 
-#include "assimp.h"
+#include "aiMatrix3x3.h"
+#include "aiMatrix4x4.h"
 #include "typedefs.h"
+#let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 
-import Data.Vect.Float (Mat3(..), Mat4(..))
+import Foreign.Storable
+import Data.Vect.Float (Mat3(..), Mat4(..), Vec2(..), Vec3(..), Vec4(..))
 
-newtype Mat3F = Mat3F Mat3
-newtype Mat4F = Mat4F Mat4
-
-{#pointer *aiMatrix3x3 as Mat3Ptr -> Mat3#}
-{#pointer *aiMatrix4x4 as Mat4Ptr -> Mat4#}
+newtype Mat3F = Mat3F Mat3 deriving Show
+newtype Mat4F = Mat4F Mat4 deriving Show
 
 instance Storable Mat3F where
   sizeOf _ = #size aiMatrix3x3

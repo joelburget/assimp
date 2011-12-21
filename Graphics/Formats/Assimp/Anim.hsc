@@ -1,7 +1,7 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 -- |
--- Module : Graphics.Formats.Assimp.Storable
+-- Module : Graphics.Formats.Assimp.Anim
 -- Copyright : (c) Joel Burget 2011
 -- License BSD3
 --
@@ -17,8 +17,14 @@ module Graphics.Formats.Assimp.Anim (
   , Animation(..)
   ) where
 
-#include "assimp.h"
+#include "aiAnim.h"
 #include "typedefs.h"
+#let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
+
+import Control.Monad (liftM)
+import Foreign.Storable
+import Foreign.Marshal.Array (peekArray)
+import Graphics.Formats.Assimp.Types
 
 data NodeAnim = NodeAnim 
   { dummy'NodeAnim :: Int
@@ -35,7 +41,6 @@ data Animation = Animation
   , channels       :: [NodeAnim]
   , meshChannels   :: [MeshAnim]
   } deriving (Show)
-{#pointer *aiAnimation as AnimationPtr -> Animation#}
 
 instance Name Animation where
   name = animationName
