@@ -22,7 +22,7 @@ data PostProcessSteps = CalcTangentSpace
                       | MakeLeftHanded
                       | Triangulate
                       | RemoveComponent
-                      | ProcessGenNormals
+                      | GenNormals
                       | GenSmoothNormals
                       | SplitLargeMeshes
                       | PreTransformVertices
@@ -39,58 +39,58 @@ data PostProcessSteps = CalcTangentSpace
                       | FindInstances
                       | OptimizeMeshes
                       | OptimizeGraph
-                      | ProcessFlipUVs
+                      | FlipUVs
                       | FlipWindingOrder
                       deriving (Show, Eq)
 
 instance Enum PostProcessSteps where
-  fromEnum CalcTangentSpace         = 0x1
-  fromEnum JoinIdenticalVertices    = 0x2
-  fromEnum MakeLeftHanded           = 0x4
-  fromEnum Triangulate              = 0x8
-  fromEnum RemoveComponent          = 0x10
-  fromEnum ProcessGenNormals        = 0x20
-  fromEnum GenSmoothNormals         = 0x40
-  fromEnum SplitLargeMeshes         = 0x80
-  fromEnum PreTransformVertices     = 0x100
-  fromEnum LimitBoneWeights         = 0x200
-  fromEnum ValidateDataStructure    = 0x400
-  fromEnum ImproveCacheLocality     = 0x800
-  fromEnum RemoveRedundantMaterials = 0x1000
-  fromEnum FixInfacingNormals       = 0x2000
-  fromEnum SortByPType              = 0x8000
-  fromEnum FindDegenerates          = 0x10000
-  fromEnum FindInvalidData          = 0x20000
-  fromEnum GenUVCoords              = 0x40000
-  fromEnum TransformUVCoords        = 0x80000
-  fromEnum FindInstances            = 0x100000
-  fromEnum OptimizeMeshes           = 0x200000
-  fromEnum OptimizeGraph            = 0x400000
-  fromEnum ProcessFlipUVs           = 0x800000
-  fromEnum FlipWindingOrder         = 0x1000000
+  fromEnum CalcTangentSpace         = #const aiProcess_CalcTangentSpace
+  fromEnum JoinIdenticalVertices    = #const aiProcess_JoinIdenticalVertices
+  fromEnum MakeLeftHanded           = #const aiProcess_MakeLeftHanded
+  fromEnum Triangulate              = #const aiProcess_Triangulate
+  fromEnum RemoveComponent          = #const aiProcess_RemoveComponent
+  fromEnum GenNormals               = #const aiProcess_GenNormals
+  fromEnum GenSmoothNormals         = #const aiProcess_GenSmoothNormals
+  fromEnum SplitLargeMeshes         = #const aiProcess_SplitLargeMeshes
+  fromEnum PreTransformVertices     = #const aiProcess_PreTransformVertices
+  fromEnum LimitBoneWeights         = #const aiProcess_LimitBoneWeights
+  fromEnum ValidateDataStructure    = #const aiProcess_ValidateDataStructure
+  fromEnum ImproveCacheLocality     = #const aiProcess_ImproveCacheLocality
+  fromEnum RemoveRedundantMaterials = #const aiProcess_RemoveRedundantMaterials
+  fromEnum FixInfacingNormals       = #const aiProcess_FixInfacingNormals
+  fromEnum SortByPType              = #const aiProcess_SortByPType
+  fromEnum FindDegenerates          = #const aiProcess_FindDegenerates
+  fromEnum FindInvalidData          = #const aiProcess_FindInvalidData
+  fromEnum GenUVCoords              = #const aiProcess_GenUVCoords
+  fromEnum TransformUVCoords        = #const aiProcess_TransformUVCoords
+  fromEnum FindInstances            = #const aiProcess_FindInstances
+  fromEnum OptimizeMeshes           = #const aiProcess_OptimizeMeshes
+  fromEnum OptimizeGraph            = #const aiProcess_OptimizeGraph
+  fromEnum FlipUVs                  = #const aiProcess_FlipUVs
+  fromEnum FlipWindingOrder         = #const aiProcess_FlipWindingOrder
 
-  toEnum 0x1       = CalcTangentSpace
-  toEnum 0x2       = JoinIdenticalVertices
-  toEnum 0x4       = MakeLeftHanded
-  toEnum 0x8       = Triangulate
-  toEnum 0x10      = RemoveComponent
-  toEnum 0x20      = ProcessGenNormals
-  toEnum 0x40      = GenSmoothNormals
-  toEnum 0x80      = SplitLargeMeshes
-  toEnum 0x100     = PreTransformVertices
-  toEnum 0x200     = LimitBoneWeights
-  toEnum 0x400     = ValidateDataStructure
-  toEnum 0x800     = ImproveCacheLocality
-  toEnum 0x1000    = RemoveRedundantMaterials
-  toEnum 0x2000    = FixInfacingNormals
-  toEnum 0x8000    = SortByPType
-  toEnum 0x10000   = FindDegenerates
-  toEnum 0x20000   = FindInvalidData
-  toEnum 0x40000   = GenUVCoords
-  toEnum 0x80000   = TransformUVCoords
-  toEnum 0x100000  = FindInstances
-  toEnum 0x200000  = OptimizeMeshes
-  toEnum 0x400000  = OptimizeGraph
-  toEnum 0x800000  = ProcessFlipUVs
-  toEnum 0x1000000 = FlipWindingOrder
+  toEnum (#const aiProcess_CalcTangentSpace)         = CalcTangentSpace
+  toEnum (#const aiProcess_JoinIdenticalVertices)    = JoinIdenticalVertices
+  toEnum (#const aiProcess_MakeLeftHanded)           = MakeLeftHanded
+  toEnum (#const aiProcess_Triangulate)              = Triangulate
+  toEnum (#const aiProcess_RemoveComponent)          = RemoveComponent
+  toEnum (#const aiProcess_GenNormals)               = GenNormals
+  toEnum (#const aiProcess_GenSmoothNormals)         = GenSmoothNormals
+  toEnum (#const aiProcess_SplitLargeMeshes)         = SplitLargeMeshes
+  toEnum (#const aiProcess_PreTransformVertices)     = PreTransformVertices
+  toEnum (#const aiProcess_LimitBoneWeights)         = LimitBoneWeights
+  toEnum (#const aiProcess_ValidateDataStructure)    = ValidateDataStructure
+  toEnum (#const aiProcess_ImproveCacheLocality)     = ImproveCacheLocality
+  toEnum (#const aiProcess_RemoveRedundantMaterials) = RemoveRedundantMaterials
+  toEnum (#const aiProcess_FixInfacingNormals)       = FixInfacingNormals
+  toEnum (#const aiProcess_SortByPType)              = SortByPType
+  toEnum (#const aiProcess_FindDegenerates)          = FindDegenerates
+  toEnum (#const aiProcess_FindInvalidData)          = FindInvalidData
+  toEnum (#const aiProcess_GenUVCoords)              = GenUVCoords
+  toEnum (#const aiProcess_TransformUVCoords)        = TransformUVCoords
+  toEnum (#const aiProcess_FindInstances)            = FindInstances
+  toEnum (#const aiProcess_OptimizeMeshes)           = OptimizeMeshes
+  toEnum (#const aiProcess_OptimizeGraph)            = OptimizeGraph
+  toEnum (#const aiProcess_FlipUVs)                  = FlipUVs
+  toEnum (#const aiProcess_FlipWindingOrder)         = FlipWindingOrder
   toEnum unmatched = error $ "PostProcessSteps.toEnum: Cannot match " ++ show unmatched

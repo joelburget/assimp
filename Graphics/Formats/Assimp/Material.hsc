@@ -56,27 +56,27 @@ data ShadingMode = Flat
                  deriving (Show, Eq)
 
 instance Enum ShadingMode where
-  fromEnum Flat         = 0x1
-  fromEnum Gouraud      = 0x2
-  fromEnum Phong        = 0x3
-  fromEnum Blinn        = 0x4
-  fromEnum Toon         = 0x5
-  fromEnum OrenNayar    = 0x6
-  fromEnum Minnaert     = 0x7
-  fromEnum CookTorrance = 0x8
-  fromEnum NoShading    = 0x9
-  fromEnum Fresnel      = 0xa
+  fromEnum Flat         = #const aiShadingMode_Flat
+  fromEnum Gouraud      = #const aiShadingMode_Gouraud
+  fromEnum Phong        = #const aiShadingMode_Phong
+  fromEnum Blinn        = #const aiShadingMode_Blinn
+  fromEnum Toon         = #const aiShadingMode_Toon
+  fromEnum OrenNayar    = #const aiShadingMode_OrenNayar
+  fromEnum Minnaert     = #const aiShadingMode_Minnaert
+  fromEnum CookTorrance = #const aiShadingMode_CookTorrance
+  fromEnum NoShading    = #const aiShadingMode_NoShading
+  fromEnum Fresnel      = #const aiShadingMode_Fresnel
 
-  toEnum 0x1 = Flat
-  toEnum 0x2 = Gouraud
-  toEnum 0x3 = Phong
-  toEnum 0x4 = Blinn
-  toEnum 0x5 = Toon
-  toEnum 0x6 = OrenNayar
-  toEnum 0x7 = Minnaert
-  toEnum 0x8 = CookTorrance
-  toEnum 0x9 = NoShading
-  toEnum 0xa = Fresnel
+  toEnum (#const aiShadingMode_Flat)         = Flat
+  toEnum (#const aiShadingMode_Gouraud)      = Gouraud
+  toEnum (#const aiShadingMode_Phong)        = Phong
+  toEnum (#const aiShadingMode_Blinn)        = Blinn
+  toEnum (#const aiShadingMode_Toon)         = Toon
+  toEnum (#const aiShadingMode_OrenNayar)    = OrenNayar
+  toEnum (#const aiShadingMode_Minnaert)     = Minnaert
+  toEnum (#const aiShadingMode_CookTorrance) = CookTorrance
+  toEnum (#const aiShadingMode_NoShading)    = NoShading
+  toEnum (#const aiShadingMode_Fresnel)      = Fresnel
   toEnum unmatched = error $ "ShadingMode.toEnum: Cannot match " ++ show unmatched
 
 data BlendMode = Default
@@ -84,11 +84,11 @@ data BlendMode = Default
                deriving (Show, Eq)
 
 instance Enum BlendMode where
-  fromEnum Default  = 0x0
-  fromEnum Additive = 0x1
+  fromEnum Default  = #const aiBlendMode_Default
+  fromEnum Additive = #const aiBlendMode_Additive
 
-  toEnum 0x0 = Default
-  toEnum 0x1 = Additive
+  toEnum (#const aiBlendMode_Default)  = Default
+  toEnum (#const aiBlendMode_Additive) = Additive
   toEnum unmatched = error $ "BlendMode.toEnum: Cannot match " ++ show unmatched
 
 data TextureFlags = Invert
@@ -97,13 +97,13 @@ data TextureFlags = Invert
                   deriving (Show, Eq)
 
 instance Enum TextureFlags where
-  fromEnum Invert      = 0x1
-  fromEnum UseAlpha    = 0x2
-  fromEnum IgnoreAlpha = 0x4
+  fromEnum Invert      = #const aiTextureFlags_Invert
+  fromEnum UseAlpha    = #const aiTextureFlags_UseAlpha
+  fromEnum IgnoreAlpha = #const aiTextureFlags_IgnoreAlpha
 
-  toEnum 0x1 = Invert
-  toEnum 0x2 = UseAlpha
-  toEnum 0x4 = IgnoreAlpha
+  toEnum (#const aiTextureFlags_Invert)      = Invert
+  toEnum (#const aiTextureFlags_UseAlpha)    = UseAlpha
+  toEnum (#const aiTextureFlags_IgnoreAlpha) = IgnoreAlpha
   toEnum unmatched = error $ "TextureFlags.toEnum: Cannot match " ++ show unmatched
 
 data TextureMapMode = Wrap
@@ -113,15 +113,15 @@ data TextureMapMode = Wrap
                     deriving (Show, Eq)
 
 instance Enum TextureMapMode where
-  fromEnum Wrap   = 0x0
-  fromEnum Clamp  = 0x1
-  fromEnum Decal  = 0x3
-  fromEnum Mirror = 0x2
+  fromEnum Wrap   = #const aiTextureMapMode_Wrap
+  fromEnum Clamp  = #const aiTextureMapMode_Clamp
+  fromEnum Decal  = #const aiTextureMapMode_Decal
+  fromEnum Mirror = #const aiTextureMapMode_Mirror
 
-  toEnum 0x0 = Wrap
-  toEnum 0x1 = Clamp
-  toEnum 0x3 = Decal
-  toEnum 0x2 = Mirror
+  toEnum (#const aiTextureMapMode_Wrap)   = Wrap
+  toEnum (#const aiTextureMapMode_Clamp)  = Clamp
+  toEnum (#const aiTextureMapMode_Decal)  = Decal
+  toEnum (#const aiTextureMapMode_Mirror) = Mirror
   toEnum unmatched = error $ "TextureMapMode.toEnum: Cannot match " ++ show unmatched
 
 data TextureMapping = TmUv
@@ -133,19 +133,19 @@ data TextureMapping = TmUv
                     deriving (Show, Eq)
 
 instance Enum TextureMapping where
-  fromEnum TmUv       = 0x0
-  fromEnum TmSphere   = 0x1
-  fromEnum TmCylinder = 0x2
-  fromEnum TmBox      = 0x3
-  fromEnum TmPlane    = 0x4
-  fromEnum TmOther    = 0x5
+  fromEnum TmUv       = #const aiTextureMapping_UV
+  fromEnum TmSphere   = #const aiTextureMapping_SPHERE
+  fromEnum TmCylinder = #const aiTextureMapping_CYLINDER
+  fromEnum TmBox      = #const aiTextureMapping_BOX
+  fromEnum TmPlane    = #const aiTextureMapping_PLANE
+  fromEnum TmOther    = #const aiTextureMapping_OTHER
 
-  toEnum 0x0 = TmUv
-  toEnum 0x1 = TmSphere
-  toEnum 0x2 = TmCylinder
-  toEnum 0x3 = TmBox
-  toEnum 0x4 = TmPlane
-  toEnum 0x5 = TmOther
+  toEnum (#const aiTextureMapping_UV)       = TmUv
+  toEnum (#const aiTextureMapping_SPHERE)   = TmSphere
+  toEnum (#const aiTextureMapping_CYLINDER) = TmCylinder
+  toEnum (#const aiTextureMapping_BOX)      = TmBox
+  toEnum (#const aiTextureMapping_PLANE)    = TmPlane
+  toEnum (#const aiTextureMapping_OTHER)    = TmOther
   toEnum unmatched = error $ "TextureMapping.toEnum: Cannot match " ++ show unmatched
 
 data TextureOp = Multiply
@@ -157,19 +157,19 @@ data TextureOp = Multiply
                deriving (Show, Eq)
 
 instance Enum TextureOp where
-  fromEnum Multiply  = 0x0
-  fromEnum Add       = 0x1
-  fromEnum Subtract  = 0x2
-  fromEnum Divide    = 0x3
-  fromEnum SmoothAdd = 0x4
-  fromEnum SignedAdd = 0x5
+  fromEnum Multiply  = #const aiTextureOp_Multiply
+  fromEnum Add       = #const aiTextureOp_Add
+  fromEnum Subtract  = #const aiTextureOp_Subtract
+  fromEnum Divide    = #const aiTextureOp_Divide
+  fromEnum SmoothAdd = #const aiTextureOp_SmoothAdd
+  fromEnum SignedAdd = #const aiTextureOp_SignedAdd
 
-  toEnum 0x0 = Multiply
-  toEnum 0x1 = Add
-  toEnum 0x2 = Subtract
-  toEnum 0x3 = Divide
-  toEnum 0x4 = SmoothAdd
-  toEnum 0x5 = SignedAdd
+  toEnum (#const aiTextureOp_Multiply)  = Multiply
+  toEnum (#const aiTextureOp_Add)       = Add
+  toEnum (#const aiTextureOp_Subtract)  = Subtract
+  toEnum (#const aiTextureOp_Divide)    = Divide
+  toEnum (#const aiTextureOp_SmoothAdd) = SmoothAdd
+  toEnum (#const aiTextureOp_SignedAdd) = SignedAdd
   toEnum unmatched = error $ "TextureOp.toEnum: Cannot match " ++ show unmatched
 
 data TextureType = None
@@ -188,33 +188,33 @@ data TextureType = None
                  deriving (Show, Eq)
 
 instance Enum TextureType where
-  fromEnum None         = 0x0
-  fromEnum Diffuse      = 0x1
-  fromEnum Specular     = 0x2
-  fromEnum Ambient      = 0x3
-  fromEnum Emissive     = 0x4
-  fromEnum Height       = 0x5
-  fromEnum Normals      = 0x6
-  fromEnum Shininess    = 0x7
-  fromEnum Opacity      = 0x8
-  fromEnum Displacement = 0x9
-  fromEnum Lightmap     = 0xa
-  fromEnum Reflection   = 0xb
-  fromEnum Unknown      = 0xc
+  fromEnum None         = #const aiTextureType_NONE
+  fromEnum Diffuse      = #const aiTextureType_DIFFUSE
+  fromEnum Specular     = #const aiTextureType_SPECULAR
+  fromEnum Ambient      = #const aiTextureType_AMBIENT
+  fromEnum Emissive     = #const aiTextureType_EMISSIVE
+  fromEnum Height       = #const aiTextureType_HEIGHT
+  fromEnum Normals      = #const aiTextureType_NORMALS
+  fromEnum Shininess    = #const aiTextureType_SHININESS
+  fromEnum Opacity      = #const aiTextureType_OPACITY
+  fromEnum Displacement = #const aiTextureType_DISPLACEMENT
+  fromEnum Lightmap     = #const aiTextureType_LIGHTMAP
+  fromEnum Reflection   = #const aiTextureType_REFLECTION
+  fromEnum Unknown      = #const aiTextureType_UNKNOWN
 
-  toEnum 0x0 = None
-  toEnum 0x1 = Diffuse
-  toEnum 0x2 = Specular
-  toEnum 0x3 = Ambient
-  toEnum 0x4 = Emissive
-  toEnum 0x5 = Height
-  toEnum 0x6 = Normals
-  toEnum 0x7 = Shininess
-  toEnum 0x8 = Opacity
-  toEnum 0x9 = Displacement
-  toEnum 0xa = Lightmap
-  toEnum 0xb = Reflection
-  toEnum 0xc = Unknown
+  toEnum (#const aiTextureType_NONE)         = None
+  toEnum (#const aiTextureType_DIFFUSE)      = Diffuse
+  toEnum (#const aiTextureType_SPECULAR)     = Specular
+  toEnum (#const aiTextureType_AMBIENT)      = Ambient
+  toEnum (#const aiTextureType_EMISSIVE)     = Emissive
+  toEnum (#const aiTextureType_HEIGHT)       = Height
+  toEnum (#const aiTextureType_NORMALS)      = Normals
+  toEnum (#const aiTextureType_SHININESS)    = Shininess
+  toEnum (#const aiTextureType_OPACITY)      = Opacity
+  toEnum (#const aiTextureType_DISPLACEMENT) = Displacement
+  toEnum (#const aiTextureType_LIGHTMAP)     = Lightmap
+  toEnum (#const aiTextureType_REFLECTION)   = Reflection
+  toEnum (#const aiTextureType_UNKNOWN)      = Unknown
   toEnum unmatched = error $ "TextureType.toEnum: Cannot match " ++ show unmatched
 
 data PropertyTypeInfo = PtiFloat
@@ -224,15 +224,15 @@ data PropertyTypeInfo = PtiFloat
                        deriving (Show, Eq)
 
 instance Enum PropertyTypeInfo where
-  fromEnum PtiFloat   = 0x1
-  fromEnum PtiString  = 0x3
-  fromEnum PtiInteger = 0x4
-  fromEnum PtiBuffer  = 0x5
+  fromEnum PtiFloat   = #const aiPTI_Float
+  fromEnum PtiString  = #const aiPTI_String
+  fromEnum PtiInteger = #const aiPTI_Integer
+  fromEnum PtiBuffer  = #const aiPTI_Buffer
 
-  toEnum 0x1 = PtiFloat
-  toEnum 0x3 = PtiString
-  toEnum 0x4 = PtiInteger
-  toEnum 0x5 = PtiBuffer
+  toEnum (#const aiPTI_Float)   = PtiFloat
+  toEnum (#const aiPTI_String)  = PtiString
+  toEnum (#const aiPTI_Integer) = PtiInteger
+  toEnum (#const aiPTI_Buffer)  = PtiBuffer
   toEnum unmatched = error $ "PropertyTypeInfo.toEnum: Cannot match " ++ show unmatched
 
 data MatKey = KeyName
@@ -295,14 +295,14 @@ matKeyToTuple (KeyTexMapAxis tType i)   = ("$tex.mapaxis",      fromEnum' tType,
 matKeyToTuple (KeyUvTransform tType i)  = ("$tex.uvtrafo",      fromEnum' tType, i)
 matKeyToTuple (KeyTexFlags tType i)     = ("$tex.flags",        fromEnum' tType, i)
 
-data MaterialProperty = MaterialProperty 
+data MaterialProperty = MaterialProperty
   { key      :: String
   , semantic :: TextureType
   , index    :: CUInt
   , mData    :: String
   } deriving (Show)
 
-data Material = Material 
+data Material = Material
   { properties :: [MaterialProperty]
   } deriving (Show)
 
@@ -326,7 +326,7 @@ instance Storable Material where
       ((#peek aiMaterial, mProperties) p))
   poke = undefined
 
-data UVTransform = UVTransform 
+data UVTransform = UVTransform
   { translation :: Vec2F
   , scaling     :: Vec2F
   , rotation    :: Float
