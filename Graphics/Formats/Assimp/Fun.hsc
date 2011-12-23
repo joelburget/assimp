@@ -41,6 +41,7 @@ import Foreign.Marshal.Array (peekArray)
 import Foreign.Storable
 import Data.Bits ((.|.))
 import Control.Monad (liftM)
+import Control.Applicative (liftA, (<$>), (<*>))
 import Unsafe.Coerce (unsafeCoerce)
 import Data.Vect (Vec3(Vec3), Vec4(Vec4))
 import Data.List (foldl1')
@@ -59,7 +60,7 @@ import Graphics.Formats.Assimp.PostProcess
 
 applyPostProcessing :: Scene -> PostProcessSteps -> IO Scene
 applyPostProcessing scene steps =
-  with scene $ \pscene -> 
+  with scene $ \pscene ->
     aiApplyPostProcessing pscene (fromIntegral . fromEnum $ steps) >>= peek
 
 foreign import ccall unsafe "aiApplyPostProcessing"
@@ -72,7 +73,7 @@ foreign import ccall unsafe "aiApplyPostProcessing"
 -- aiDetachAllLogStreams
 
 importFile :: String -> [PostProcessSteps] -> IO (Either String Scene)
-importFile str psteps = do 
+importFile str psteps = do
   let psteps' = foldl1' (.|.) $ map (fromIntegral . fromEnum) psteps
   sceneptr <- withCString str $ \x -> aiImportFile x psteps'
   if sceneptr == nullPtr
@@ -103,24 +104,24 @@ foreign import ccall unsafe "aiGetExtensionList"
   aiGetExtensionList :: Ptr AiString -> IO ()
 
 getMemoryRequirements :: Scene -> IO MemoryInfo
-getMemoryRequirements scene = 
+getMemoryRequirements scene =
   with scene $ \pscene ->
     alloca $ \pmeminfo -> do
       aiGetMemoryRequirements pscene pmeminfo
       peek pmeminfo
-  
-foreign import ccall unsafe "aiGetMemoryRequirements" 
+
+foreign import ccall unsafe "aiGetMemoryRequirements"
   aiGetMemoryRequirements :: Ptr Scene -> Ptr MemoryInfo -> IO ()
 
 setImportPropertyInteger :: String -> Int -> IO ()
 setImportPropertyInteger prop n =
-  withCString prop $ \prop' -> aiSetImportPropertyInteger prop' (fromIntegral n)
+  withCString prop $ \cprop -> aiSetImportPropertyInteger cprop (fromIntegral n)
 
 foreign import ccall unsafe "aiSetImportPropertyInteger"
   aiSetImportPropertyInteger :: Ptr CChar -> CInt -> IO ()
 
 setImportPropertyFloat :: String -> Float -> IO ()
-setImportPropertyFloat prop f = withCString prop $ \prop' -> 
+setImportPropertyFloat prop f = withCString prop $ \prop' ->
   aiSetImportPropertyFloat prop' (fromRational . toRational $ f)
 
 foreign import ccall unsafe "aiSetImportPropertyFloat"
@@ -154,7 +155,7 @@ instance SingleGetter Int where
 
 instance SingleGetter Vec3 where
 -- Also another case?
-  get mat key = (liftM . liftM) (\(Vec4 r g b _) -> Vec3 r g b) 
+  get mat key = (liftM . liftM) (\(Vec4 r g b _) -> Vec3 r g b)
     (getMaterialColor mat key)
 
 instance SingleGetter Vec4 where
@@ -183,30 +184,30 @@ getMaterialProperty mat key = do
     ReturnOutOfMemory -> return $ Left "Out of memory."
   where
     peekM :: Ptr MaterialProperty -> IO (Either String MaterialProperty)
-    peekM p = 
+    peekM p =
       if p == nullPtr
       then return $ Left "No property found"
       else liftM Right $ peek p
 
-getMaterialProperty' :: Material 
-                     -> String 
-                     -> CUInt 
-                     -> CUInt 
+getMaterialProperty' :: Material
+                     -> String
+                     -> CUInt
+                     -> CUInt
                      -> IO (Return, Ptr MaterialProperty)
 getMaterialProperty' mat prop n1 n2 =
   with mat $ \pmat ->
     withCString prop $ \pprop ->
-      alloca $ \ppmatprop -> do
-        ret <- aiGetMaterialProperty pmat pprop n1 n2 ppmatprop
-        pmatprop <- peek ppmatprop
-        return (toEnum . fromIntegral $ ret, pmatprop)
+      alloca $ \ppmatprop -> (,)
+        <$> liftA (toEnum . fromIntegral) 
+              (aiGetMaterialProperty pmat pprop n1 n2 ppmatprop)
+        <*> peek ppmatprop
 
 foreign import ccall unsafe "aiGetMaterialProperty"
-  aiGetMaterialProperty :: Ptr Material 
-                        -> Ptr CChar 
-                        -> CUInt 
-                        -> CUInt 
-                        -> Ptr (Ptr MaterialProperty) 
+  aiGetMaterialProperty :: Ptr Material
+                        -> Ptr CChar
+                        -> CUInt
+                        -> CUInt
+                        -> Ptr (Ptr MaterialProperty)
                         -> IO CInt
 
 -------------------------------------------------------------------------------
@@ -223,8 +224,8 @@ getMaterialFloatArray mat key max = do
   let (mKey, mType, mIndex) = matKeyToTuple key
   (ret, arr, max') <- getMaterialFloatArray' mat mKey mType mIndex max
   ret' <- case ret of
-    ReturnSuccess     -> liftM (Right . (map unsafeCoerce)) 
-                           $ peekArray (fromIntegral max') arr 
+    ReturnSuccess     -> liftM (Right . (map unsafeCoerce))
+                           $ peekArray (fromIntegral max') arr
     ReturnFailure     -> return $ Left "Failed"
     ReturnOutOfMemory -> return $ Left "Out of memory."
   free arr
@@ -240,18 +241,18 @@ getMaterialFloatArray' mat key typ idx max =
   with mat $ \pmat ->
     withCString key $ \ckey ->
       with max $ \pmax -> do
-        buf <- mallocBytes ((sizeOf (undefined :: CFloat)) * (fromIntegral max))
+        buf <- mallocBytes $ (sizeOf (undefined :: CFloat)) * (fromIntegral max)
         ret <- aiGetMaterialFloatArray pmat ckey typ idx buf pmax
         max' <- peek pmax
         return (toEnum . fromIntegral $ ret, buf, max')
 
 foreign import ccall unsafe "aiGetMaterialFloatArray"
-  aiGetMaterialFloatArray :: Ptr Material 
-                          -> Ptr CChar 
-                          -> CUInt 
-                          -> CUInt 
-                          -> Ptr CFloat 
-                          -> Ptr CUInt 
+  aiGetMaterialFloatArray :: Ptr Material
+                          -> Ptr CChar
+                          -> CUInt
+                          -> CUInt
+                          -> Ptr CFloat
+                          -> Ptr CUInt
                           -> IO CInt
 
 -------------------------------------------------------------------------------
@@ -270,8 +271,8 @@ getMaterialIntArray mat key max = do
   let (mKey, mType, mIndex) = matKeyToTuple key
   (ret, arr, max') <- getMaterialIntArray' mat mKey mType mIndex max
   ret' <- case ret of
-    ReturnSuccess     -> liftM (Right . (map unsafeCoerce)) 
-                           $ peekArray (fromIntegral max') arr 
+    ReturnSuccess     -> liftM (Right . (map unsafeCoerce)) $
+                           peekArray (fromIntegral max') arr
     ReturnFailure     -> return $ Left "Failed"
     ReturnOutOfMemory -> return $ Left "Out of memory."
   free arr
@@ -293,12 +294,12 @@ getMaterialIntArray' mat key typ idx max =
         return (toEnum . fromIntegral $ ret, buf, max')
 
 foreign import ccall unsafe "aiGetMaterialIntegerArray"
-  aiGetMaterialIntegerArray :: Ptr Material 
-                            -> Ptr CChar 
-                            -> CUInt 
-                            -> CUInt 
-                            -> Ptr CInt 
-                            -> Ptr CUInt 
+  aiGetMaterialIntegerArray :: Ptr Material
+                            -> Ptr CChar
+                            -> CUInt
+                            -> CUInt
+                            -> Ptr CInt
+                            -> Ptr CUInt
                             -> IO CInt
 
 -------------------------------------------------------------------------------
@@ -321,29 +322,20 @@ getMaterialColor mat key = do
     ReturnFailure     -> Left "Failed"
     ReturnOutOfMemory -> Left "Out of memory."
 
--- Can't get this to work :(
--- {#fun unsafe aiGetMaterialColor as getMaterialColor'
---   {with'* `Material',
---           `String'  ,
---    mCUInt  `CUInt'    ,
---    mCUInt  `CUInt'    ,
---    alloca- `Vec4' peek'*} -> `Return' mRet#}
-
 getMaterialColor' :: Material -> String -> CUInt -> CUInt -> IO (Return, Vec4)
-getMaterialColor' a1 a2 a3 a4 =
-  with a1 $ \a1' -> 
-  withCString a2 $ \a2' -> 
-  alloca $ \a5' -> 
-  aiGetMaterialColor a1' a2' a3 a4 a5' >>= \res ->
-  peek a5' >>= \a5'' -> 
-  return (mRet res, a5'')
+getMaterialColor' mat key typ idx =
+  with mat $ \pmat ->
+    withCString key $ \ckey ->
+      alloca $ \pcolor -> (,)
+        <$> liftA mRet (aiGetMaterialColor pmat ckey typ idx pcolor)
+        <*> peek pcolor
 
-foreign import ccall unsafe "Graphics/Formats/Assimp/Fun.chs.h aiGetMaterialColor"
-  aiGetMaterialColor :: Ptr Material 
-                     -> Ptr CChar 
-                     -> CUInt 
-                     -> CUInt 
-                     -> Ptr Vec4 
+foreign import ccall unsafe "aiGetMaterialColor"
+  aiGetMaterialColor :: Ptr Material
+                     -> Ptr CChar
+                     -> CUInt
+                     -> CUInt
+                     -> Ptr Vec4
                      -> IO CInt
 
 -------------------------------------------------------------------------------
@@ -356,43 +348,40 @@ getMaterialString mat key = do
     ReturnSuccess     -> Right str
     ReturnFailure     -> Left "Failed"
     ReturnOutOfMemory -> Left "Out of memory."
-    
--- {#fun unsafe aiGetMaterialString as getMaterialString
---   {with'*  `Material',
---            `String'  ,
---    mCUInt   `CUInt'    ,
---    mCUInt   `CUInt'    ,
---    alloca- `AiString' peek'*} -> `Return' mRet#}
 
-getMaterialString' :: Material -> String -> CUInt -> CUInt -> IO (Return, AiString)
-getMaterialString' a1 a2 a3 a4 =
-  with a1 $ \a1' -> 
-  withCString a2 $ \a2' -> 
-  alloca $ \a5' -> 
-  aiGetMaterialString a1' a2' a3 a4 a5' >>= \res ->
-  peek a5' >>= \a5'' -> 
-  return (mRet res, a5'')
+getMaterialString' :: Material 
+                   -> String 
+                   -> CUInt 
+                   -> CUInt 
+                   -> IO (Return, AiString)
+getMaterialString' mat key typ idx =
+  with mat $ \pmat ->
+    withCString key $ \ckey ->
+      alloca $ \pAiStr -> (,)
+        <$> liftA mRet (aiGetMaterialString pmat ckey typ idx pAiStr)
+        <*> peek pAiStr
 
-foreign import ccall unsafe "Graphics/Formats/Assimp/Fun.chs.h aiGetMaterialString"
-  aiGetMaterialString :: Ptr Material 
-                      -> Ptr CChar 
-                      -> CUInt 
-                      -> CUInt 
-                      -> Ptr AiString 
+foreign import ccall unsafe "aiGetMaterialString"
+  aiGetMaterialString :: Ptr Material
+                      -> Ptr CChar
+                      -> CUInt
+                      -> CUInt
+                      -> Ptr AiString
                       -> IO CInt
 
 -------------------------------------------------------------------------------
 
 getTextureCount :: Material -> TextureType -> IO CUInt
 getTextureCount mat ttype =
-  with mat $ \pmat -> aiGetMaterialTextureCount pmat (fromIntegral . fromEnum $ ttype)
+  with mat $ \pmat -> 
+    aiGetMaterialTextureCount pmat (fromIntegral . fromEnum $ ttype)
 
 foreign import ccall unsafe "aiGetMaterialTextureCount"
   aiGetMaterialTextureCount :: Ptr Material -> CInt -> IO CUInt
 
 -------------------------------------------------------------------------------
 
--- getTexture :: 
+-- getTexture ::
 
 -- {#fun unsafe aiGetMaterialTexture as getTexture'
 --   {with'*  `Material'   ,
