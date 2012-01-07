@@ -36,7 +36,6 @@ import Foreign.Marshal.Array (peekArray)
 import Foreign.Storable
 import Control.Applicative((<$>), (<*>))
 import Data.Vect.Float (Vec3(Vec3))
-import Graphics.Formats.Assimp.Vector
 
 #include "assimp.h"        // Plain-C interface
 #include "typedefs.h"
@@ -78,8 +77,8 @@ instance Storable Plane where
   poke = undefined
 
 data Ray = Ray 
-  { rayPos :: Vec3F
-  , rayDir :: Vec3F
+  { rayPos :: Vec3
+  , rayDir :: Vec3
   } deriving (Show)
 
 instance Storable Ray where
@@ -149,7 +148,7 @@ aiStringToString :: AiString -> String
 aiStringToString (AiString s) = s
 
 class Position a where
-  position :: a -> Vec3F
+  position :: a -> Vec3
 
 class Name a where
   name :: a -> String

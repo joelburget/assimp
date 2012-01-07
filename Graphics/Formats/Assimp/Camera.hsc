@@ -21,14 +21,14 @@ module Graphics.Formats.Assimp.Camera (
 
 import Control.Applicative ((<$>), (<*>), liftA)
 import Foreign.Storable
-import Graphics.Formats.Assimp.Vector
+import Data.Vect.Float (Vec3(..))
 import Graphics.Formats.Assimp.Types
 
 data Camera = Camera 
   { cameraName     :: String
-  , cameraPosition :: Vec3F
-  , up             :: Vec3F
-  , lookAt         :: Vec3F
+  , cameraPosition :: Vec3
+  , up             :: Vec3
+  , lookAt         :: Vec3
   , horizontalFOV  :: Float
   , clipPlaneNear  :: Float
   , clipPlaneFar   :: Float

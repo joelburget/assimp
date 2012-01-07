@@ -22,8 +22,8 @@ module Graphics.Formats.Assimp.Light (
 
 import Control.Applicative (liftA, (<$>), (<*>))
 import Foreign.Storable
+import Data.Vect.Float (Vec3(Vec3))
 import Graphics.Formats.Assimp.Types
-import Graphics.Formats.Assimp.Vector
 
 data LightSourceType = LightSourceUndefined
                      | LightSourceDirectional
@@ -46,8 +46,8 @@ instance Enum LightSourceType where
 data Light = Light
   { lightName            :: String
   , mType                :: LightSourceType
-  , lightPosition        :: Vec3F
-  , direction            :: Vec3F
+  , lightPosition        :: Vec3
+  , direction            :: Vec3
   , attenuationConstant  :: Float
   , attenuationLinear    :: Float
   , attenuationQuadratic :: Float

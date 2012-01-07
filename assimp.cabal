@@ -68,7 +68,6 @@ Library
     Graphics.Formats.Assimp.Scene
     Graphics.Formats.Assimp.Texture
     Graphics.Formats.Assimp.Types
-    Graphics.Formats.Assimp.Vector
     Graphics.Formats.Assimp.Version
   ghc-options: -Wall
   Build-depends: base         >= 4     && < 5

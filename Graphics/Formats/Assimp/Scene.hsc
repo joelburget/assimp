@@ -24,7 +24,6 @@ import Foreign.C
 import Foreign.Marshal.Array
 import Control.Monad (liftM)
 import Graphics.Formats.Assimp.Types
-import Graphics.Formats.Assimp.Vector
 import Graphics.Formats.Assimp.Matrix
 import Graphics.Formats.Assimp.Light
 import Graphics.Formats.Assimp.Camera

@@ -25,7 +25,6 @@ module Graphics.Formats.Assimp (
   , module Graphics.Formats.Assimp.Scene
   , module Graphics.Formats.Assimp.Texture
   , module Graphics.Formats.Assimp.Types
-  , module Graphics.Formats.Assimp.Vector
   , module Graphics.Formats.Assimp.Version
   ) where
 
@@ -42,5 +41,4 @@ import Graphics.Formats.Assimp.Quaternion
 import Graphics.Formats.Assimp.Scene
 import Graphics.Formats.Assimp.Texture
 import Graphics.Formats.Assimp.Types
-import Graphics.Formats.Assimp.Vector
 import Graphics.Formats.Assimp.Version

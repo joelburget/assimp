@@ -30,8 +30,8 @@ import Foreign.Marshal.Array
 import Data.Bits (shiftR)
 import Control.Monad (liftM, join)
 import Control.Applicative ((<$>), (<*>))
+import Data.Vect.Float (Vec3(..))
 import Graphics.Formats.Assimp.Types
-import Graphics.Formats.Assimp.Vector
 import Graphics.Formats.Assimp.Color4D
 import Graphics.Formats.Assimp.Matrix (Mat4F)
 import Graphics.Formats.Assimp.Material
@@ -55,12 +55,12 @@ instance Enum PrimitiveType where
 
 data Mesh = Mesh
   { primitiveTypes  :: [PrimitiveType]
-  , vertices        :: [Vec3F]
-  , normals         :: [Vec3F]
-  , tangents        :: [Vec3F]
-  , bitangents      :: [Vec3F]
+  , vertices        :: [Vec3]
+  , normals         :: [Vec3]
+  , tangents        :: [Vec3]
+  , bitangents      :: [Vec3]
   , colors          :: [Color4F]
-  , textureCoords   :: [Vec3F]
+  , textureCoords   :: [Vec3]
   , numUVComponents :: CUInt
   , faces           :: [Face]
   , bones           :: [Bone]

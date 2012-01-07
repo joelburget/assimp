@@ -58,6 +58,13 @@ import Graphics.Formats.Assimp.PostProcess
 -- aiImportFileEx
 -- aiImportFileFromMemory
 
+{- |
+ - Apply post-processing to an already-imported scene.
+ -
+ - This is strictly equivalent to calling 'aiImportFile' with the same flags.
+ - However, you can use this separate function to inspect the imported scene
+ - first to fine-tune your post-processing setup.
+ -}
 applyPostProcessing :: Scene -> PostProcessSteps -> IO Scene
 applyPostProcessing scene steps =
   with scene $ \pscene ->
@@ -72,6 +79,9 @@ foreign import ccall unsafe "aiApplyPostProcessing"
 -- aiDetachLogStream
 -- aiDetachAllLogStreams
 
+{- |
+ - Reads the given file and returns its content.
+ -}
 importFile :: String -> [PostProcessSteps] -> IO (Either String Scene)
 importFile str psteps = do
   let psteps' = foldl1' (.|.) $ map (fromIntegral . fromEnum) psteps
@@ -89,12 +99,23 @@ foreign import ccall unsafe "aiImportFile"
 foreign import ccall unsafe "aiReleaseImport"
   aiReleaseImport :: Ptr Scene -> IO ()
 
+{- | 
+ - Returns the error text of the last failed import process.
+ -
+ - You probably won't ever need this.
+ -}
 getErrorString :: IO String
 getErrorString = aiGetErrorString >>= peekCString
 
 foreign import ccall unsafe "aiGetErrorString"
   aiGetErrorString :: IO (Ptr CChar)
 
+{- |
+ - Get a list of all file extensions supported by ASSIMP.
+ -
+ - If a file extension is contained in the list this does, of course, not mean
+ - that ASSIMP is able to load all files with this extension.
+ -}
 getExtensionList :: IO String
 getExtensionList = alloca $ \pstr -> do
   aiGetExtensionList pstr
@@ -103,6 +124,9 @@ getExtensionList = alloca $ \pstr -> do
 foreign import ccall unsafe "aiGetExtensionList"
   aiGetExtensionList :: Ptr AiString -> IO ()
 
+{- |
+ - Get the storage required by an imported asset.
+ -}
 getMemoryRequirements :: Scene -> IO MemoryInfo
 getMemoryRequirements scene =
   with scene $ \pscene ->
@@ -113,6 +137,9 @@ getMemoryRequirements scene =
 foreign import ccall unsafe "aiGetMemoryRequirements"
   aiGetMemoryRequirements :: Ptr Scene -> Ptr MemoryInfo -> IO ()
 
+{- |
+ - Set an integer property.
+ -}
 setImportPropertyInteger :: String -> Int -> IO ()
 setImportPropertyInteger prop n =
   withCString prop $ \cprop -> aiSetImportPropertyInteger cprop (fromIntegral n)
@@ -120,6 +147,9 @@ setImportPropertyInteger prop n =
 foreign import ccall unsafe "aiSetImportPropertyInteger"
   aiSetImportPropertyInteger :: Ptr CChar -> CInt -> IO ()
 
+{- |
+ - Set a floating-point property.
+ -}
 setImportPropertyFloat :: String -> Float -> IO ()
 setImportPropertyFloat prop f = withCString prop $ \prop' ->
   aiSetImportPropertyFloat prop' (fromRational . toRational $ f)
@@ -127,6 +157,9 @@ setImportPropertyFloat prop f = withCString prop $ \prop' ->
 foreign import ccall unsafe "aiSetImportPropertyFloat"
   aiSetImportPropertyFloat :: Ptr CChar -> CFloat -> IO ()
 
+{- |
+ - Set a string property.
+ -}
 setImportPropertyString :: String -> String -> IO ()
 setImportPropertyString prop s =
   withCString prop $ \prop' ->
@@ -138,9 +171,21 @@ foreign import ccall unsafe "aiSetImportPropertyString"
 class ArrayGetter a where
   getArray :: Material -> MatKey -> CUInt -> IO (Either String [a])
 
+{- |
+- 'get' corresponds to '.Get(4 params)' from the C++ api and the following functions from the C api:
+-
+- * aiGetMaterialFloat
+- * aiGetMaterialInteger
+- * aiGetMaterialColor
+- * aiGetMaterialString
+-}
 class SingleGetter a where
   get :: Material -> MatKey -> IO (Either String a)
 
+  {- |
+  - 'getArray' corresponds to '.Get(5 params)' from the C++ api and the following functions from the C api:
+  -
+  -}
 instance ArrayGetter Float where
   getArray = getMaterialFloatArray
 
@@ -154,7 +199,6 @@ instance SingleGetter Int where
   get = getMaterialInt
 
 instance SingleGetter Vec3 where
--- Also another case?
   get mat key = (liftM . liftM) (\(Vec4 r g b _) -> Vec3 r g b)
     (getMaterialColor mat key)
 
@@ -180,7 +224,7 @@ getMaterialProperty mat key = do
   (ret, prop) <- getMaterialProperty' mat mKey mType mIndex
   case ret of
     ReturnSuccess     -> peekM prop
-    ReturnFailure     -> return $ Left "Failed"
+    ReturnFailure     -> return $ Left "Failed."
     ReturnOutOfMemory -> return $ Left "Out of memory."
   where
     peekM :: Ptr MaterialProperty -> IO (Either String MaterialProperty)
@@ -226,7 +270,7 @@ getMaterialFloatArray mat key max = do
   ret' <- case ret of
     ReturnSuccess     -> liftM (Right . (map unsafeCoerce))
                            $ peekArray (fromIntegral max') arr
-    ReturnFailure     -> return $ Left "Failed"
+    ReturnFailure     -> return $ Left "Failed."
     ReturnOutOfMemory -> return $ Left "Out of memory."
   free arr
   return ret'
@@ -273,7 +317,7 @@ getMaterialIntArray mat key max = do
   ret' <- case ret of
     ReturnSuccess     -> liftM (Right . (map unsafeCoerce)) $
                            peekArray (fromIntegral max') arr
-    ReturnFailure     -> return $ Left "Failed"
+    ReturnFailure     -> return $ Left "Failed."
     ReturnOutOfMemory -> return $ Left "Out of memory."
   free arr
   return ret'
@@ -319,7 +363,7 @@ getMaterialColor mat key = do
   (ret, vec) <- getMaterialColor' mat mKey mType mIndex
   return $ case ret of
     ReturnSuccess     -> Right vec
-    ReturnFailure     -> Left "Failed"
+    ReturnFailure     -> Left "Failed."
     ReturnOutOfMemory -> Left "Out of memory."
 
 getMaterialColor' :: Material -> String -> CUInt -> CUInt -> IO (Return, Vec4)
@@ -346,7 +390,7 @@ getMaterialString mat key = do
   (ret, (AiString str)) <- getMaterialString' mat mKey mType mIndex
   return $ case ret of
     ReturnSuccess     -> Right str
-    ReturnFailure     -> Left "Failed"
+    ReturnFailure     -> Left "Failed."
     ReturnOutOfMemory -> Left "Out of memory."
 
 getMaterialString' :: Material 
@@ -372,23 +416,89 @@ foreign import ccall unsafe "aiGetMaterialString"
 -------------------------------------------------------------------------------
 
 getTextureCount :: Material -> TextureType -> IO CUInt
-getTextureCount mat ttype =
-  with mat $ \pmat -> 
-    aiGetMaterialTextureCount pmat (fromIntegral . fromEnum $ ttype)
+getTextureCount mat ttype = with mat $ \pmat -> 
+  aiGetMaterialTextureCount pmat (fromIntegral . fromEnum $ ttype)
 
 foreign import ccall unsafe "aiGetMaterialTextureCount"
   aiGetMaterialTextureCount :: Ptr Material -> CInt -> IO CUInt
 
 -------------------------------------------------------------------------------
 
--- getTexture ::
+getTexture :: Material
+           -> TextureType
+           -> CUInt
+           -> GetTextureConf
+           -> IO (Either String GetTextureRet)
+getTexture mat typ idx conf = do
+  (ret, gtRet) <- getTexture' mat typ idx conf
+  return $ case ret of
+    ReturnSuccess     -> Right gtRet
+    ReturnFailure     -> Left "Failed."
+    ReturnOutOfMemory -> Left "Out of memory."
 
--- {#fun unsafe aiGetMaterialTexture as getTexture'
---   {with'*  `Material'   ,
---    f `TextureType',
---    mCUInt `CUInt'
---            `String'     ,
---    alloca-  `CUInt'  peek'*} -> `Return' mRet#}
+data GetTextureConf = GetTextureConf
+  { confMapping :: Bool
+  , confUvindex :: Bool
+  , confBlend   :: Bool
+  , confOp      :: Bool
+  , confMapmode :: Bool
+  , confFlags   :: Bool
+  }
+
+allGetTextureConf = GetTextureConf True True True True True True
+noneGetTextureConf = GetTextureConf False False False False False False
+
+data GetTextureRet = GetTextureRet
+  { path    :: String
+  , mapping :: Maybe TextureMapping
+  , uvindex :: Maybe CUInt
+  , blend   :: Maybe CFloat
+  , op      :: Maybe TextureOp
+  , mapmode :: Maybe TextureMapMode
+  , flags   :: Maybe TextureFlags
+  }
+
+getTexture' :: Material 
+            -> TextureType 
+            -> CUInt 
+            -> GetTextureConf
+            -> IO (Return, GetTextureRet)
+getTexture' mat typ idx conf =
+  with mat $ \pMat ->
+    alloca $ \pPath ->
+      (if confMapping conf then alloca else ($ nullPtr)) $ \pMapping ->
+        alloca $ \pUv ->
+          alloca $ \pBlend ->
+            alloca $ \pOp ->
+              alloca $ \pMapMode ->
+                alloca $ \pFlags -> do
+                  ret <- mRet `liftM` aiGetMaterialTexture pMat 
+                                        (fromIntegral . fromEnum $ typ) idx pPath 
+                                        pMapping pUv pBlend pOp pMapMode pFlags
+                  let helper ptr = if ptr /= nullPtr 
+                                   then Just `liftM` peek ptr 
+                                   else return Nothing
+                  path'    <- aiStringToString `liftM` peek pPath
+                  mapping' <- (liftM . liftM) (toEnum . fromIntegral) (helper pMapping)
+                  uv'      <- helper pUv
+                  blend'   <- helper pBlend
+                  op'      <- (liftM . liftM) (toEnum . fromIntegral) (helper pOp)
+                  mapmode' <- (liftM . liftM) (toEnum . fromIntegral) (helper pMapMode)
+                  flags'   <- (liftM . liftM) (toEnum . fromIntegral) (helper pFlags)
+                  return (ret, GetTextureRet path' mapping' uv' blend' op' mapmode' flags')
+
+foreign import ccall unsafe "aiGetMaterialTexture"
+  aiGetMaterialTexture :: Ptr Material       -- mat     [in]
+                       -> CUInt              -- type    [in]
+                       -> CUInt              -- index   [in]
+                       -> Ptr AiString       -- path    [out]
+                       -> Ptr CInt           -- mapping [out]
+                       -> Ptr CUInt          -- uvindex [out]
+                       -> Ptr CFloat         -- blend   [out]
+                       -> Ptr CInt           -- op      [out]
+                       -> Ptr CInt           -- mapmode [out]
+                       -> Ptr CUInt          -- flags   [out]
+                       -> IO CInt
 
 -- I'm not sure whether or not I will implement these or not. I guess I'll
 -- check the source to see if they're pure. They could easily be implemented in

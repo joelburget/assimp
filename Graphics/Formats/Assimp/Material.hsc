@@ -35,8 +35,8 @@ module Graphics.Formats.Assimp.Material (
 import Foreign.C.Types
 import Foreign.C.String
 import Foreign.Storable
+import Data.Vect (Vec2)
 import Graphics.Formats.Assimp.Types
-import Graphics.Formats.Assimp.Vector (Vec2F)
 import Control.Monad (join)
 import Control.Applicative ((<$>), (<*>), liftA, liftA2)
 
@@ -327,7 +327,7 @@ instance Storable Material where
   poke = undefined
 
 data UVTransform = UVTransform
-  { translation :: Vec2F
-  , scaling     :: Vec2F
+  { translation :: Vec2
+  , scaling     :: Vec2
   , rotation    :: Float
   } deriving (Show)
