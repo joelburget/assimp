@@ -1,6 +1,7 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 -- |
 -- Module : Graphics.Formats.Assimp.Fun
