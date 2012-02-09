@@ -1,17 +1,18 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 -- |
--- Module : Graphics.Formats.Assimp.Color4D
--- Copyright : (c) Joel Burget 2011
--- License BSD3
+-- Module      : Graphics.Formats.Assimp.Color4D
+-- Copyright   : (c) Joel Burget 2011
+-- License     : BSD3
 --
--- Maintainer : Joel Burget <joelburget@gmail.com>
--- Stability : experimental
+-- Maintainer  : Joel Burget <joelburget@gmail.com>
+-- Stability   : experimental
 -- Portability : non-portable
 --
 -- Corresponds to aiColor4D.h
 
 module Graphics.Formats.Assimp.Color4D (
+  -- * RGBA Color
     Color4F(Color4F)
   ) where
 
@@ -23,6 +24,7 @@ import Control.Applicative ((<$>), (<*>))
 import Foreign.Storable
 import Data.Vect.Float (Vec4(..))
 
+-- | RGBA color structure
 newtype Color4F = Color4F Vec4 deriving Show
 
 instance Storable Color4F where

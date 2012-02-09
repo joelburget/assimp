@@ -4,31 +4,34 @@
 {-# LANGUAGE FlexibleInstances #-}
 
 -- |
--- Module : Graphics.Formats.Assimp.Fun
--- Copyright : (c) Joel Burget 2011
--- License BSD3
+-- Module      : Graphics.Formats.Assimp.Fun
+-- Copyright   : (c) Joel Burget 2011
+-- License     : BSD3
 --
--- Maintainer : Joel Burget <joelburget@gmail.com>
--- Stability : experimental
+-- Maintainer  : Joel Burget <joelburget@gmail.com>
+-- Stability   : experimental
 -- Portability : non-portable
 --
 -- Defines functions for interacting with assimp
 
 module Graphics.Formats.Assimp.Fun (
-  -- * Basics
+  -- * Basic functions
     importFile
   , applyPostProcessing
   -- * Accessing materials
   , get
   , getArray
-  -- * Currently unused
+  , getMaterialProperty
+  , getTexture
+  , GetTextureConf(..)
+  , GetTextureRet(..)
+  -- * Other functions
   , getErrorString
   , setImportPropertyInteger
   , setImportPropertyFloat
   , setImportPropertyString
   , getExtensionList
   , getMemoryRequirements
-  , getMaterialProperty
   , getTextureCount
   ) where
 
@@ -59,13 +62,12 @@ import Graphics.Formats.Assimp.PostProcess
 -- aiImportFileEx
 -- aiImportFileFromMemory
 
-{- |
- - Apply post-processing to an already-imported scene.
- -
- - This is strictly equivalent to calling 'aiImportFile' with the same flags.
- - However, you can use this separate function to inspect the imported scene
- - first to fine-tune your post-processing setup.
- -}
+-- | Apply post-processing to an already-imported scene.
+--
+-- This is strictly equivalent to calling 'importFile' with the same flags.
+-- However, you can use this separate function to inspect the imported scene
+-- first to fine-tune your post-processing setup.
+--
 applyPostProcessing :: Scene -> PostProcessSteps -> IO Scene
 applyPostProcessing scene steps =
   with scene $ \pscene ->
@@ -80,9 +82,7 @@ foreign import ccall unsafe "aiApplyPostProcessing"
 -- aiDetachLogStream
 -- aiDetachAllLogStreams
 
-{- |
- - Reads the given file and returns its content.
- -}
+-- | Reads the given file and returns its content.
 importFile :: String -> [PostProcessSteps] -> IO (Either String Scene)
 importFile str psteps = do
   let psteps' = foldl1' (.|.) $ map (fromIntegral . fromEnum) psteps
@@ -100,23 +100,19 @@ foreign import ccall unsafe "aiImportFile"
 foreign import ccall unsafe "aiReleaseImport"
   aiReleaseImport :: Ptr Scene -> IO ()
 
-{- | 
- - Returns the error text of the last failed import process.
- -
- - You probably won't ever need this.
- -}
+-- | Returns the error text of the last failed import process.
+--
+-- You probably won't ever need this.
 getErrorString :: IO String
 getErrorString = aiGetErrorString >>= peekCString
 
 foreign import ccall unsafe "aiGetErrorString"
   aiGetErrorString :: IO (Ptr CChar)
 
-{- |
- - Get a list of all file extensions supported by ASSIMP.
- -
- - If a file extension is contained in the list this does, of course, not mean
- - that ASSIMP is able to load all files with this extension.
- -}
+-- | Get a list of all file extensions supported by ASSIMP.
+--
+-- If a file extension is contained in the list this does, of course, not mean
+-- that ASSIMP is able to load all files with this extension.
 getExtensionList :: IO String
 getExtensionList = alloca $ \pstr -> do
   aiGetExtensionList pstr
@@ -125,9 +121,7 @@ getExtensionList = alloca $ \pstr -> do
 foreign import ccall unsafe "aiGetExtensionList"
   aiGetExtensionList :: Ptr AiString -> IO ()
 
-{- |
- - Get the storage required by an imported asset.
- -}
+-- | Get the storage required by an imported asset.
 getMemoryRequirements :: Scene -> IO MemoryInfo
 getMemoryRequirements scene =
   with scene $ \pscene ->
@@ -138,9 +132,7 @@ getMemoryRequirements scene =
 foreign import ccall unsafe "aiGetMemoryRequirements"
   aiGetMemoryRequirements :: Ptr Scene -> Ptr MemoryInfo -> IO ()
 
-{- |
- - Set an integer property.
- -}
+-- | Set an integer property.
 setImportPropertyInteger :: String -> Int -> IO ()
 setImportPropertyInteger prop n =
   withCString prop $ \cprop -> aiSetImportPropertyInteger cprop (fromIntegral n)
@@ -148,9 +140,7 @@ setImportPropertyInteger prop n =
 foreign import ccall unsafe "aiSetImportPropertyInteger"
   aiSetImportPropertyInteger :: Ptr CChar -> CInt -> IO ()
 
-{- |
- - Set a floating-point property.
- -}
+-- | Set a floating-point property.
 setImportPropertyFloat :: String -> Float -> IO ()
 setImportPropertyFloat prop f = withCString prop $ \prop' ->
   aiSetImportPropertyFloat prop' (fromRational . toRational $ f)
@@ -158,9 +148,7 @@ setImportPropertyFloat prop f = withCString prop $ \prop' ->
 foreign import ccall unsafe "aiSetImportPropertyFloat"
   aiSetImportPropertyFloat :: Ptr CChar -> CFloat -> IO ()
 
-{- |
- - Set a string property.
- -}
+-- | Set a string property.
 setImportPropertyString :: String -> String -> IO ()
 setImportPropertyString prop s =
   withCString prop $ \prop' ->
@@ -170,23 +158,44 @@ foreign import ccall unsafe "aiSetImportPropertyString"
   aiSetImportPropertyString :: CString -> Ptr AiString -> IO ()
 
 class ArrayGetter a where
-  getArray :: Material -> MatKey -> CUInt -> IO (Either String [a])
+  -- | Retrieve an array of values from a material with a specific key
+  --
+  -- Corresponds to '.Get(5 params)' from the C++ api and the
+  -- following functions from the C api:
+  --
+  -- * aiGetMaterialFloatArray
+  --
+  -- * aiGetMaterialIntegerArray
+  --
+  -- Example:
+  --
+  -- > getArray mat (KeyUvTransform Diffuse 0) 4
+  getArray :: Material -- ^ Material to query
+           -> MatKey   -- ^ Key of the property to retrieve
+           -> CUInt    -- ^ Maximum number of values to retrieve
+           -> IO (Either String [a])
 
-{- |
-- 'get' corresponds to '.Get(4 params)' from the C++ api and the following functions from the C api:
--
-- * aiGetMaterialFloat
-- * aiGetMaterialInteger
-- * aiGetMaterialColor
-- * aiGetMaterialString
--}
 class SingleGetter a where
-  get :: Material -> MatKey -> IO (Either String a)
+  -- | Retrieve a value from a material with a specific key
+  --
+  -- Corresponds to '.Get(4 params)' from the C++ api and the following
+  -- functions from the C api:
+  --
+  -- * aiGetMaterialFloat
+  --
+  -- * aiGetMaterialInteger
+  --
+  -- * aiGetMaterialColor
+  --
+  -- * aiGetMaterialString
+  --
+  -- Example:
+  --
+  -- > get mat KeyColorDiffuse
+  get :: Material -- ^ Material to query
+      -> MatKey   -- ^ Key of the property to retrieve
+      -> IO (Either String a)
 
-  {- |
-  - 'getArray' corresponds to '.Get(5 params)' from the C++ api and the following functions from the C api:
-  -
-  -}
 instance ArrayGetter Float where
   getArray = getMaterialFloatArray
 
@@ -214,9 +223,7 @@ mRet  = toEnum . fromInteger . toInteger
 
 -------------------------------------------------------------------------------
 
-{- |
- - Retrieve a material property with a specific key from the material
- -}
+-- | Retrieve a material property with a specific key
 getMaterialProperty :: Material -- ^ The material
                     -> MatKey   -- ^ A key
                     -> IO (Either String MaterialProperty)
@@ -256,11 +263,7 @@ foreign import ccall unsafe "aiGetMaterialProperty"
                         -> IO CInt
 
 -------------------------------------------------------------------------------
-{- |
- - Retrieve an array of float values with a specific key from the material
- - Example:
- - > getMaterialFloatArray mat (KeyUvTransform Diffuse 0) 4
- -}
+
 getMaterialFloatArray :: Material -- ^ The material
                       -> MatKey   -- ^ A key
                       -> CUInt    -- ^ Max number of values to retrieve
@@ -416,6 +419,7 @@ foreign import ccall unsafe "aiGetMaterialString"
 
 -------------------------------------------------------------------------------
 
+-- | Get the number of textures on a texture stack
 getTextureCount :: Material -> TextureType -> IO CUInt
 getTextureCount mat ttype = with mat $ \pmat -> 
   aiGetMaterialTextureCount pmat (fromIntegral . fromEnum $ ttype)
@@ -425,10 +429,17 @@ foreign import ccall unsafe "aiGetMaterialTextureCount"
 
 -------------------------------------------------------------------------------
 
-getTexture :: Material
-           -> TextureType
-           -> CUInt
-           -> GetTextureConf
+-- | Retrieve values pertaining to a particular texture slot from a material
+-- structure
+--
+-- This function is provided just for convenience. You could also read the
+-- texture by parsing all of its properties manually. This function bundles all
+-- of them in a huge function monster.
+--
+getTexture :: Material       -- ^ Material to query
+           -> TextureType    -- ^ Texture stack to read from (diffuse, specular, etc)
+           -> CUInt          -- ^ Index of the texture
+           -> GetTextureConf -- ^ Which values to retrieve
            -> IO (Either String GetTextureRet)
 getTexture mat typ idx conf = do
   (ret, gtRet) <- getTexture' mat typ idx conf
@@ -438,25 +449,25 @@ getTexture mat typ idx conf = do
     ReturnOutOfMemory -> Left "Out of memory."
 
 data GetTextureConf = GetTextureConf
-  { confMapping :: Bool
-  , confUvindex :: Bool
-  , confBlend   :: Bool
-  , confOp      :: Bool
-  , confMapmode :: Bool
-  , confFlags   :: Bool
+  { confMapping :: Bool -- ^ Retrieve the texture mapping mode?
+  , confUvindex :: Bool -- ^ Retrieve the index of the UV source channel?
+  , confBlend   :: Bool -- ^ Retrieve the blend factor?
+  , confOp      :: Bool -- ^ Retrieve the texture blend operation to perform between this texture and the previous texture?
+  , confMapmode :: Bool -- ^ Retrieve the mapping modes to be used for the texture?
+  , confFlags   :: Bool -- ^ Retrieve the texture flags?
   }
 
 allGetTextureConf = GetTextureConf True True True True True True
 noneGetTextureConf = GetTextureConf False False False False False False
 
 data GetTextureRet = GetTextureRet
-  { path    :: String
-  , mapping :: Maybe TextureMapping
-  , uvindex :: Maybe CUInt
-  , blend   :: Maybe CFloat
-  , op      :: Maybe TextureOp
-  , mapmode :: Maybe TextureMapMode
-  , flags   :: Maybe TextureFlags
+  { retPath    :: String               -- ^ Path to the texture
+  , retMapping :: Maybe TextureMapping -- ^ Texture mapping mode
+  , retUvindex :: Maybe CUInt          -- ^ Index of the UV source channel
+  , retBlend   :: Maybe CFloat         -- ^ Blend factor
+  , retOp      :: Maybe TextureOp      -- ^ Texture operation
+  , retMapmode :: Maybe TextureMapMode -- ^ Texture mapping modes
+  , retFlags   :: Maybe [TextureFlag]  -- ^ Texture flags
   }
 
 getTexture' :: Material 
@@ -468,11 +479,11 @@ getTexture' mat typ idx conf =
   with mat $ \pMat ->
     alloca $ \pPath ->
       (if confMapping conf then alloca else ($ nullPtr)) $ \pMapping ->
-        alloca $ \pUv ->
-          alloca $ \pBlend ->
-            alloca $ \pOp ->
-              alloca $ \pMapMode ->
-                alloca $ \pFlags -> do
+        (if confUvindex conf then alloca else ($ nullPtr)) $ \pUv ->
+          (if confBlend conf then alloca else ($ nullPtr)) $ \pBlend ->
+            (if confOp conf then alloca else ($ nullPtr)) $ \pOp ->
+              (if confMapmode conf then alloca else ($ nullPtr)) $ \pMapMode ->
+                (if confFlags conf then alloca else ($ nullPtr)) $ \pFlags -> do
                   ret <- mRet `liftM` aiGetMaterialTexture pMat 
                                         (fromIntegral . fromEnum $ typ) idx pPath 
                                         pMapping pUv pBlend pOp pMapMode pFlags
@@ -485,7 +496,9 @@ getTexture' mat typ idx conf =
                   blend'   <- helper pBlend
                   op'      <- (liftM . liftM) (toEnum . fromIntegral) (helper pOp)
                   mapmode' <- (liftM . liftM) (toEnum . fromIntegral) (helper pMapMode)
-                  flags'   <- (liftM . liftM) (toEnum . fromIntegral) (helper pFlags)
+                  -- flags'   <- (liftM . liftM) (toEnum . fromIntegral) (helper pFlags)
+                  -- TODO
+                  let flags' = Nothing
                   return (ret, GetTextureRet path' mapping' uv' blend' op' mapmode' flags')
 
 foreign import ccall unsafe "aiGetMaterialTexture"

@@ -1,10 +1,10 @@
 -- |
--- Module : Graphics.Formats.Assimp.Storable
+-- Module    : Graphics.Formats.Assimp.Storable
 -- Copyright : (c) Joel Burget 2011
--- License BSD3
+-- License   : BSD3
 --
--- Maintainer : Joel Burget <joelburget@gmail.com>
--- Stability : experimental
+-- Maintainer  : Joel Burget <joelburget@gmail.com>
+-- Stability   : experimental
 -- Portability : non-portable
 --
 -- Import this module to use assimp. Please excuse the lack of documentation.

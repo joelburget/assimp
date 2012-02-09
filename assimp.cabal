@@ -3,7 +3,7 @@ Version:             0.1
 Synopsis:            The Assimp asset import library
 
 Description:
-    Important: Install with
+    /Important/: Install with
     @cabal install --extra-include-dirs \/usr\/local\/include\/assimp\/@
     Of course use the location of the include files on your system.
     .
@@ -35,10 +35,12 @@ Description:
     > 
     > main = do
     >   args <- getArgs
-    >   print =<< importFile (head args) processing -- Outputs all information in the scene
-    >   print =<< getVersionMajor     -- Print the major version of assimp
-    >   print =<< getVersionMinor     -- Print the minor version of assimp
-    >   print =<< getVersionRevision  -- Print the version revision of assimp
+    >   mapM_ (print =<<)
+    >     [ importFile (head args) processing -- Outputs all information in the scene
+    >     , getVersionMajor     -- Print the major version of assimp
+    >     , getVersionMinor     -- Print the minor version of assimp
+    >     , getVersionRevision  -- Print the version revision of assimp
+    >     ]
     .
     See <https://github.com/joelburget/Cologne/blob/master/Cologne/AssimpImport.hs>
     for more.
@@ -47,7 +49,7 @@ License:             BSD3
 License-file:        LICENSE
 Author:              Joel Burget
 Maintainer:          joelburget@gmail.com
-Copyright:           Joel Burget 2011
+Copyright:           Joel Burget 2011-2012
 Category:            Graphics
 Build-type:          Simple
 Cabal-version:       >= 1.6

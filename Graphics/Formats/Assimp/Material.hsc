@@ -1,12 +1,12 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 -- |
--- Module : Graphics.Formats.Assimp.Material
--- Copyright : (c) Joel Burget 2011
--- License BSD3
+-- Module      : Graphics.Formats.Assimp.Material
+-- Copyright   : (c) Joel Burget 2011 - 2012
+-- License     : BSD3
 --
--- Maintainer : Joel Burget <joelburget@gmail.com>
--- Stability : experimental
+-- Maintainer  : Joel Burget <joelburget@gmail.com>
+-- Stability   : experimental
 -- Portability : non-portable
 --
 -- Corresponds to aiMaterial.h
@@ -14,7 +14,7 @@
 module Graphics.Formats.Assimp.Material (
     ShadingMode(..)       -- ?
   , BlendMode(..)
-  , TextureFlags(..)
+  , TextureFlag(..)
   , TextureMapMode(..)
   , TextureMapping(..)
   , TextureOp(..)
@@ -43,17 +43,51 @@ import Control.Applicative ((<$>), (<*>), liftA, liftA2)
 fromEnum' :: TextureType -> CUInt
 fromEnum' = fromInteger . toInteger . fromEnum
 
-data ShadingMode = Flat
-                 | Gouraud
-                 | Phong
-                 | Blinn
-                 | Toon
-                 | OrenNayar
-                 | Minnaert
-                 | CookTorrance
-                 | NoShading
-                 | Fresnel
-                 deriving (Show, Eq)
+-- | Defines all shading models supported by the library.
+--
+-- The list of shading modes has been taken from Blender. See Blender
+-- documentation for more information. The API does not distinguish between
+-- "specular" and "diffuse" shaders (thus the specular term for diffuse shading
+-- models like Oren-Nayar remains undefined). 
+--
+-- Again, this value is just a hint. Assimp tries to select the shader whose
+-- most common implementation matches the original rendering results of the 3D
+-- modeller which wrote a particular model as closely as possible.
+data ShadingMode 
+  -- | Flat shading.
+  --
+  -- Shading is done on per-face base, diffuse only. Also known as 'faceted
+  -- shading'.
+  = Flat
+  -- | Simple Gouraud shading.
+  | Gouraud
+  -- | Phong Shading.
+  | Phong
+  -- | Phong-Blinn Shading.
+  | Blinn
+  -- | Toon Shading per pixel.
+  | Toon
+  -- | Oren-Nayar Shading per pixel.
+  --
+  -- Extension to standard Lambertian shading, taking the roughness of the
+  -- material into account
+  | OrenNayar
+  -- | Minnaert Shading per pixel.
+  --
+  -- Extension to standard Lambertian shading, taking the "darkness" of the
+  -- material into account
+  | Minnaert
+  -- | Cook-Torrance Shading per pixel.
+  --
+  -- Special shader for metallic surfaces.
+  | CookTorrance
+  -- | No shading at all.
+  --
+  -- Constant light influence of 1.0.
+  | NoShading
+  -- | Fresnel shading.
+  | Fresnel
+  deriving (Show, Eq)
 
 instance Enum ShadingMode where
   fromEnum Flat         = #const aiShadingMode_Flat
@@ -79,9 +113,35 @@ instance Enum ShadingMode where
   toEnum (#const aiShadingMode_Fresnel)      = Fresnel
   toEnum unmatched = error $ "ShadingMode.toEnum: Cannot match " ++ show unmatched
 
-data BlendMode = Default
-               | Additive
-               deriving (Show, Eq)
+-- | Defines alpha-blend flags.
+-- If you're familiar with OpenGL or D3D, these flags aren't new to you. They
+-- define *how* the final color value of a pixel is computed, basing on the
+-- previous color at that pixel and the new color value from the material. The
+-- blend formula is:
+--
+-- @
+-- SourceColor * SourceBlend + DestColor * DestBlend
+-- @
+--
+-- where <DestColor> is the previous color in the framebuffer at this position
+-- and <SourceColor> is the material colro before the transparency calculation.
+-- This corresponds to the AI_MATKEY_BLEND_FUNC property.
+data BlendMode 
+  -- | Formula:
+  --
+  -- @
+  -- SourceColor*SourceAlpha + DestColor*(1-SourceAlpha)
+  -- @
+  = Default
+  -- | Additive blending.
+  --
+  -- Formula:
+  -- 
+  -- @
+  -- SourceColor*1 + DestColor*1
+  -- @
+  | Additive
+  deriving (Show, Eq)
 
 instance Enum BlendMode where
   fromEnum Default  = #const aiBlendMode_Default
@@ -91,12 +151,12 @@ instance Enum BlendMode where
   toEnum (#const aiBlendMode_Additive) = Additive
   toEnum unmatched = error $ "BlendMode.toEnum: Cannot match " ++ show unmatched
 
-data TextureFlags = Invert
+data TextureFlag = Invert
                   | UseAlpha
                   | IgnoreAlpha
                   deriving (Show, Eq)
 
-instance Enum TextureFlags where
+instance Enum TextureFlag where
   fromEnum Invert      = #const aiTextureFlags_Invert
   fromEnum UseAlpha    = #const aiTextureFlags_UseAlpha
   fromEnum IgnoreAlpha = #const aiTextureFlags_IgnoreAlpha
@@ -104,7 +164,7 @@ instance Enum TextureFlags where
   toEnum (#const aiTextureFlags_Invert)      = Invert
   toEnum (#const aiTextureFlags_UseAlpha)    = UseAlpha
   toEnum (#const aiTextureFlags_IgnoreAlpha) = IgnoreAlpha
-  toEnum unmatched = error $ "TextureFlags.toEnum: Cannot match " ++ show unmatched
+  toEnum unmatched = error $ "TextureFlag.toEnum: Cannot match " ++ show unmatched
 
 data TextureMapMode = Wrap
                     | Clamp

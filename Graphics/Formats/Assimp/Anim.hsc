@@ -1,17 +1,18 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 -- |
--- Module : Graphics.Formats.Assimp.Anim
--- Copyright : (c) Joel Burget 2011
--- License BSD3
+-- Module      : Graphics.Formats.Assimp.Anim
+-- Copyright   : (c) Joel Burget 2011
+-- License     : BSD3
 --
--- Maintainer : Joel Burget <joelburget@gmail.com>
--- Stability : experimental
+-- Maintainer  : Joel Burget <joelburget@gmail.com>
+-- Stability   : experimental
 -- Portability : non-portable
 --
 -- Corresponds to aiAnim.h
 
 module Graphics.Formats.Assimp.Anim (
+  -- * Animation types /(Not completely implemented)/
     NodeAnim(..)
   , MeshAnim(..)
   , Animation(..)
@@ -26,14 +27,19 @@ import Foreign.Storable
 import Foreign.Marshal.Array (peekArray)
 import Graphics.Formats.Assimp.Types
 
+-- | Describes the animation of a single node. /Not yet implemented/
 data NodeAnim = NodeAnim 
   { dummy'NodeAnim :: Int
   } deriving (Show)
 
+-- | Describes vertex-based animations for a single mesh or a group of meshes.
+-- /Not yet implemented/
 data MeshAnim = MeshAnim 
   { dummy'MeshAnim :: Int
   } deriving (Show)
 
+-- | An animation consists of keyframe data for a number of nodes.
+-- For each node affected by the animation a separate series of data is given.
 data Animation = Animation 
   { animationName  :: String
   , duration       :: Double
