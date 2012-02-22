@@ -1,12 +1,12 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 -- |
--- Module : Graphics.Formats.Assimp.Mesh
--- Copyright : (c) Joel Burget 2011
--- License BSD3
+-- Module      : Graphics.Formats.Assimp.Mesh
+-- Copyright   : (c) Joel Burget 2011-2012
+-- License     : BSD3
 --
--- Maintainer : Joel Burget <joelburget@gmail.com>
--- Stability : experimental
+-- Maintainer  : Joel Burget <joelburget@gmail.com>
+-- Stability   : experimental
 -- Portability : non-portable
 --
 -- Corresponds to aiMesh.h
@@ -36,11 +36,31 @@ import Graphics.Formats.Assimp.Color4D
 import Graphics.Formats.Assimp.Matrix (Mat4F)
 import Graphics.Formats.Assimp.Material
 
-data PrimitiveType = PrimitiveTypePoint
-                   | PrimitiveTypeLine
-                   | PrimitiveTypeTriangle
-                   | PrimitiveTypePolygon
-                   deriving (Show,Eq)
+-- | Enumerates the types of geometric primitives supported by Assimp.
+data PrimitiveType 
+  -- | A point primitive.
+  --
+  -- This is just a single vertex in the virtual world, 'aiFace' contains just
+  -- one index for such a primitive.
+  = PrimitiveTypePoint
+  -- | A line primitive.
+  --
+  -- This is a line defined through a start and an end position. 'aiFace'
+  -- contains exactly two indices for such a primitive.
+  | PrimitiveTypeLine
+  -- | A triangular primitive.
+  --
+  -- A triangle consists of three indices.
+  | PrimitiveTypeTriangle
+  -- | A higher-level polygon with more than 3 edges.
+  --
+  -- A triangle is a polygon, but polygon in this context means "all polygons
+  -- that are not triangles". The "Triangulate"-Step is provided for your
+  -- convenience, it splits all polygons in triangles (which are much easier to
+  -- handle).
+  | PrimitiveTypePolygon
+  deriving (Show,Eq)
+
 instance Enum PrimitiveType where
   fromEnum PrimitiveTypePoint = 1
   fromEnum PrimitiveTypeLine = 2
@@ -53,18 +73,98 @@ instance Enum PrimitiveType where
   toEnum 8 = PrimitiveTypePolygon
   toEnum unmatched = error ("PrimitiveType.toEnum: Cannot match " ++ show unmatched)
 
-data Mesh = Mesh
-  { primitiveTypes  :: [PrimitiveType]
+-- | A mesh represents a geometry or model with a single material.
+--
+-- It usually consists of a number of vertices and a series of primitives/faces
+-- referencing the vertices. In addition there might be a series of bones, each
+-- of them addressing a number of vertices with a certain weight. Vertex data
+-- is presented in channels with each channel containing a single per-vertex
+-- information such as a set of texture coords or a normal vector. If a data
+-- pointer is non-null, the corresponding data stream is present.
+-- 
+-- A Mesh uses only a single material which is referenced by a material ID.
+data Mesh = Mesh {
+  -- | Bitwise combination of the members of the 'PrimitiveType' enum.
+  --
+  -- This specifies which types of primitives are present in the mesh. The
+  -- "SortByPrimitiveType"-Step can be used to make sure the output meshes
+  -- consist of one primitive type each.
+    primitiveTypes  :: [PrimitiveType]
+  -- | Vertex positions.
   , vertices        :: [Vec3]
+  -- | Vertex normals
+  --
+  -- Meshes with mixed primitive types (i.e. lines and triangles) may have
+  -- normals, but the normals for vertices that are only referenced by point or
+  -- line primitives are undefined and set to QNaN
+  --
+  -- Note:
+  -- Normal vectors computed by Assimp are always unit-length. However, this
+  -- needn't apply for normals that have been taken directly from the model
+  -- file.
   , normals         :: [Vec3]
+  -- | Vertex tangents.
+  --
+  -- The tangent of a vertex points in the direction of the positive X texture
+  -- axis. The list contains normalized vectors, NULL if not present. A mesh
+  -- consisting of points and lines only may not have normal vectors. Meshes
+  -- with mixed primitive types (i.e. lines and triangles) may have normals,
+  -- but the normals for vertices that are only referenced by point or line
+  -- primitives are undefined and set to qNaN.  See the normals member for a
+  -- detailed discussion of qNaNs.
+  --
+  -- Note:
+  -- If the mesh contains tangents, it automatically also contains bitangents
+  -- (the bitangent is just the cross product of tangent and normal vectors).
   , tangents        :: [Vec3]
+  -- | Vertex bitangents.
+  --
+  -- The bitangent of a vertex points in the direction of the positive Y
+  -- texture axis. The list contains normalized vectors.
+  --
+  -- Note:
+  -- If the mesh contains tangents, it automatically also contains bitangents.
   , bitangents      :: [Vec3]
+  -- | Vertex color sets.
   , colors          :: [Color4F]
+  -- | Vertex texture coords, also known as UV channels.
   , textureCoords   :: [Vec3]
+  -- | Specifies the number of components for a given UV channel.
+  --
+  -- Up to three channels are supported (UVW, for accessing volume or cube maps). If the value is 2 for a given channel n, the component p.z of mTextureCoords[n][p] is set to 0.0f. If the value is 1 for a given channel, p.y is set to 0.0f, too.
+  --
+  -- Note:
+  -- 4D coords are not supported
   , numUVComponents :: CUInt
+  -- | The faces the mesh is constructed from.
+  --
+  -- Each face refers to a number of vertices by their indices. If the
+  -- 'FlagsNonVerboseFormat' is NOT set each face references an
+  -- unique set of vertices.
   , faces           :: [Face]
+  -- | The bones of this mesh.
+  --
+  -- A bone consists of a name by which it can be found in the frame hierarchy
+  -- and a set of vertex weights.
   , bones           :: [Bone]
+  -- | The material used by this mesh.
+  --
+  -- A mesh does use only a single material. If an imported model uses multiple
+  -- materials, the import splits up the mesh. Use this value as index into the
+  -- scene's material list.
   , materialIndex   :: CUInt
+  -- | Name of the mesh.
+  --
+  -- Meshes can be named, but this is not a requirement and leaving this field
+  -- empty is totally fine. There are mainly three uses for mesh names:
+  -- 
+  --   * some formats name nodes and meshes independently.
+  --
+  --   * importers tend to split meshes up to meet the one-material-per-mesh
+  --   requirement. Assigning the same (dummy) name to each of the result
+  --   meshes aids the caller at recovering the original mesh partitioning.
+  --
+  --   * Vertex animations refer to meshes by their names.
   , meshName        :: String
   } deriving (Show)
 
@@ -101,10 +201,18 @@ instance Storable Mesh where
                mMaterialIndex mName
   poke = undefined
 
-data Bone = Bone
-  { boneName      :: String
+-- | A single bone of a mesh.
+--
+-- A bone has a name by which it can be found in the frame hierarchy and by
+-- which it can be addressed by animations. In addition it has a number of
+-- influences on vertices.
+data Bone = Bone {
+  -- | The name of the bone. Use 'name' to access.
+    boneName      :: String
+  -- | The vertices affected by this bone.
   , weights       :: [VertexWeight]
-  , offpokeMatrix :: Mat4F
+  -- | Matrix that transforms from mesh space to bone space in bind pose.
+  , offsetMatrix :: Mat4F
   } deriving (Show)
 
 instance Name Bone where
@@ -122,9 +230,33 @@ instance Storable Bone where
     return $ Bone mN lst mO
   poke = undefined
 
-data Face = Face
-  { indices :: [CUInt] -- Holds indices defining the face
-  --, debug :: String
+-- | A single face in a mesh, referring to multiple vertices.
+--
+-- If mNumIndices is 3, we call the face 'triangle', for mNumIndices > 3 it's
+-- called 'polygon' (hey, that's just a definition!).
+--
+-- 'Mesh' :: 'primitiveTypes' can be queried to quickly examine which types of
+-- primitive are actually present in a mesh. The SortByPrimitiveType flag
+-- executes a special post-processing algorithm which splits meshes with
+-- *different* primitive types mixed up (e.g. lines and triangles) in several
+-- 'clean' submeshes. Furthermore there is a configuration option (
+-- AI_CONFIG_PP_SBP_REMOVE) to force SortByPrimitiveType to remove specific
+-- kinds of primitives from the imported scene, completely and forever. In many
+-- cases you'll probably want to set this setting to
+--
+-- @
+-- PrimitiveTypeLine|PrimitiveTypePoint
+-- @
+--
+-- Together with the 'Triangulate' flag you can then be sure that
+-- 'Face' :: 'numIndices' is always 3.
+--
+-- Note:
+-- Take a look at the Data Structures page
+-- (<http://assimp.sourceforge.net/lib_html/data.html>) for more information on
+-- the layout and winding order of a face.
+data Face = Face { 
+    indices :: [CUInt] -- Holds indices defining the face
   } deriving (Show)
 
 instance Storable Face where
@@ -137,8 +269,11 @@ instance Storable Face where
     return $ Face lst
   poke = undefined
 
-data VertexWeight = VertexWeight
-  { vertexId :: CUInt
+data VertexWeight = VertexWeight {
+  -- | Index of the vertex which is influenced by the bone.
+    vertexId :: CUInt
+  -- | The strength of the influence in the range (0..1). The influence from
+  -- all bones at one vertex amounts to 1.
   , weight   :: CFloat
   } deriving (Show)
 

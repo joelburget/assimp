@@ -1,12 +1,12 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 -- |
--- Module : Graphics.Formats.Assimp.Matrix
--- Copyright : (c) Joel Burget 2011
--- License BSD3
+-- Module      : Graphics.Formats.Assimp.Matrix
+-- Copyright   : (c) Joel Burget 2011-2012
+-- License     : BSD3
 --
--- Maintainer : Joel Burget <joelburget@gmail.com>
--- Stability : experimental
+-- Maintainer  : Joel Burget <joelburget@gmail.com>
+-- Stability   : experimental
 -- Portability : non-portable
 --
 -- Corresponds to aiMatrix{3x3,4x4}.h
@@ -24,7 +24,18 @@ module Graphics.Formats.Assimp.Matrix (
 import Foreign.Storable
 import Data.Vect.Float (Mat3(..), Mat4(..), Vec2(..), Vec3(..), Vec4(..))
 
+-- | Represents a row-major 3x3 matrix.
+--
+-- There's much confusion about matrix layouts (colum vs. row order). This is
+-- *always* a row-major matrix. Even with the aiProcess_ConvertToLeftHanded
+-- flag.
 newtype Mat3F = Mat3F Mat3 deriving Show
+
+-- | Represents a row-major 4x4 matrix, use this for homogeneous coordinates.
+--
+-- There's much confusion about matrix layouts (colum vs. row order). This is
+-- *always* a row-major matrix. Even with the aiProcess_ConvertToLeftHanded
+-- flag.
 newtype Mat4F = Mat4F Mat4 deriving Show
 
 instance Storable Mat3F where

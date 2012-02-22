@@ -22,17 +22,17 @@ Description:
     information contained in it.
     .
     > module Main where
-    > 
+    >
     > import System (getArgs)
     > import Graphics.Formats.Assimp
-    > 
+    >
     > -- Defines the preprocessing we want assimp to perform
     > processing = [ CalcTangentSpace
     >              , Triangulate
     >              , JoinIdenticalVertices
     >              , SortByPType
     >              ]
-    > 
+    >
     > main = do
     >   args <- getArgs
     >   mapM_ (print =<<)
@@ -44,7 +44,7 @@ Description:
     .
     See <https://github.com/joelburget/Cologne/blob/master/Cologne/AssimpImport.hs>
     for more.
-    
+
 License:             BSD3
 License-file:        LICENSE
 Author:              Joel Burget
@@ -60,6 +60,7 @@ Library
     Graphics.Formats.Assimp.Anim
     Graphics.Formats.Assimp.Camera
     Graphics.Formats.Assimp.Color4D
+    Graphics.Formats.Assimp.Config
     Graphics.Formats.Assimp.Fun
     Graphics.Formats.Assimp.Light
     Graphics.Formats.Assimp.Material
@@ -78,7 +79,7 @@ Library
   Build-tools: hsc2hs
   Extensions: ForeignFunctionInterface
   Extra-libraries: assimp
-  Include-dirs: 
+  Include-dirs:
     include,
     Graphics/Formats/
 

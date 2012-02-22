@@ -6,15 +6,12 @@
 -- Maintainer  : Joel Burget <joelburget@gmail.com>
 -- Stability   : experimental
 -- Portability : non-portable
---
--- Import this module to use assimp. Please excuse the lack of documentation.
--- Everything should nearly directly mirror the original assimp,
--- documentation available here: <http://assimp.sourceforge.net/lib_html/>
 
 module Graphics.Formats.Assimp (
     module Graphics.Formats.Assimp.Anim
   , module Graphics.Formats.Assimp.Camera
   , module Graphics.Formats.Assimp.Color4D
+  , module Graphics.Formats.Assimp.Config
   , module Graphics.Formats.Assimp.Fun
   , module Graphics.Formats.Assimp.Light
   , module Graphics.Formats.Assimp.Material
@@ -31,6 +28,7 @@ module Graphics.Formats.Assimp (
 import Graphics.Formats.Assimp.Anim
 import Graphics.Formats.Assimp.Camera
 import Graphics.Formats.Assimp.Color4D
+import Graphics.Formats.Assimp.Config
 import Graphics.Formats.Assimp.Fun
 import Graphics.Formats.Assimp.Light
 import Graphics.Formats.Assimp.Material
