@@ -1,6 +1,4 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE FlexibleInstances #-}
 
 -- |
@@ -27,9 +25,7 @@ module Graphics.Formats.Assimp.Fun (
   , GetTextureRet(..)
   -- * Other functions
   , getErrorString
-  , setImportPropertyInteger
-  , setImportPropertyFloat
-  , setImportPropertyString
+  , setImportProperty
   , getExtensionList
   , getMemoryRequirements
   , getTextureCount
@@ -54,6 +50,7 @@ import Graphics.Formats.Assimp.Types
 import Graphics.Formats.Assimp.Scene
 import Graphics.Formats.Assimp.Material hiding (key)
 import Graphics.Formats.Assimp.PostProcess
+import Graphics.Formats.Assimp.Config
 
 #include "assimp.h"
 #include "aiMaterial.h"
@@ -132,7 +129,55 @@ getMemoryRequirements scene =
 foreign import ccall unsafe "aiGetMemoryRequirements"
   aiGetMemoryRequirements :: Ptr Scene -> Ptr MemoryInfo -> IO ()
 
--- | Set an integer property.
+-- | Set a global import property
+--
+-- This corresponds to 'aiSetImportPropertyInteger',
+-- 'aiSetImportPropertyFloat', and 'aiSetImportPropertyString' from the C++
+-- api. See 'Config' for the options.
+setImportProperty :: Config -> IO ()
+setImportProperty conf = let name = configName conf in case conf of
+  GlobMeasureTime b                -> setImportPropertyInteger name $ fromEnum b
+  PpCtMaxSmoothingAngle f          -> setImportPropertyFloat   name f
+  PpGsnMaxSmoothingAngle f         -> setImportPropertyFloat   name f
+  ImportMdlColormap str            -> setImportPropertyString  name str
+  PpRrmExcludeList str             -> setImportPropertyString  name str
+  PpPtvKeepHierarchy b             -> setImportPropertyInteger name $ fromEnum b
+  PpPtvNormalize b                 -> setImportPropertyInteger name $ fromEnum b
+  PpFdRemove b                     -> setImportPropertyInteger name $ fromEnum b
+  PpOgExcludeList str              -> setImportPropertyString  name str
+  PpSlmTriangleLimit i             -> setImportPropertyInteger name i
+  PpSlmVertexLimit i               -> setImportPropertyInteger name i
+  PpLbwMaxWeights i                -> setImportPropertyInteger name i
+  PpIclPtcacheSize i               -> setImportPropertyInteger name i
+  PpRvcFlags i                     -> setImportPropertyInteger name i
+  PpSbpRemove i                    -> setImportPropertyInteger name i
+  PpFidAnimAccuracy f              -> setImportPropertyFloat   name f
+  PpTuvEvaluate i                  -> setImportPropertyInteger name i
+  FavorSpeed b                     -> setImportPropertyInteger name $ fromEnum b
+  ImportGlobalKeyframe i           -> setImportPropertyInteger name i
+  ImportMd3Keyframe i              -> setImportPropertyInteger name i
+  ImportMd2Keyframe i              -> setImportPropertyInteger name i
+  ImportMdlKeyframe i              -> setImportPropertyInteger name i
+  ImportMdcKeyframe i              -> setImportPropertyInteger name i
+  ImportSmdKeyframe i              -> setImportPropertyInteger name i
+  ImportUnrealKeyframe i           -> setImportPropertyInteger name i
+  ImportAcSeparateBfCull b         -> setImportPropertyInteger name $ fromEnum b
+  ImportAcEvalSubdivision b        -> setImportPropertyInteger name $ fromEnum b
+  ImportUnrealHandleFlags b        -> setImportPropertyInteger name $ fromEnum b
+  ImportTerMakeUvs b               -> setImportPropertyInteger name $ fromEnum b
+  ImportAseReconstructNormals b    -> setImportPropertyInteger name $ fromEnum b
+  ImportMd3HandleMultipart b       -> setImportPropertyInteger name $ fromEnum b
+  ImportMd3SkinName str            -> setImportPropertyString  name str
+  ImportMd3ShaderSrc str           -> setImportPropertyString  name str
+  ImportLwoOneLayerOnly (Left str) -> setImportPropertyString  name str
+  ImportLwoOneLayerOnly (Right i)  -> setImportPropertyInteger name i
+  ImportMd5NoAnimAutoload b        -> setImportPropertyInteger name $ fromEnum b
+  ImportLwsAnimStart i             -> setImportPropertyInteger name i
+  ImportLwsAnimEnd i               -> setImportPropertyInteger name i
+  ImportIrrAnimFps i               -> setImportPropertyInteger name i
+  ImportOgreMaterialFile str       -> setImportPropertyString  name str
+
+-- Set an integer property.
 setImportPropertyInteger :: String -> Int -> IO ()
 setImportPropertyInteger prop n =
   withCString prop $ \cprop -> aiSetImportPropertyInteger cprop (fromIntegral n)
@@ -140,7 +185,7 @@ setImportPropertyInteger prop n =
 foreign import ccall unsafe "aiSetImportPropertyInteger"
   aiSetImportPropertyInteger :: Ptr CChar -> CInt -> IO ()
 
--- | Set a floating-point property.
+-- Set a floating-point property.
 setImportPropertyFloat :: String -> Float -> IO ()
 setImportPropertyFloat prop f = withCString prop $ \prop' ->
   aiSetImportPropertyFloat prop' (fromRational . toRational $ f)
@@ -148,7 +193,7 @@ setImportPropertyFloat prop f = withCString prop $ \prop' ->
 foreign import ccall unsafe "aiSetImportPropertyFloat"
   aiSetImportPropertyFloat :: Ptr CChar -> CFloat -> IO ()
 
--- | Set a string property.
+-- Set a string property.
 setImportPropertyString :: String -> String -> IO ()
 setImportPropertyString prop s =
   withCString prop $ \prop' ->

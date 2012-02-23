@@ -1,9 +1,7 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
-
 -- |
 -- Module      : Graphics.Formats.Assimp.PostProcess
 -- Copyright   : (c) Joel Burget 2011-2012
--- License BSD3
+-- License     : BSD3
 --
 -- Maintainer  : Joel Burget <joelburget@gmail.com>
 -- Stability   : experimental
@@ -13,6 +11,7 @@
 
 module Graphics.Formats.Assimp.Config (
     Config(..)
+  , configName
   ) where
 
 -- | Global configuration
@@ -23,14 +22,16 @@ data Config =
   -- (i.e. IO time, importing, postprocessing, ..) and dumps these timings to
   -- the DefaultLogger. See <http://assimp.sourceforge.net/lib_html/perf.html>
   -- for more information on this topic.
-    GlobMeasureTime -- bool, default false
+  --
+  -- Default: False
+    GlobMeasureTime Bool
   -- | Specifies the maximum angle that may be between two vertex tangents that
   -- their tangents and bitangents are smoothed.
   --
   -- This applies to the CalcTangentSpace-Step. The angle is specified in
   -- degrees, so 180 is PI. The default value is 45 degrees. The maximum value
   -- is 175.
-  | PpCtMaxSmoothingAngle -- float
+  | PpCtMaxSmoothingAngle Float
   -- | Specifies the maximum angle that may be between two face normals at the
   -- same vertex position that their are smoothed together.
   --
@@ -42,7 +43,7 @@ data Config =
   -- float.  Warning: setting this option may cause a severe loss of
   -- performance. The performance is unaffected if the 'FavorSpeed' flag is set
   -- but the output quality may be reduced.
-  | PpGsnMaxSmoothingAngle -- float
+  | PpGsnMaxSmoothingAngle Float
   -- | Sets the colormap (= palette) to be used to decode embedded textures in
   -- MDL (Quake or 3DGS) files.
   --
@@ -50,7 +51,7 @@ data Config =
   -- and contains RGB triplets for each of the 256 palette entries.  The
   -- default value is colormap.lmp. If the file is not found, a default palette
   -- (from Quake 1) is used. 
-  | ImportMdlColormap -- string
+  | ImportMdlColormap String
   -- | Configures the 'RemoveRedundantMaterials' step to keep materials
   -- matching a name in a given list.
   --
@@ -68,7 +69,9 @@ data Config =
   --
   -- Note: Linefeeds, tabs or carriage returns are treated as whitespace.
   --   Material names are case sensitive.
-  | PpRrmExcludeList -- string, default n/a
+  --
+  -- Default: n/a
+  | PpRrmExcludeList String
   -- | Configures the 'PretransformVertices' step to keep the scene hierarchy. 
   --
   -- Meshes are moved to worldspace, but no optimization is performed (read:
@@ -79,15 +82,19 @@ data Config =
   -- important additional information which you intend to parse. For rendering,
   -- you can still render all meshes in the scene without any
   -- transformations.
-  | PpPtvKeepHierarchy -- bool, default false
+  --
+  -- Default: False
+  | PpPtvKeepHierarchy Bool
   -- | Configures the 'PretransformVertices' step to normalize all vertex
   -- components into the -1...1 range.
   --
-  --  That is, a bounding box for the whole scene is computed, the maximum
-  --  component is taken and all meshes are scaled appropriately (uniformly of
-  --  course!). This might be useful if you don't know the spatial dimension
-  --  of the input data
-  | PpPtvNormalize
+  -- That is, a bounding box for the whole scene is computed, the maximum
+  -- component is taken and all meshes are scaled appropriately (uniformly of
+  -- course!). This might be useful if you don't know the spatial dimension of
+  -- the input data.
+  --
+  -- Default: False
+  | PpPtvNormalize Bool
   -- | Configures the 'FindDegenerates' step to remove degenerated primitives
   -- from the import - immediately.
   --
@@ -95,7 +102,9 @@ data Config =
   -- degenerated lines to points. See the documentation to the
   -- 'FindDegenerates' step for a detailed example of the various ways to get
   -- rid of these lines and points if you don't want them.
-  | PpFdRemove -- bool, default false
+  --
+  -- Default: False
+  | PpFdRemove Bool
   -- | Configures the 'OptimizeGraph' step to preserve nodes matching a name in
   -- a given list.
   -- 
@@ -112,27 +121,29 @@ data Config =
   --
   --  Note: Linefeeds, tabs or carriage returns are treated as whitespace.
   --  Node names are case sensitive.
-  | PpOgExcludeList -- string, default n/a
+  --
+  --  Default: n/a
+  | PpOgExcludeList String
   -- | Set the maximum number of triangles in a mesh.
   --
   -- This is used by the 'SplitLargeMeshes' PostProcess-Step to determine
   -- whether a mesh must be split or not.
   --
   -- Note: The default value is AI_SLM_DEFAULT_MAX_TRIANGLES
-  | PpSlmTriangleLimit -- integer, default AI_SLM_DEFAULT_MAX_TRIANGLES
+  | PpSlmTriangleLimit Int
   -- | Set the maximum number of vertices in a mesh.
   --
   -- This is used by the 'SplitLargeMeshes' PostProcess-Step to determine
   -- whether a mesh must be split or not.
   --
   -- Note: The default value is AI_SLM_DEFAULT_MAX_VERTICES
-  | PpSlmVertexLimit -- integer, default AI_SLM_DEFAULT_MAX_VERTICES
+  | PpSlmVertexLimit Int
   -- | Set the maximum number of bones affecting a single vertex
   --
   -- This is used by the 'LimitBoneWeights' PostProcess-Step.
   --
   -- Note: The default value is AI_LBW_MAX_WEIGHTS
-  | PpLbwMaxWeights -- integer, default AI_LMW_MAX_WEIGHTS
+  | PpLbwMaxWeights Int
   -- | Set the size of the post-transform vertex cache to optimize the vertices
   -- for. This configures the 'ImproveCacheLocality' step.
   --
@@ -142,7 +153,7 @@ data Config =
   --
   -- Note: The default value is PP_ICL_PTCACHE_SIZE. That results in slight
   -- performance improvements for most nVidia/AMD cards since 2002.
-  | PpIclPtcacheSize -- integer, default PP_ICL_PTCACHE_SIZE
+  | PpIclPtcacheSize Int
   -- | Input parameter to the RemoveComponent step: Specifies the parts of the
   -- data structure to be removed.
   --
@@ -152,14 +163,18 @@ data Config =
   -- valid mesh is remaining after the step has been executed (e.g you thought
   -- it was funny to specify ALL of the flags defined above) the import FAILS.
   -- Mainly because there is no data to work on anymore ...
-  | PpRvcFlags -- integer, default 0
+  --
+  -- Default: 0
+  | PpRvcFlags Int
   -- | Input parameter to the SortByPType step: Specifies which primitive types
   -- are removed by the step.
   --
-  --  This is a bitwise combination of the 'PrimitiveType' flags.
-  --  Specifying all of them is illegal, of course. A typical use would
-  --  be to exclude all line and point meshes from the import.
-  | PpSbpRemove -- integer, default 0
+  -- This is a bitwise combination of the 'PrimitiveType' flags. Specifying all
+  -- of them is illegal, of course. A typical use would be to exclude all line
+  -- and point meshes from the import.
+  --
+  --  Default: 0
+  | PpSbpRemove Int
   -- | Input parameter to the FindInvalidData step: Specifies the
   -- floating-point accuracy for animation values.
   --
@@ -169,49 +184,58 @@ data Config =
   -- invariant abs(n0-n1)>epsilon holds true for all vector respectively
   -- quaternion components. The default value is 0.f - comparisons are exact
   -- then.
-  | PpFidAnimAccuracy -- float, default 0.f
+  --
+  -- Default: 0.0
+  | PpFidAnimAccuracy Float
   -- | Input parameter to the TransformUVCoords step: Specifies which UV
   -- transformations are evaluated.
   --
   --  This is a bitwise combination of the AI_UVTRAFO_XXX flags. By default all
   --  transformations are enabled (AI_UVTRAFO_ALL).
-  | PpTuvEvaluate -- integer, default AI_UVTRAFO_ALL
-  -- | A hint to assimp to favour speed against import quality.
+  | PpTuvEvaluate Int
+  -- | A hint to assimp to favor speed against import quality.
   --
   -- Enabling this option may result in faster loading, but it needn't.
   -- It represents just a hint to loaders and post-processing steps to use
   -- faster code paths, if possible. 
-  | FavorSpeed -- integer, default 0, != 0 stands for true
+  --
+  -- Default: False
+  | FavorSpeed Bool
   -- | Set the vertex animation keyframe to be imported
   --
   -- ASSIMP does not support vertex keyframes (only bone animation is
-  -- supported).  The library reads only one frame of models with vertex
-  -- animations.  By default this is the first frame.
+  -- supported). The library reads only one frame of models with vertex
+  -- animations. By default this is the first frame.
   --
   -- Note: The default value is 0. This option applies to all importers.
   -- However, it is also possible to override the global setting for a specific
   -- loader. You can use the AI_CONFIG_IMPORT_XXX_KEYFRAME options (where XXX
   -- is a placeholder for the file format for which you want to override the
   -- global setting).
-  | ImportGlobalKeyframe
-  | ImportMd3Keyframe
-  | ImportMd2Keyframe
-  | ImportMdlKeyframe
-  | ImportMdcKeyframe
-  | ImportSmdKeyframe
-  | ImportUnrealKeyframe
+  | ImportGlobalKeyframe Int
+  | ImportMd3Keyframe Int -- ^ See 'ImportGlobalKeyframe'
+  | ImportMd2Keyframe Int -- ^ See 'ImportGlobalKeyframe'
+  | ImportMdlKeyframe Int -- ^ See 'ImportGlobalKeyframe'
+  | ImportMdcKeyframe Int -- ^ See 'ImportGlobalKeyframe'
+  | ImportSmdKeyframe Int -- ^ See 'ImportGlobalKeyframe'
+  | ImportUnrealKeyframe Int -- ^ See 'ImportGlobalKeyframe'
+
   -- | Configures the AC loader to collect all surfaces which have the
   -- "Backface cull" flag set in separate meshes. 
-  | ImportAcSeparateBfCull -- bool, default true
+  --
+  -- Default: True
+  | ImportAcSeparateBfCull Bool
   -- | Configures whether the AC loader evaluates subdivision surfaces
   --
   -- (indicated by the presence of the 'subdiv' attribute in the file). By
   -- default, Assimp performs the subdivision using the standard Catmull-Clark
   -- algorithm
-  | ImportAcEvalSubdivision
+  | ImportAcEvalSubdivision Bool
   -- | Configures the UNREAL 3D loader to separate faces with different surface
   -- flags (e.g. two-sided vs. single-sided).
-  | ImportUnrealHandleFlags -- bool, default true
+  --
+  -- Default: True
+  | ImportUnrealHandleFlags Bool
   -- | Configures the terragen import plugin to compute uv's for terrains, if
   -- not given. Furthermore a default texture is assigned.
   --
@@ -219,26 +243,34 @@ data Config =
   -- want to compute them on your own, if you need them. This option is
   -- intended for model viewers which want to offer an easy way to apply
   -- textures to terrains.
-  | ImportTerMakeUvs -- bool, default false
+  --
+  -- Default: False
+  | ImportTerMakeUvs Bool
   -- | Configures the ASE loader to always reconstruct normal vectors basing on
   -- the smoothing groups loaded from the file.
   -- 
   -- Some ASE files have carry invalid normals, other don't.
-  | ImportAseReconstructNormals -- bool, default true
+  --
+  -- Default: True
+  | ImportAseReconstructNormals Bool
   -- | Configures the M3D loader to detect and process multi-part Quake player
   -- models.
   --
   -- These models usually consist of 3 files, lower.md3, upper.md3 and
   -- head.md3. If this property is set to true, Assimp will try to load and
   -- combine all three files if one of them is loaded.
-  | ImportMd3HandleMultipart -- bool, default true
+  --
+  -- Default: True
+  | ImportMd3HandleMultipart Bool
   -- | Tells the MD3 loader which skin files to load.
   --
   -- When loading MD3 files, Assimp checks whether a file
   -- \<md3_file_name\>_\<skin_name\>.skin is existing. These files are used by
   -- Quake III to be able to assign different skins (e.g. red and blue team) to
   -- models. 'default', 'red', 'blue' are typical skin names.
-  | ImportMd3SkinName -- string, default "default"
+  --
+  -- Default: "default"
+  | ImportMd3SkinName String
   -- | Specify the Quake 3 shader file to be used for a particular MD3 file.
   -- This can also be a search path.
   --
@@ -252,7 +284,7 @@ data Config =
   -- open @\<dir\>\/\<model_name\>.shader@ first,
   -- @\<dir\>\/\<file_name\>.shader@ is the fallback file. Note that \<dir\>
   -- should have a terminal (back)slash.
-  | ImportMd3ShaderSrc
+  | ImportMd3ShaderSrc String
   -- | Configures the LWO loader to load just one layer from the model.
   -- 
   -- LWO files consist of layers and in some cases it could be useful to load
@@ -261,7 +293,9 @@ data Config =
   -- property is not set the whole LWO model is loaded. Loading fails if the
   -- requested layer is not available. The layer index is zero-based and the
   -- layer name may not be empty.
-  | ImportLwoOneLayerOnly -- integer, default all layers are loaded
+  --
+  -- Default: all layers are loaded
+  | ImportLwoOneLayerOnly (Either String Int)
   -- | Configures the MD5 loader to not load the MD5ANIM file for a MD5MESH
   -- file automatically.
   -- 
@@ -269,7 +303,9 @@ data Config =
   -- MD5ANIM extension in the same directory. If it is found, it is loaded and
   -- combined with the MD5MESH file. This configuration option can be used to
   -- disable this behaviour.
-  | ImportMd5NoAnimAutoload -- bool, default false
+  --
+  -- Default: False
+  | ImportMd5NoAnimAutoload Bool
   -- | Defines the begin of the time range for which the LWS loader evaluates
   -- animations and computes 'NodeAnim's.
   -- 
@@ -281,18 +317,64 @@ data Config =
   -- given in frames, '0' is the first frame. By default, if this property is
   -- not set, the importer takes the animation start from the input LWS file
   -- ('FirstFrame' line)
-  | ImportLwsAnimStart -- integer, default taken from file
+  --
+  -- Default: taken from file
+  | ImportLwsAnimStart Int
   -- | See 'ImportLwsAnimStart' - end of the imported time range
-  | ImportLwsAnimEnd
+  | ImportLwsAnimEnd Int
   -- | Defines the output frame rate of the IRR loader.
   -- 
   -- IRR animations are difficult to convert for Assimp and there will always
   -- be a loss of quality. This setting defines how many keys per second are
   -- returned by the converter.
-  | ImportIrrAnimFps -- integer, default 100
+  --
+  -- Default: 100
+  | ImportIrrAnimFps Int
   -- | Importer will try to load this Materialfile
   --
   -- Ogre Meshes contain only the MaterialName, not the MaterialFile. If there
   -- is no material file with the same name as the material, Ogre Importer will
   -- try to load this file and search the material in it.
-  | ImportOgreMaterialFile
+  | ImportOgreMaterialFile String
+
+configName :: Config -> String
+configName config = case config of
+  GlobMeasureTime _             -> "GLOB_MEASURE_TIME"
+  PpCtMaxSmoothingAngle _       -> "PP_CT_MAX_SMOOTHING_ANGLE"
+  PpGsnMaxSmoothingAngle _      -> "PP_GSN_MAX_SMOOTHING_ANGLE"
+  ImportMdlColormap _           -> "PP_MDL_COLORMAP"
+  PpRrmExcludeList _            -> "PP_RRM_EXCLUDE_LIST"
+  PpPtvKeepHierarchy _          -> "PP_PTV_KEEP_HIERARCHY"
+  PpPtvNormalize _              -> "PP_PTV_NORMALIZE"
+  PpFdRemove _                  -> "PP_FD_REMOVE"
+  PpOgExcludeList _             -> "PP_OG_EXCLUDE_LIST"
+  PpSlmTriangleLimit _          -> "PP_SLM_TRIANGLE_LIMIT"
+  PpSlmVertexLimit _            -> "PP_SLM_VERTEX_LIMIT"
+  PpLbwMaxWeights _             -> "PP_LBW_MAX_WEIGHTS"
+  PpIclPtcacheSize _            -> "PP_ICL_PTCACHE_SIZE"
+  PpRvcFlags _                  -> "PP_RVC_FLAGS"
+  PpSbpRemove _                 -> "PP_SBP_REMOVE"
+  PpFidAnimAccuracy _           -> "PP_FID_ANIM_ACCURACY"
+  PpTuvEvaluate _               -> "PP_TUV_EVALUATE"
+  FavorSpeed _                  -> "FAVOUR_SPEED"
+  ImportGlobalKeyframe _        -> "IMPORT_GLOBAL_KEYFRAME"
+  ImportMd3Keyframe _           -> "IMPORT_MD3_KEYFRAME"
+  ImportMd2Keyframe _           -> "IMPORT_MD2_KEYFRAME"
+  ImportMdlKeyframe _           -> "IMPORT_MDL_KEYFRAME"
+  ImportMdcKeyframe _           -> "IMPORT_MDC_KEYFRAME"
+  ImportSmdKeyframe _           -> "IMPORT_SMD_KEYFRAME"
+  ImportUnrealKeyframe _        -> "IMPORT_UNREAL_KEYFRAME"
+  ImportAcSeparateBfCull _      -> "IMPORT_AC_SEPARATE_BFCULL"
+  ImportAcEvalSubdivision _     -> "IMPORT_AC_EVAL_SUBDIVISION"
+  ImportUnrealHandleFlags _     -> "UNREAL_HANDLE_FLAGS"
+  ImportTerMakeUvs _            -> "IMPORT_TER_MAKE_UVS"
+  ImportAseReconstructNormals _ -> "IMPORT_ASE_RECONSTRUCT_NORMALS"
+  ImportMd3HandleMultipart _    -> "IMPORT_MD3_HANDLE_MULTIPART"
+  ImportMd3SkinName _           -> "IMPORT_MD3_SKIN_NAME"
+  ImportMd3ShaderSrc _          -> "IMPORT_MD3_SHADER_SRC"
+  ImportLwoOneLayerOnly _       -> "IMPORT_LWO_ONE_LAYER_ONLY"
+  ImportMd5NoAnimAutoload _     -> "IMPORT_MD5_NO_ANIM_AUTOLOAD"
+  ImportLwsAnimStart _          -> "IMPORT_LWS_ANIM_START"
+  ImportLwsAnimEnd _            -> "IMPORT_LWS_ANIM_END"
+  ImportIrrAnimFps _            -> "IMPORT_IRR_ANIM_FPS"
+  ImportOgreMaterialFile _      -> "IMPORT_OGRE_MATERIAL_FILE"
