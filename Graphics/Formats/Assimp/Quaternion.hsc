@@ -33,7 +33,7 @@ instance Storable Quaternion where
   sizeOf _ = #size aiQuaternion
   alignment _ = #alignment aiQuaternion
   peek p = Quaternion <$> (#peek aiQuaternion, w) p
-                      <*> (#peek aiQuaternion, w) p
-                      <*> (#peek aiQuaternion, w) p
-                      <*> (#peek aiQuaternion, w) p
+                      <*> (#peek aiQuaternion, x) p
+                      <*> (#peek aiQuaternion, y) p
+                      <*> (#peek aiQuaternion, z) p
   poke = undefined
