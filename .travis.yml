@@ -1,4 +1,8 @@
 language: haskell
+before_install:
+  - sudo apt-add-repository ppa:openrave/release
+  - sudo apt-get update
+  - sudo apt-get install assimp
 install:
   - cabal update
   - cabal install
