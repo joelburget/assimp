@@ -540,7 +540,7 @@ data MatKey =
   -- 0..1 range.
   --
   -- Default: n/a
-  | KeyMappingModeU TextureType MapMode
+  | KeyMappingModeU TextureType CUInt
   -- | Wrap mode on the v axis.
   --
   -- See 'KeyMappingModeU'.
