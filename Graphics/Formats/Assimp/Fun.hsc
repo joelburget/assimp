@@ -220,6 +220,7 @@ class ArrayGetter a where
            -> CUInt    -- ^ Maximum number of values to retrieve
            -> IO (Either String [a])
 
+-- TODO(joel) - make type safe (must use correct MatKey)
 class SingleGetter a where
   -- | Retrieve a value from a material with a specific key
   --

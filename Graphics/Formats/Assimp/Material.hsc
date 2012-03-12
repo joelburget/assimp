@@ -22,6 +22,7 @@ module Graphics.Formats.Assimp.Material (
   , PropertyTypeInfo (..)
   , MatKey (..)
   , MaterialProperty (..)
+  , MaterialData (..)
   , Material (..)
   , UVTransform (..)
   , matKeyToTuple
@@ -407,35 +408,160 @@ instance Enum TextureType where
   toEnum (#const aiTextureType_UNKNOWN)      = Unknown
   toEnum unmatched = error $ "TextureType.toEnum: Cannot match " ++ show unmatched
 
-data MatKey = KeyName
-            | KeyTwoSided
-            | KeyShadingModel
-            | KeyEnableWireframe
-            | KeyBlendFunc
-            | KeyOpacity
-            | KeyBumpScaling
-            | KeyShininess
-            | KeyReflectivity
-            | KeyShininessStrength
-            | KeyRefraction
-            | KeyColorDiffuse
-            | KeyColorAmbient
-            | KeyColorSpecular
-            | KeyColorEmissive
-            | KeyColorTransparent
-            | KeyColorReflective
-            | KeyGlobalBackgroundImage
-            | KeyTexture TextureType CUInt
-            | KeyUvWSrc TextureType CUInt
-            | KeyTexOp TextureType CUInt
-            | KeyMapping TextureType CUInt
-            | KeyTexBlend TextureType CUInt
-            | KeyMappingModeU TextureType CUInt
-            | KeyMappingModeV TextureType CUInt
-            | KeyTexMapAxis TextureType CUInt
-            | KeyUvTransform TextureType CUInt
-            | KeyTexFlags TextureType CUInt
-            deriving (Show, Eq)
+-- | Retrieve a property from a material using 'get'
+data MatKey =
+  -- | The name of the material, if available.
+  --
+  -- Note: Ignored by 'RemoveRedundantMaterials'. Materials are considered
+  -- equal even if their names are different.
+  --
+  -- Default: n/a
+    KeyName
+  -- | Specifies whether meshes using this material must be rendered without
+  -- backface culling.
+  --
+  -- Default: 'False'
+  | KeyTwoSided
+  -- | One of the 'ShadingMode' enumerated values.
+  --
+  -- Defines the library shading model to use for (real time) rendering to
+  -- approximate the original look of the material as closely as possible.
+  --
+  -- Default: 'Gouraud'
+  | KeyShadingModel
+  -- | Specifies whether wireframe rendering must be turned on for the
+  -- material.
+  --
+  -- Default: 'False'
+  | KeyEnableWireframe
+  -- | One of the 'BlendMode' enumerated values.
+  --
+  -- Defines how the final color value in the screen buffer is computed from
+  -- the given color at that position and the newly computed color from the
+  -- material. Simply said, alpha blending settings.
+  --
+  -- Default: 'False'
+  | KeyBlendFunc
+  -- | Defines the opacity of the material in a range between 0..1.
+  --
+  -- Default: 1.0
+  | KeyOpacity
+  | KeyBumpScaling
+  -- | Defines the shininess of a phong-shaded material.
+  --
+  -- This is actually the exponent of the phong specular equation.
+  --
+  -- Default: 0.0
+  | KeyShininess
+  | KeyReflectivity
+  | KeyShininessStrength
+  -- | Scales the specular color of the material.
+  --
+  -- Default: 1.0
+  | KeyRefraction
+  -- | Diffuse color of the material.
+  --
+  -- This is typically scaled by the amount of incoming diffuse light (e.g.
+  -- using gouraud shading).
+  --
+  -- Default: Black
+  | KeyColorDiffuse
+  -- | Ambient color of the material.
+  --
+  -- This is typically scaled by the amount of ambient light.
+  --
+  -- Default: Black
+  | KeyColorAmbient
+  -- | Specular color of the material.
+  --
+  -- This is typically scaled by the amount of incoming specular light (e.g.
+  -- using phong shading)
+  --
+  -- Default: Black
+  | KeyColorSpecular
+  -- | Emissive color of the material.
+  --
+  -- This is the amount of light emitted by the object. In real time
+  -- applications it will usually not affect surrounding objects, but
+  -- raytracing applications may wish to treat emissive objects as light
+  -- sources.
+  --
+  -- Default: Black
+  | KeyColorEmissive
+  -- | Defines the transparent color of the material.
+  --
+  -- This is the color to be multiplied with the color of translucent light to
+  -- construct the final 'destination color' for a particular position in the
+  -- screen buffer.
+  --
+  -- Default: Black
+  | KeyColorTransparent
+  | KeyColorReflective
+  | KeyGlobalBackgroundImage
+  -- | Defines the path to the nth texture on the stack 't'
+  --
+  -- ... where 'n' is >= 0 and 't' is a 'TextureType'.
+  --
+  -- Default: n/a
+  | KeyTexture TextureType CUInt
+  -- | Defines the UV channel to be used as input mapping coordinates for
+  -- sampling the nth texture on the stack 't'. All meshes assigned to this
+  -- material share the same UV channel setup.
+  --
+  -- Default: n/a
+  | KeyUvWSrc TextureType CUInt
+  -- | One of the 'TextureOp' enumerated values.
+  --
+  -- Defines the arithmetic operation to be used to combine the n'th texture on
+  -- the stack 't' with the n-1'th. 'KeyTexOp t 0' refers to the blend
+  -- operation between the base color for this stack (e.g. 'Diffuse' for the
+  -- diffuse stack) and the first texture.
+  --
+  -- Default: n/a
+  | KeyTexOp TextureType CUInt
+  -- | Defines how the input mapping coordinates for sampling the n'th texture
+  -- on the stack 't' are computed. Usually explicit UV coordinates are
+  -- provided, but some model file formats might also be using basic shapes,
+  -- such as spheres or cylinders, to project textures onto meshes.
+  --
+  -- Default: n/a
+  | KeyMapping TextureType CUInt
+  -- | Defines the strength the n'th texture on the stack 't'.
+  --
+  -- All color components (rgb) are multipled with this factor *before* any
+  -- further processing is done.
+  --
+  -- Default: n/a
+  | KeyTexBlend TextureType CUInt
+  -- | Any of the aiTextureMapMode enumerated values.
+  --
+  -- Defines the texture wrapping mode on the x axis for sampling the n'th
+  -- texture on the stack 't'. 'Wrapping' occurs whenever UVs lie outside the
+  -- 0..1 range.
+  --
+  -- Default: n/a
+  | KeyMappingModeU TextureType MapMode
+  -- | Wrap mode on the v axis.
+  --
+  -- See 'KeyMappingModeU'.
+  --
+  -- Default: n/a
+  | KeyMappingModeV TextureType CUInt
+  -- | Defines the base axis to to compute the mapping coordinates for the n'th
+  -- texture on the stack 't' from.
+  --
+  -- This is not required for UV-mapped textures. For instance, if MAPPING(t,n)
+  -- is 'TmSphere', U and V would map to longitude and latitude of
+  -- a sphere around the given axis.  The axis is given in local mesh space.
+  --
+  -- Default: n/a
+  | KeyTexMapAxis TextureType CUInt
+  | KeyUvTransform TextureType CUInt
+  -- | Defines miscellaneous flag for the n'th texture on the stack 't'.
+  --
+  -- This is a bitwise combination of the 'TextureFlags' enumerated values.
+  | KeyTexFlags TextureType CUInt
+  deriving (Show, Eq)
 
 matKeyToTuple :: MatKey -> (String, CUInt, CUInt)
 matKeyToTuple KeyName                   = ("?mat.name",                   0, 0)
@@ -468,10 +594,10 @@ matKeyToTuple (KeyUvTransform tType i)  = ("$tex.uvtrafo",  fromEnum' tType, i)
 matKeyToTuple (KeyTexFlags tType i)     = ("$tex.flags",    fromEnum' tType, i)
 
 data PropertyTypeInfo = PtiFloat
-                       | PtiString
-                       | PtiInteger
-                       | PtiBuffer
-                       deriving (Show, Eq)
+                      | PtiString
+                      | PtiInteger
+                      | PtiBuffer
+                      deriving (Show, Eq)
 
 instance Enum PropertyTypeInfo where
   fromEnum PtiFloat   = #const aiPTI_Float
@@ -512,10 +638,10 @@ instance Storable MaterialProperty where
     mType'    <- (#peek aiMaterialProperty, mType) p
     pmData    <- (#peek aiMaterialProperty, mData) p
     mData'    <- let ptr = castPtr pmData in case toEnum mType' of
-      PtiFloat   -> MaterialFloat  <$> peek ptr
+      PtiFloat   -> MaterialFloat                     <$> peek ptr
       PtiString  -> MaterialString . aiStringToString <$> peek ptr
-      PtiInteger -> MaterialInt    <$> peek ptr
-      PtiBuffer  -> return $ MaterialBuffer pmData
+      PtiInteger -> MaterialInt                       <$> peek ptr
+      PtiBuffer  -> MaterialBuffer                    <$> peek ptr
     return $ MaterialProperty key' semantic' index' mData'
   poke = undefined
 
