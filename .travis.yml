@@ -6,3 +6,7 @@ before_install:
 install:
   - cabal update
   - cabal install
+notifications:
+  email:
+    on_success: change
+    on_failure: always
