@@ -80,7 +80,9 @@ bitsToList i = map (toEnum . fst)    -- get enums from powers of two
 getLegalString :: IO (String)
 getLegalString = aiGetLegalString >>= peekCString
 
-isExtensionSupported :: String -> IO Bool
+-- | Returns whether a given file extension is supported by ASSIMP
+isExtensionSupported :: String -- ^ Extension, for example ".3ds", ".md3" (must include dot)
+                     -> IO Bool
 isExtensionSupported ext =
   liftM toBool $ withCString ext aiIsExtensionSupported
 
