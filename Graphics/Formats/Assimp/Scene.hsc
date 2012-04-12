@@ -103,12 +103,12 @@ instance Show SceneFlags where
 
 data Node = Node {
   -- | The name of the node. Use 'name' to access.
-	--
+  --
   -- The name might be empty (length of zero) but all nodes which need to be
   -- accessed afterwards by bones or anims are usually named.  Multiple nodes
   -- may have the same name, but nodes which are accessed by bones (see
   -- 'aiBone' and 'aiMesh'::'mBones') *must* be unique.
-	-- 
+  -- 
   -- Cameras and lights are assigned to a specific node name - if there are
   -- multiple nodes with this name, they're assigned to each of them.
   --
