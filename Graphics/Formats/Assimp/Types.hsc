@@ -1,12 +1,12 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 -- |
--- Module : Graphics.Formats.Assimp.Types
--- Copyright : (c) Joel Burget 2011
--- License BSD3
+-- Module      : Graphics.Formats.Assimp.Types
+-- Copyright   : (c) Joel Burget 2011-2012
+-- License     : BSD3
 --
--- Maintainer : Joel Burget <joelburget@gmail.com>
--- Stability : experimental
+-- Maintainer  : Joel Burget <joelburget@gmail.com>
+-- Stability   : experimental
 -- Portability : non-portable
 --
 -- Corresponds to aiTypes.h
@@ -41,10 +41,17 @@ import Data.Vect.Float (Vec3(Vec3))
 #include "typedefs.h"
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 
-data Return = ReturnSuccess
-            | ReturnFailure
-            | ReturnOutOfMemory
-            deriving (Show,Eq)
+-- | Standard return type for some library functions.
+data Return 
+  -- | Indicates that a function was successful
+  = ReturnSuccess
+  -- | Indicates that a function failed
+  | ReturnFailure
+  -- | Indicates that not enough memory was available to perform the requested
+  -- operation
+  | ReturnOutOfMemory
+  deriving (Show,Eq)
+
 instance Enum Return where
   fromEnum ReturnSuccess = 0
   fromEnum ReturnFailure = (-1)
@@ -55,10 +62,15 @@ instance Enum Return where
   toEnum (-3) = ReturnOutOfMemory
   toEnum unmatched = error $ "Return.toEnum: Cannot match " ++ show unmatched
 
-data Origin = Set
-            | Cur
-            | End
-            deriving (Show, Eq)
+-- | Seek origins (for the virtual file system API).
+data Origin -- TODO(joel) used?
+  -- | Beginning of the file
+  = Set
+  -- | Current position of the file pointer
+  | Cur
+  -- | End of the file, offsets must be negative
+  | End
+  deriving (Show, Eq)
 
 data Plane = Plane
   { planeA :: Float
@@ -98,15 +110,19 @@ instance Storable Color3F where
                              <*> (#peek aiColor3D, b) p)
   poke = undefined
 
-data MemoryInfo = MemoryInfo 
-  { memoryInfoTextures   :: CUInt
-  , memoryInfoMaterials  :: CUInt
-  , memoryInfoMeshes     :: CUInt
-  , memoryInfoNodes      :: CUInt
-  , memoryInfoAnimations :: CUInt
-  , memoryInfoCameras    :: CUInt
-  , memoryInfoLights     :: CUInt
-  , memoryInfoTotal      :: CUInt
+-- | Stores the memory requirements for different components (e.g. meshes,
+-- materials, animations) of an import. All sizes are in bytes.
+--
+-- see 'getMemoryRequirements'
+data MemoryInfo = MemoryInfo {
+    memoryInfoTextures   :: CUInt -- ^ Storage allocated for texture data
+  , memoryInfoMaterials  :: CUInt -- ^ Storage allocated for material data
+  , memoryInfoMeshes     :: CUInt -- ^ Storage allocated for mesh data
+  , memoryInfoNodes      :: CUInt -- ^ Storage allocated for node data
+  , memoryInfoAnimations :: CUInt -- ^ Storage allocated for animation data
+  , memoryInfoCameras    :: CUInt -- ^ Storage allocated for camera data
+  , memoryInfoLights     :: CUInt -- ^ Storage allocated for light data
+  , memoryInfoTotal      :: CUInt -- ^ Storage allocated for the full import
   } deriving (Show)
 
 instance Storable MemoryInfo where
