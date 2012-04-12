@@ -3,7 +3,7 @@
 -- |
 -- Module      : Graphics.Formats.Assimp.PostProcess
 -- Copyright   : (c) Joel Burget 2011-2012
--- License BSD3
+-- License     : BSD3
 --
 -- Maintainer  : Joel Burget <joelburget@gmail.com>
 -- Stability   : experimental

@@ -78,4 +78,3 @@ instance Storable Animation where
     mMeshChannels    <- peekArray mNumMeshChannels mMeshChannels'
     return $ Animation mName mDuration mTicksPerSecond mChannels mMeshChannels
   poke = undefined
-

@@ -1,7 +1,7 @@
 -- |
--- Module    : Graphics.Formats.Assimp.Storable
--- Copyright : (c) Joel Burget 2011
--- License   : BSD3
+-- Module      : Graphics.Formats.Assimp
+-- Copyright   : (c) Joel Burget 2011-2012
+-- License     : BSD3
 --
 -- Maintainer  : Joel Burget <joelburget@gmail.com>
 -- Stability   : experimental

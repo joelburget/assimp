@@ -1,12 +1,12 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 -- |
--- Module : Graphics.Formats.Assimp.Quaternion
--- Copyright : (c) Joel Burget 2011
--- License BSD3
+-- Module      : Graphics.Formats.Assimp.Quaternion
+-- Copyright   : (c) Joel Burget 2011-2012
+-- License     : BSD3
 --
--- Maintainer : Joel Burget <joelburget@gmail.com>
--- Stability : experimental
+-- Maintainer  : Joel Burget <joelburget@gmail.com>
+-- Stability   : experimental
 -- Portability : non-portable
 --
 -- Corresponds to aiQuaternion.h
