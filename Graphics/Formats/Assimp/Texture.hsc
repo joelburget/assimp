@@ -22,10 +22,11 @@ module Graphics.Formats.Assimp.Texture (
 #include "typedefs.h"
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 
+import Control.Applicative ((<$>), (<*>))
+
 import Foreign.Storable
 import Foreign.C
 import Foreign.Marshal.Array
-import Foreign.C.Types (CUChar)
 
 -- | Helper structure to represent a texel in a ARGB8888 format
 --
@@ -40,7 +41,11 @@ data Texel = Texel
 instance Storable Texel where
   sizeOf _ = #size aiTexel
   alignment _ = #alignment aiTexel
-  peek _ = return $ Texel 0
+  peek p = Texel
+    <$> (#peek aiTexel, b) p
+    <*> (#peek aiTexel, g) p
+    <*> (#peek aiTexel, r) p
+    <*> (#peek aiTexel, a) p
   poke = undefined
 
 -- | Helper structure to describe an embedded texture
@@ -94,10 +99,10 @@ instance Storable Texture where
     mWidth <- (#peek aiTexture, mWidth) p
     mHeight <- (#peek aiTexture, mHeight) p
     -- Should achFormatHint be included?
-    achFormatHint <- (#peek aiTexture, achFormatHint) p >>= peekCString
+    _achFormatHint <- (#peek aiTexture, achFormatHint) p >>= peekCString
     pcData' <- (#peek aiTexture, pcData) p
-    pcData <- if mHeight == 0
-              then peekArray (fromIntegral mWidth) pcData'
-              else peekArray (fromIntegral (mWidth * mHeight)) pcData'
-    return $ Texture mWidth mHeight achFormatHint pcData
+    _pcData <- if mHeight == 0
+      then peekArray (fromIntegral mWidth) pcData'
+      else peekArray (fromIntegral (mWidth * mHeight)) pcData'
+    return $ Texture mWidth mHeight _achFormatHint _pcData
   poke = undefined
