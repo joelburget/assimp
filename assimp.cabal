@@ -23,7 +23,7 @@ Description:
     .
     > module Main where
     >
-    > import System (getArgs)
+    > import System.Environment (getArgs)
     > import Graphics.Formats.Assimp
     >
     > -- Defines the preprocessing we want assimp to perform
