@@ -19,7 +19,7 @@ module Graphics.Formats.Assimp.Material (
   , TextureMapping (..)
   , TextureOp (..)
   , TextureType (..)
-  , PropertyTypeInfo (..)
+  --, PropertyTypeInfo (..)
   , MatKey (..)
   , MaterialProperty (..)
   , MaterialData (..)
@@ -609,7 +609,8 @@ instance Enum PropertyTypeInfo where
   toEnum (#const aiPTI_String)  = PtiString
   toEnum (#const aiPTI_Integer) = PtiInteger
   toEnum (#const aiPTI_Buffer)  = PtiBuffer
-  toEnum unmatched = error $ "PropertyTypeInfo.toEnum: Cannot match " ++ show unmatched
+  toEnum unmatched = error $
+    "PropertyTypeInfo.toEnum: Cannot match " ++ show unmatched
 
 data MaterialProperty = MaterialProperty
   { key      :: String
@@ -621,11 +622,11 @@ data MaterialProperty = MaterialProperty
 data MaterialData =
     MaterialFloat Float
   | MaterialString String
-  | MaterialInt Int
-  | MaterialBuffer (Ptr Char)
+  | MaterialInt CUInt
+  | MaterialBuffer CUInt (Ptr Char)
   deriving (Show)
 
-data Material = Material {properties :: [MaterialProperty]} deriving (Show)
+newtype Material = Material {properties :: [MaterialProperty]} deriving (Show)
 
 instance Storable MaterialProperty where
   sizeOf _ = #size aiMaterialProperty
@@ -635,13 +636,17 @@ instance Storable MaterialProperty where
     semantic' <- (toEnum . fromIntegral :: CUInt -> TextureType) <$>
       (#peek aiMaterialProperty, mSemantic) p
     index'    <- (#peek aiMaterialProperty, mIndex) p
-    mType'    <- (#peek aiMaterialProperty, mType) p
+    mType'    <- (toEnum . fromIntegral :: CUInt -> PropertyTypeInfo) <$>
+      (#peek aiMaterialProperty, mType) p
     pmData    <- (#peek aiMaterialProperty, mData) p
-    mData'    <- let ptr = castPtr pmData in case toEnum mType' of
+    print (key', semantic', index', mType', pmData)
+    mData'    <- let ptr = castPtr pmData in case mType' of
       PtiFloat   -> MaterialFloat                     <$> peek ptr
       PtiString  -> MaterialString . aiStringToString <$> peek ptr
       PtiInteger -> MaterialInt                       <$> peek ptr
-      PtiBuffer  -> MaterialBuffer                    <$> peek ptr
+      PtiBuffer  -> MaterialBuffer 
+                <$> (#peek aiMaterialProperty, mDataLength) p
+                <*> peek ptr
     return $ MaterialProperty key' semantic' index' mData'
   poke = undefined
 
