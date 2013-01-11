@@ -13,7 +13,9 @@
 
 module Graphics.Formats.Assimp.Matrix (
     Mat3F(Mat3F)
+  , unMat3F
   , Mat4F(Mat4F)
+  , unMat4F
   ) where
 
 #include "aiMatrix3x3.h"
@@ -22,21 +24,21 @@ module Graphics.Formats.Assimp.Matrix (
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 
 import Foreign.Storable
-import Data.Vect.Float (Mat3(..), Mat4(..), Vec2(..), Vec3(..), Vec4(..))
+import Data.Vect.Float (Mat3(..), Mat4(..), Vec3(..), Vec4(..))
 
 -- | Represents a row-major 3x3 matrix.
 --
 -- There's much confusion about matrix layouts (colum vs. row order). This is
 -- *always* a row-major matrix. Even with the aiProcess_ConvertToLeftHanded
 -- flag.
-newtype Mat3F = Mat3F Mat3 deriving Show
+newtype Mat3F = Mat3F {unMat3F :: Mat3} deriving Show
 
 -- | Represents a row-major 4x4 matrix, use this for homogeneous coordinates.
 --
 -- There's much confusion about matrix layouts (colum vs. row order). This is
 -- *always* a row-major matrix. Even with the aiProcess_ConvertToLeftHanded
 -- flag.
-newtype Mat4F = Mat4F Mat4 deriving Show
+newtype Mat4F = Mat4F {unMat4F :: Mat4} deriving Show
 
 instance Storable Mat3F where
   sizeOf _ = #size aiMatrix3x3

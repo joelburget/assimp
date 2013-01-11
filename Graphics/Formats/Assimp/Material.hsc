@@ -319,7 +319,7 @@ data TextureType
   -- No texture, but the value to be used as 'texture semantic'
   -- (aiMaterialProperty::mSemantic) for all material properties *not* related
   -- to textures.
-  = None
+  = NoTexture
   -- | The texture is combined with the result of the diffuse lighting
   -- equation.
   | Diffuse
@@ -379,7 +379,7 @@ data TextureType
   deriving (Show, Eq)
 
 instance Enum TextureType where
-  fromEnum None         = #const aiTextureType_NONE
+  fromEnum NoTexture    = #const aiTextureType_NONE
   fromEnum Diffuse      = #const aiTextureType_DIFFUSE
   fromEnum Specular     = #const aiTextureType_SPECULAR
   fromEnum Ambient      = #const aiTextureType_AMBIENT
@@ -393,7 +393,7 @@ instance Enum TextureType where
   fromEnum Reflection   = #const aiTextureType_REFLECTION
   fromEnum Unknown      = #const aiTextureType_UNKNOWN
 
-  toEnum (#const aiTextureType_NONE)         = None
+  toEnum (#const aiTextureType_NONE)         = NoTexture
   toEnum (#const aiTextureType_DIFFUSE)      = Diffuse
   toEnum (#const aiTextureType_SPECULAR)     = Specular
   toEnum (#const aiTextureType_AMBIENT)      = Ambient
@@ -593,6 +593,38 @@ matKeyToTuple (KeyTexMapAxis tType i)   = ("$tex.mapaxis",  fromEnum' tType, i)
 matKeyToTuple (KeyUvTransform tType i)  = ("$tex.uvtrafo",  fromEnum' tType, i)
 matKeyToTuple (KeyTexFlags tType i)     = ("$tex.flags",    fromEnum' tType, i)
 
+buildMatKey :: String -> TextureType -> CUInt -> MatKey
+buildMatKey str tType i = case str of
+  "?mat.name"         -> KeyName
+  "$mat.twosided"     -> KeyTwoSided
+  "$mat.shadingm"     -> KeyShadingModel
+  "$mat.wireframe"    -> KeyEnableWireframe
+  "$mat.blend"        -> KeyBlendFunc
+  "$mat.opacity"      -> KeyOpacity
+  "$mat.bumpscaling"  -> KeyBumpScaling
+  "$mat.shininess"    -> KeyShininess
+  "$mat.reflectivity" -> KeyReflectivity
+  "$mat.shinpercent"  -> KeyShininessStrength
+  "$mat.refracti"     -> KeyRefraction
+  "$clr.diffuse"      -> KeyColorDiffuse
+  "$clr.ambient"      -> KeyColorAmbient
+  "$clr.specular"     -> KeyColorSpecular
+  "$clr.emissive"     -> KeyColorEmissive
+  "$clr.transparent"  -> KeyColorTransparent
+  "$clr.reflective"   -> KeyColorReflective
+  "?bg.global"        -> KeyGlobalBackgroundImage
+  "$tex.file"         -> KeyTexture tType i
+  "$tex.uvwsrc"       -> KeyUvWSrc tType i
+  "$tex.op"           -> KeyTexOp tType i
+  "$tex.mapping"      -> KeyMapping tType i
+  "$tex.blend"        -> KeyTexBlend tType i
+  "$tex.mapmodeu"     -> KeyMappingModeU tType i
+  "$tex.mapmodev"     -> KeyMappingModeV tType i
+  "$tex.mapaxis"      -> KeyTexMapAxis tType i
+  "$tex.uvtrafo"      -> KeyUvTransform tType i
+  "$tex.flags"        -> KeyTexFlags tType i
+  unmatched           -> error $ "buildMatKey: Cannot match " ++ show unmatched
+
 data PropertyTypeInfo = PtiFloat
                       | PtiString
                       | PtiInteger
@@ -613,9 +645,9 @@ instance Enum PropertyTypeInfo where
     "PropertyTypeInfo.toEnum: Cannot match " ++ show unmatched
 
 data MaterialProperty = MaterialProperty
-  { key      :: String
-  , semantic :: TextureType
-  , index    :: CUInt
+  { key      :: MatKey
+  --, semantic :: TextureType
+  --, index    :: CUInt
   , mData    :: MaterialData
   } deriving (Show)
 
@@ -639,7 +671,7 @@ instance Storable MaterialProperty where
     mType'    <- (toEnum . fromIntegral :: CUInt -> PropertyTypeInfo) <$>
       (#peek aiMaterialProperty, mType) p
     pmData    <- (#peek aiMaterialProperty, mData) p
-    print (key', semantic', index', mType', pmData)
+    print (key', index', mType', pmData)
     mData'    <- let ptr = castPtr pmData in case mType' of
       PtiFloat   -> MaterialFloat                     <$> peek ptr
       PtiString  -> MaterialString . aiStringToString <$> peek ptr
@@ -647,7 +679,7 @@ instance Storable MaterialProperty where
       PtiBuffer  -> MaterialBuffer 
                 <$> (#peek aiMaterialProperty, mDataLength) p
                 <*> peek ptr
-    return $ MaterialProperty key' semantic' index' mData'
+    return $ MaterialProperty (buildMatKey key' semantic' index') mData'
   poke = undefined
 
 instance Storable Material where

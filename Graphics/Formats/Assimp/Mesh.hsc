@@ -30,10 +30,10 @@ import Foreign.Marshal.Array
 import Data.Bits (shiftR)
 import Control.Monad (liftM, join)
 import Control.Applicative ((<$>), (<*>))
-import Data.Vect.Float (Vec3(..))
+import Data.Vect.Float (Vec3(..), Mat4)
 import Graphics.Formats.Assimp.Types
 import Graphics.Formats.Assimp.Color4D
-import Graphics.Formats.Assimp.Matrix (Mat4F)
+import Graphics.Formats.Assimp.Matrix (Mat4F, unMat4F)
 import Graphics.Formats.Assimp.Material
 
 -- | Enumerates the types of geometric primitives supported by Assimp.
@@ -212,7 +212,7 @@ data Bone = Bone {
   -- | The vertices affected by this bone.
   , weights       :: [VertexWeight]
   -- | Matrix that transforms from mesh space to bone space in bind pose.
-  , offsetMatrix :: Mat4F
+  , offsetMatrix :: Mat4
   } deriving (Show)
 
 instance Name Bone where
@@ -226,7 +226,7 @@ instance Storable Bone where
     mNW <- (#peek aiBone, mNumWeights) p
     mW <- (#peek aiBone, mWeights) p
     lst <- peekArray mNW mW
-    mO <- (#peek aiBone, mOffsetMatrix) p
+    mO <- unMat4F <$> (#peek aiBone, mOffsetMatrix) p
     return $ Bone mN lst mO
   poke = undefined
 
@@ -255,7 +255,7 @@ instance Storable Bone where
 -- Take a look at the Data Structures page
 -- (<http://assimp.sourceforge.net/lib_html/data.html>) for more information on
 -- the layout and winding order of a face.
-data Face = Face { 
+newtype Face = Face { 
     indices :: [CUInt] -- Holds indices defining the face
   } deriving (Show)
 

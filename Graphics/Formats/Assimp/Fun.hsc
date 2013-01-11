@@ -3,7 +3,7 @@
 
 -- |
 -- Module      : Graphics.Formats.Assimp.Fun
--- Copyright   : (c) Joel Burget 2011
+-- Copyright   : (c) Joel Burget 2011-2012
 -- License     : BSD3
 --
 -- Maintainer  : Joel Burget <joelburget@gmail.com>
@@ -31,7 +31,7 @@ module Graphics.Formats.Assimp.Fun (
   , getTextureCount
   ) where
 
-import Prelude hiding (max)
+import Prelude hiding (max, catch)
 import Foreign.Ptr
 import Foreign.C.Types
 import Foreign.C.String (CString, withCString, peekCString)
@@ -42,6 +42,7 @@ import Foreign.Storable
 import Data.Bits ((.|.))
 import Control.Monad (liftM)
 import Control.Applicative (liftA, (<$>), (<*>))
+import Control.Exception (catch)
 import Unsafe.Coerce (unsafeCoerce)
 import Data.Vect (Vec3(Vec3), Vec4(Vec4))
 import Data.List (foldl1')
@@ -203,7 +204,7 @@ foreign import ccall unsafe "aiSetImportPropertyString"
   aiSetImportPropertyString :: CString -> Ptr AiString -> IO ()
 
 class ArrayGetter a where
-  -- | Retrieve an array of values from a material with a specific key
+  -- | Retrieve a list of values from a material with a specific key
   --
   -- Corresponds to '.Get(5 params)' from the C++ api and the
   -- following functions from the C api:
@@ -243,7 +244,7 @@ class SingleGetter a where
       -> IO (Either String a)
 
 instance ArrayGetter Float where
-  getArray = getMaterialFloatArray
+  getArray = wrapA getMaterialFloatArray
 
 instance ArrayGetter Int where
   getArray = getMaterialIntArray
@@ -266,6 +267,14 @@ instance SingleGetter String where
 
 mRet :: CInt -> Return
 mRet  = toEnum . fromInteger . toInteger
+
+wrap :: (Material -> MatKey -> IO (Either String a))
+     -> (Material -> MatKey -> IO (Either String a))
+wrap fun mat key = catch (fun mat key) $ \e -> return $ Left $ show (e :: IOError)
+
+wrapA :: (Material -> MatKey -> CUInt -> IO (Either String a))
+      -> (Material -> MatKey -> CUInt -> IO (Either String a))
+wrapA fun mat key num = catch (fun mat key num) $ \e -> return $ Left $ show (e :: IOError)
 
 -------------------------------------------------------------------------------
 
@@ -315,14 +324,19 @@ getMaterialFloatArray :: Material -- ^ The material
                       -> CUInt    -- ^ Max number of values to retrieve
                       -> IO (Either String [Float])
 getMaterialFloatArray mat key max = do
+  putStrLn "gmfa 1"
   let (mKey, mType, mIndex) = matKeyToTuple key
+  putStrLn "gmfa 6"
   (ret, arr, max') <- getMaterialFloatArray' mat mKey mType mIndex max
+  putStrLn "gmfa 7"
   ret' <- case ret of
     ReturnSuccess     -> liftM (Right . (map unsafeCoerce))
                            $ peekArray (fromIntegral max') arr
     ReturnFailure     -> return $ Left "Failed."
     ReturnOutOfMemory -> return $ Left "Out of memory."
+  putStrLn "gmfa 2"
   free arr
+  putStrLn "gmfa 3"
   return ret'
 
 getMaterialFloatArray' :: Material
@@ -331,14 +345,23 @@ getMaterialFloatArray' :: Material
                        -> CUInt
                        -> CUInt
                        -> IO (Return, Ptr CFloat, CUInt)
-getMaterialFloatArray' mat key typ idx max =
-  with mat $ \pmat ->
-    withCString key $ \ckey ->
-      with max $ \pmax -> do
-        buf <- mallocBytes $ (sizeOf (undefined :: CFloat)) * (fromIntegral max)
-        ret <- aiGetMaterialFloatArray pmat ckey typ idx buf pmax
-        max' <- peek pmax
-        return (toEnum . fromIntegral $ ret, buf, max')
+getMaterialFloatArray' mat key typ idx max = do
+  putStrLn "gmfa' infinity"
+  print mat
+  with mat $ \pmat -> do
+    putStrLn "gmfa' 5"
+    return (ReturnSuccess, nullPtr, 0)
+--    withCString key $ \ckey -> do
+--      putStrLn "gmfa' 6"
+--      with max $ \pmax -> do
+--        putStrLn "gmfa' 1"
+--        buf <- mallocBytes $ (sizeOf (undefined :: CFloat)) * (fromIntegral max)
+--        putStrLn "gmfa' 2"
+--        ret <- aiGetMaterialFloatArray pmat ckey typ idx buf pmax
+--        putStrLn "gmfa' 3"
+--        max' <- peek pmax
+--        putStrLn "gmfa' 4"
+--        return (toEnum . fromIntegral $ ret, buf, max')
 
 foreign import ccall unsafe "aiGetMaterialFloatArray"
   aiGetMaterialFloatArray :: Ptr Material
@@ -373,11 +396,11 @@ getMaterialIntArray mat key max = do
   return ret'
 
 getMaterialIntArray' :: Material
-                       -> String
-                       -> CUInt
-                       -> CUInt
-                       -> CUInt
-                       -> IO (Return, Ptr CInt, CUInt)
+                     -> String
+                     -> CUInt
+                     -> CUInt
+                     -> CUInt
+                     -> IO (Return, Ptr CInt, CUInt)
 getMaterialIntArray' mat key typ idx max =
   with mat $ \pmat ->
     withCString key $ \ckey ->

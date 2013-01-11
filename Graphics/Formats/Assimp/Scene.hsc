@@ -23,6 +23,7 @@ import Foreign.Storable
 import Foreign.C
 import Foreign.Marshal.Array
 import Control.Monad (liftM)
+import Data.Vect.Float (Mat4)
 import Graphics.Formats.Assimp.Types
 import Graphics.Formats.Assimp.Matrix
 import Graphics.Formats.Assimp.Light
@@ -117,13 +118,13 @@ data Node = Node {
   -- quotation marks, ampersands, ... .
     nodeName       :: String
   -- | The transformation relative to the node's parent.
-  , transformation :: Mat4F
+  , transformation :: Mat4
   -- | Parent node. 'Nothing' if this node is the root node.
   , parent         :: Maybe Node
   -- | The child nodes of this node.
   , children       :: [Node]
   -- | The meshes of this node. Each entry is an index into the mesh
-  , nodeMeshes     :: [CUInt] -- Holds indices defining the node
+  , nodeMeshes     :: [CUInt] -- TODO(joel) Change to [Mesh]
   } deriving (Show)
 
 instance Name Node where
@@ -134,7 +135,7 @@ instance Storable Node where
   alignment _ = #alignment aiNode
   peek p = do
     mName           <- liftM aiStringToString $ (#peek aiNode, mName) p
-    mTransformation <- (#peek aiNode, mTransformation) p
+    mTransformation <- unMat4F `fmap` (#peek aiNode, mTransformation) p
     -- mParent      <- if mParentPtr == nullPtr 
     --                 then return Nothing 
     --                 else (#peek aiNode, mParent) p
