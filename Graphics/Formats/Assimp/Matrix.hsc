@@ -18,8 +18,8 @@ module Graphics.Formats.Assimp.Matrix (
   , unMat4F
   ) where
 
-#include "aiMatrix3x3.h"
-#include "aiMatrix4x4.h"
+#include "matrix3x3.h"
+#include "matrix4x4.h"
 #include "typedefs.h"
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 

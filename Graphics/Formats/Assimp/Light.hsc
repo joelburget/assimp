@@ -16,7 +16,7 @@ module Graphics.Formats.Assimp.Light (
   , Light(..)
   ) where
 
-#include "aiLight.h"
+#include "light.h"
 #include "typedefs.h"
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 

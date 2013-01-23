@@ -16,7 +16,7 @@ module Graphics.Formats.Assimp.Color4D (
     Color4F(Color4F)
   ) where
 
-#include "aiColor4D.h"
+#include "color4.h"
 #include "typedefs.h"
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 

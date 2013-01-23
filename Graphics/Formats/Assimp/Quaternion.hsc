@@ -15,7 +15,7 @@ module Graphics.Formats.Assimp.Quaternion (
     Quaternion(..)
   ) where
 
-#include "aiQuaternion.h"
+#include "quaternion.h"
 #include "typedefs.h"
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 

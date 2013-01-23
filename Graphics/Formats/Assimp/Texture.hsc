@@ -17,8 +17,7 @@ module Graphics.Formats.Assimp.Texture (
   , Texture(..)
   ) where
 
-#include "assimp.h"
-#include "aiTexture.h"
+#include "texture.h"
 #include "typedefs.h"
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 

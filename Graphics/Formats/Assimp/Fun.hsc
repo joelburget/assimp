@@ -47,14 +47,14 @@ import Unsafe.Coerce (unsafeCoerce)
 import Data.Vect (Vec3(Vec3), Vec4(Vec4))
 import Data.List (foldl1')
 
+import Graphics.Formats.Assimp.Config
+import Graphics.Formats.Assimp.Color4D
 import Graphics.Formats.Assimp.Types
 import Graphics.Formats.Assimp.Scene
 import Graphics.Formats.Assimp.Material hiding (key)
 import Graphics.Formats.Assimp.PostProcess
-import Graphics.Formats.Assimp.Config
 
-#include "assimp.h"
-#include "aiMaterial.h"
+#include "material.h"
 #include "typedefs.h"
 
 -- aiImportFileEx
@@ -84,11 +84,15 @@ foreign import ccall unsafe "aiApplyPostProcessing"
 importFile :: String -> [PostProcessSteps] -> IO (Either String Scene)
 importFile str psteps = do
   let psteps' = foldl1' (.|.) $ map (fromIntegral . fromEnum) psteps
-  sceneptr <- withCString str $ \x -> aiImportFile x psteps'
+  putStrLn "withCString"
+  sceneptr <- withCString str $ flip aiImportFile psteps'
+  putStrLn $ show sceneptr
   if sceneptr == nullPtr
     then liftM Left getErrorString
     else do
+      putStrLn "peeking"
       scene <- peek sceneptr
+      putStrLn "releasing"
       aiReleaseImport sceneptr
       return $ Right scene
 
@@ -244,7 +248,7 @@ class SingleGetter a where
       -> IO (Either String a)
 
 instance ArrayGetter Float where
-  getArray = wrapA getMaterialFloatArray
+  getArray = wrapArray getMaterialFloatArray
 
 instance ArrayGetter Int where
   getArray = getMaterialIntArray
@@ -259,6 +263,9 @@ instance SingleGetter Vec3 where
   get mat key = (liftM . liftM) (\(Vec4 r g b _) -> Vec3 r g b)
     (getMaterialColor mat key)
 
+instance SingleGetter Color4F where
+  get mat key = (liftM . liftM) Color4F (getMaterialColor mat key)
+
 instance SingleGetter Vec4 where
   get = getMaterialColor
 
@@ -270,11 +277,13 @@ mRet  = toEnum . fromInteger . toInteger
 
 wrap :: (Material -> MatKey -> IO (Either String a))
      -> (Material -> MatKey -> IO (Either String a))
-wrap fun mat key = catch (fun mat key) $ \e -> return $ Left $ show (e :: IOError)
+wrap fun mat key = catch (fun mat key) $ \e ->
+    return $ Left $ show (e :: IOError)
 
-wrapA :: (Material -> MatKey -> CUInt -> IO (Either String a))
-      -> (Material -> MatKey -> CUInt -> IO (Either String a))
-wrapA fun mat key num = catch (fun mat key num) $ \e -> return $ Left $ show (e :: IOError)
+wrapArray :: (Material -> MatKey -> CUInt -> IO (Either String a))
+         -> (Material -> MatKey -> CUInt -> IO (Either String a))
+wrapArray fun mat key num = catch (fun mat key num) $ \e ->
+    return $ Left $ show (e :: IOError)
 
 -------------------------------------------------------------------------------
 

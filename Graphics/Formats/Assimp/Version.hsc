@@ -22,8 +22,8 @@ module Graphics.Formats.Assimp.Version (
   , isExtensionSupported
   ) where
 
-#include "assimp.h"
-#include "aiVersion.h"
+#include "defs.h"
+#include "version.h"
 #include "typedefs.h"
 
 import Foreign.Marshal.Utils (toBool)

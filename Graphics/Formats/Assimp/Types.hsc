@@ -37,7 +37,7 @@ import Foreign.Storable
 import Control.Applicative((<$>), (<*>))
 import Data.Vect.Float (Vec3(Vec3))
 
-#include "assimp.h"        // Plain-C interface
+#include "cimport.h"        // Plain-C interface
 #include "typedefs.h"
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 
@@ -83,9 +83,9 @@ instance Storable Plane where
   sizeOf _ = #size aiPlane
   alignment _ = #alignment aiPlane
   peek p = Plane <$> (#peek aiPlane, a) p
-                   <*> (#peek aiPlane, b) p
-                   <*> (#peek aiPlane, c) p
-                   <*> (#peek aiPlane, d) p
+                 <*> (#peek aiPlane, b) p
+                 <*> (#peek aiPlane, c) p
+                 <*> (#peek aiPlane, d) p
   poke = undefined
 
 data Ray = Ray 
@@ -169,13 +169,21 @@ class Position a where
 class Name a where
   name :: a -> String
 
--- Same as peekArray but checks for a null pointer
-peekArray' :: Storable a => Int -> Ptr a -> IO [a]
+-- | Same as @peekArray@ but checks for a null pointer.
+peekArray' :: Storable a
+           => Int    -- ^ Length of the array
+           -> Ptr a  -- ^ Array location
+           -> IO [a] -- ^ Resulting list
 peekArray' n ptr = if ptr == nullPtr
                    then return []
                    else peekArray n ptr
 
-peekArrayPtr :: (Storable a) => Int -> (Ptr (Ptr a)) -> IO [a]
+
+-- Like @peekArray'@ but takes an array of pointers.
+peekArrayPtr :: Storable a
+             => Int           -- ^ Length of the array
+             -> (Ptr (Ptr a)) -- ^ Array of pointers
+             -> IO [a]        -- ^ Resulting list
 peekArrayPtr n p = peekArray' (fromIntegral n) p >>= mapM peek
 
 toEnumList :: Enum a => CUInt -> [a]

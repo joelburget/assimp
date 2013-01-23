@@ -19,7 +19,7 @@ module Graphics.Formats.Assimp.Material (
   , TextureMapping (..)
   , TextureOp (..)
   , TextureType (..)
-  --, PropertyTypeInfo (..)
+  , PropertyTypeInfo (..)
   , MatKey (..)
   , MaterialProperty (..)
   , MaterialData (..)
@@ -28,12 +28,12 @@ module Graphics.Formats.Assimp.Material (
   , matKeyToTuple
   ) where
 
-#include "assimp.h"
-#include "aiMaterial.h"
+#include "material.h"
 #include "typedefs.h"
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 
 import Foreign.Ptr (Ptr, castPtr)
+import Foreign.C.String (peekCStringLen)
 import Foreign.C.Types
 import Foreign.Storable
 import Data.Vect (Vec2)
@@ -671,24 +671,32 @@ instance Storable MaterialProperty where
     mType'    <- (toEnum . fromIntegral :: CUInt -> PropertyTypeInfo) <$>
       (#peek aiMaterialProperty, mType) p
     pmData    <- (#peek aiMaterialProperty, mData) p
-    print (key', index', mType', pmData)
+    len <- (#peek aiMaterialProperty, mDataLength) p :: IO CUInt
+    print (key', index', mType', pmData, len)
     mData'    <- let ptr = castPtr pmData in case mType' of
       PtiFloat   -> MaterialFloat                     <$> peek ptr
-      PtiString  -> MaterialString . aiStringToString <$> peek ptr
+      PtiString  -> MaterialString <$> peekCStringLen (ptr, fromIntegral len)
       PtiInteger -> MaterialInt                       <$> peek ptr
-      PtiBuffer  -> MaterialBuffer 
-                <$> (#peek aiMaterialProperty, mDataLength) p
-                <*> peek ptr
+      PtiBuffer  -> MaterialBuffer len <$> peek ptr
+    print mData'
     return $ MaterialProperty (buildMatKey key' semantic' index') mData'
   poke = undefined
 
 instance Storable Material where
   sizeOf _ = #size aiMaterial
   alignment _ = #alignment aiMaterial
-  peek p = Material <$>
-    (join $ peekArrayPtr
-      <$> (fromIntegral <$> ((#peek aiMaterial, mNumProperties) p :: IO CUInt))
-      <*> (#peek aiMaterial, mProperties) p)
+  peek p = do
+      mNumProperties <- fromIntegral <$> ((#peek aiMaterial, mNumProperties) p :: IO CUInt)
+      print mNumProperties
+      arrPtr <- (#peek aiMaterial, mProperties) p
+      -- let props' = (castPtr arrPtr :: Ptr ())
+      -- print props'
+      props <- peekArrayPtr mNumProperties arrPtr
+      return $ Material props
+  -- peek p = Material <$>
+  --   (join $ peekArrayPtr
+  --     <$> (fromIntegral <$> ((#peek aiMaterial, mNumProperties) p :: IO CUInt))
+  --     <*> (#peek aiMaterial, mProperties) p)
   poke = undefined
 
 data UVTransform = UVTransform

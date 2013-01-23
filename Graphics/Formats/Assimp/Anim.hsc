@@ -18,7 +18,7 @@ module Graphics.Formats.Assimp.Anim (
   , Animation(..)
   ) where
 
-#include "aiAnim.h"
+#include "anim.h"
 #include "typedefs.h"
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 

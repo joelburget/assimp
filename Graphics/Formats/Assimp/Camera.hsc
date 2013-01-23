@@ -16,7 +16,7 @@ module Graphics.Formats.Assimp.Camera (
     Camera(..)
   ) where
 
-#include "aiCamera.h"
+#include "camera.h"
 #include "typedefs.h"
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 

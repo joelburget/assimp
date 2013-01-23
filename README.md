@@ -1,7 +1,8 @@
 Assimp
 ======
 
-FFI bindings for [Assimp](http://assimp.sourceforge.net) - asset import library. Supports the following formats:
+FFI bindings for [Assimp](http://assimp.sourceforge.net) - asset import
+library. Supports the following formats:
 
 - Collada ( *.dae;*.xml )
 - Blender ( *.blend ) 3
@@ -43,9 +44,11 @@ FFI bindings for [Assimp](http://assimp.sourceforge.net) - asset import library.
 
 1: Experimental loaders
 
-2: Indicates very limited support - many of the format's features don't map to Assimp's data structures.
+2: Indicates very limited support - many of the format's features don't map to
+Assimp's data structures.
 
-3: These formats support animations, but ASSIMP doesn't yet support them (or they're buggy)
+3: These formats support animations, but ASSIMP doesn't yet support them (or
+they're buggy)
 
 Example
 -------

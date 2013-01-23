@@ -1,5 +1,5 @@
 -- |
--- Module      : Graphics.Formats.Assimp.PostProcess
+-- Module      : Graphics.Formats.Assimp.Config
 -- Copyright   : (c) Joel Burget 2011-2012
 -- License     : BSD3
 --
