@@ -15,7 +15,7 @@ module Graphics.Formats.Assimp.PostProcess (
     PostProcessSteps(..)
   ) where
 
-#include "postProcess.h" // Post processing flags
+#include "postprocess.h" // Post processing flags
 
 -- | Flags for all possible post processing steps.
 data PostProcessSteps 
