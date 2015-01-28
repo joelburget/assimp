@@ -68,3 +68,5 @@ more information.
     main = do
       args <- getArgs
       scene <- importFile "model.ply" processing
+      
+[![Build Status](https://travis-ci.org/haraldsteinlechner/assimp.svg?branch=tmp)](https://travis-ci.org/haraldsteinlechner/assimp)
