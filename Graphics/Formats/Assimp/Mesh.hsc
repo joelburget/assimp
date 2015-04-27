@@ -200,9 +200,10 @@ instance Storable Mesh where
     putStrLn $ "num faces: " ++ (show mNumFaces)
     (#peek aiMesh, mFaces) p >>= \(x::Ptr ()) -> putStrLn $ "mFaces: " ++ (show x)
     mFaces           <- (#peek aiMesh, mFaces) p >>= peekArray mNumFaces
-    putStrLn "peeking mBones"
-    mBones           <- join $ peekArrayPtr <$> ((#peek aiMesh, mNumBones) p)
-                                            <*> ((#peek aiMesh, mBones) p)
+    putStrLn $ "numBones: "  
+    -- mBones           <- join $ peekArrayPtr <$> ((#peek aiMesh, mNumBones) p)
+    --                                        <*> ((#peek aiMesh, mBones) p)
+    let mBones = error "got me"
     putStrLn "peeking mMaterialIndex"
     mMaterialIndex   <- (#peek aiMesh, mMaterialIndex) p
     putStrLn "peeking mName"
