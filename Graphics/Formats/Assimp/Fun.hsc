@@ -53,6 +53,7 @@ import Graphics.Formats.Assimp.Types
 import Graphics.Formats.Assimp.Scene
 import Graphics.Formats.Assimp.Material hiding (key)
 import Graphics.Formats.Assimp.PostProcess
+import Graphics.Formats.Assimp.Utils 
 
 #include "material.h"
 #include "typedefs.h"
@@ -84,15 +85,15 @@ foreign import ccall unsafe "aiApplyPostProcessing"
 importFile :: String -> [PostProcessSteps] -> IO (Either String Scene)
 importFile str psteps = do
   let psteps' = foldl1' (.|.) $ map (fromIntegral . fromEnum) psteps
-  putStrLn "withCString"
+  logLn "withCString"
   sceneptr <- withCString str $ flip aiImportFile psteps'
-  putStrLn $ show sceneptr
+  logLn $ show sceneptr
   if sceneptr == nullPtr
     then liftM Left getErrorString
     else do
-      putStrLn "peeking"
+      logLn "peeking"
       scene <- peek sceneptr
-      putStrLn "releasing"
+      logLn "releasing"
       aiReleaseImport sceneptr
       return $ Right scene
 
@@ -333,19 +334,19 @@ getMaterialFloatArray :: Material -- ^ The material
                       -> CUInt    -- ^ Max number of values to retrieve
                       -> IO (Either String [Float])
 getMaterialFloatArray mat key max = do
-  putStrLn "gmfa 1"
+  logLn "gmfa 1"
   let (mKey, mType, mIndex) = matKeyToTuple key
-  putStrLn "gmfa 6"
+  logLn "gmfa 6"
   (ret, arr, max') <- getMaterialFloatArray' mat mKey mType mIndex max
-  putStrLn "gmfa 7"
+  logLn "gmfa 7"
   ret' <- case ret of
     ReturnSuccess     -> liftM (Right . (map unsafeCoerce))
                            $ peekArray (fromIntegral max') arr
     ReturnFailure     -> return $ Left "Failed."
     ReturnOutOfMemory -> return $ Left "Out of memory."
-  putStrLn "gmfa 2"
+  logLn "gmfa 2"
   free arr
-  putStrLn "gmfa 3"
+  logLn "gmfa 3"
   return ret'
 
 getMaterialFloatArray' :: Material
@@ -355,21 +356,21 @@ getMaterialFloatArray' :: Material
                        -> CUInt
                        -> IO (Return, Ptr CFloat, CUInt)
 getMaterialFloatArray' mat key typ idx max = do
-  putStrLn "gmfa' infinity"
-  print mat
+  logLn "gmfa' infinity"
+  logPrint mat
   with mat $ \pmat -> do
-    putStrLn "gmfa' 5"
+    logLn "gmfa' 5"
     return (ReturnSuccess, nullPtr, 0)
 --    withCString key $ \ckey -> do
---      putStrLn "gmfa' 6"
+--      logLn "gmfa' 6"
 --      with max $ \pmax -> do
---        putStrLn "gmfa' 1"
+--        logLn "gmfa' 1"
 --        buf <- mallocBytes $ (sizeOf (undefined :: CFloat)) * (fromIntegral max)
---        putStrLn "gmfa' 2"
+--        logLn "gmfa' 2"
 --        ret <- aiGetMaterialFloatArray pmat ckey typ idx buf pmax
---        putStrLn "gmfa' 3"
+--        logLn "gmfa' 3"
 --        max' <- peek pmax
---        putStrLn "gmfa' 4"
+--        logLn "gmfa' 4"
 --        return (toEnum . fromIntegral $ ret, buf, max')
 
 foreign import ccall unsafe "aiGetMaterialFloatArray"
