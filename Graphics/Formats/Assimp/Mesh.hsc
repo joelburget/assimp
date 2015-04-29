@@ -201,9 +201,9 @@ instance Storable Mesh where
     (#peek aiMesh, mFaces) p >>= \(x::Ptr ()) -> putStrLn $ "mFaces: " ++ (show x)
     mFaces           <- (#peek aiMesh, mFaces) p >>= peekArray mNumFaces
     putStrLn $ "numBones: "  
-    -- mBones           <- join $ peekArrayPtr <$> ((#peek aiMesh, mNumBones) p)
-    --                                        <*> ((#peek aiMesh, mBones) p)
-    let mBones = error "got me"
+    mNumBones        <- (#peek aiMesh, mNumBones) p :: IO CUInt
+    print mNumBones
+    mBones           <- ((#peek aiMesh, mBones) p) >>= peekArrayPtr (fromIntegral mNumBones) 
     putStrLn "peeking mMaterialIndex"
     mMaterialIndex   <- (#peek aiMesh, mMaterialIndex) p
     putStrLn "peeking mName"
@@ -236,7 +236,7 @@ instance Storable Bone where
   alignment _ = #alignment aiBone
   peek p = do
     mN <- liftM aiStringToString $ (#peek aiBone, mName) p
-    mNW <- (#peek aiBone, mNumWeights) p
+    mNW <- liftM fromIntegral ( (#peek aiBone, mNumWeights) p :: IO CUInt )
     mW <- (#peek aiBone, mWeights) p
     lst <- peekArray mNW mW
     mO <- unMat4F <$> (#peek aiBone, mOffsetMatrix) p

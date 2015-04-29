@@ -224,9 +224,7 @@ instance Storable Scene where
     putStrLn "peeking mNumAnimations"
     mNumAnimations <- (#peek aiScene, mNumAnimations) p :: IO CUInt
     putStrLn $ "mNumAnimations: " ++ (show mNumAnimations)
-    --mAnimations    <- (#peek aiScene, mAnimations) p >>= 
-    --                    peekArrayPtr (fromIntegral mNumAnimations)
-    let mAnimations = error "urdar"
+    mAnimations    <- (#peek aiScene, mAnimations) p >>= peekArrayPtr (fromIntegral mNumAnimations) 
     mNumTextures   <- (#peek aiScene, mNumTextures) p :: IO CUInt
     putStrLn $ "mNumTextures: " ++ (show mNumTextures)
     mTextures      <- (#peek aiScene, mTextures) p >>= 
