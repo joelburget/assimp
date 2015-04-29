@@ -27,6 +27,7 @@ import Foreign.Storable
 import Foreign.C.Types
 import Foreign.Marshal.Array (peekArray)
 import Graphics.Formats.Assimp.Types
+import Graphics.Formats.Assimp.Utils 
 
 -- | Describes the animation of a single node. /Not yet implemented/
 data NodeAnim = NodeAnim 
@@ -69,13 +70,13 @@ instance Storable Animation where
   alignment _ = #alignment aiAnimation
   peek p = do
     mName            <- liftM aiStringToString $ (#peek aiAnimation, mName) p
-    print mName
+    logPrint mName
     mDuration        <- (#peek aiAnimation, mDuration) p
-    print mDuration
+    logPrint mDuration
     mTicksPerSecond  <- (#peek aiAnimation, mTicksPerSecond) p
-    print mTicksPerSecond
+    logPrint mTicksPerSecond
     mNumChannels     <- (#peek aiAnimation, mNumChannels) p :: IO CUInt
-    print mNumChannels
+    logPrint mNumChannels
     mChannels'       <- (#peek aiAnimation, mChannels) p
     mChannels        <- peekArray (fromIntegral mNumChannels) mChannels'
     mNumMeshChannels <- (#peek aiAnimation, mNumMeshChannels) p :: IO CUInt

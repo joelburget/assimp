@@ -38,6 +38,7 @@ import Foreign.C.Types
 import Foreign.Storable
 import Data.Vect (Vec2)
 import Graphics.Formats.Assimp.Types
+import Graphics.Formats.Assimp.Utils 
 import Control.Monad (join)
 import Control.Applicative ((<$>), (<*>))
 
@@ -672,13 +673,13 @@ instance Storable MaterialProperty where
       (#peek aiMaterialProperty, mType) p
     pmData    <- (#peek aiMaterialProperty, mData) p
     len <- (#peek aiMaterialProperty, mDataLength) p :: IO CUInt
-    print (key', index', mType', pmData, len)
+    logPrint (key', index', mType', pmData, len)
     mData'    <- let ptr = castPtr pmData in case mType' of
       PtiFloat   -> MaterialFloat                     <$> peek ptr
       PtiString  -> MaterialString <$> peekCStringLen (ptr, fromIntegral len)
       PtiInteger -> MaterialInt                       <$> peek ptr
       PtiBuffer  -> MaterialBuffer len <$> peek ptr
-    print mData'
+    logPrint mData'
     return $ MaterialProperty (buildMatKey key' semantic' index') mData'
   poke = undefined
 
@@ -687,7 +688,7 @@ instance Storable Material where
   alignment _ = #alignment aiMaterial
   peek p = do
       mNumProperties <- fromIntegral <$> ((#peek aiMaterial, mNumProperties) p :: IO CUInt)
-      print mNumProperties
+      logPrint mNumProperties
       arrPtr <- (#peek aiMaterial, mProperties) p
       -- let props' = (castPtr arrPtr :: Ptr ())
       -- print props'

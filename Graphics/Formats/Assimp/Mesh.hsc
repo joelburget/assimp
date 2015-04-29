@@ -35,6 +35,7 @@ import Graphics.Formats.Assimp.Types
 import Graphics.Formats.Assimp.Color4D
 import Graphics.Formats.Assimp.Matrix (Mat4F, unMat4F)
 import Graphics.Formats.Assimp.Material
+import Graphics.Formats.Assimp.Utils 
 
 -- | Enumerates the types of geometric primitives supported by Assimp.
 data PrimitiveType 
@@ -177,7 +178,7 @@ instance Storable Mesh where
   peek p = do
     -- Note for some reason I had to shift the bits right by 1 but I don't
     -- think that should have been necessary.
-    putStrLn "peeking mPrimitiveTypes"
+    logLn "peeking mPrimitiveTypes"
     mPrimitiveTypes  <- liftM (toEnumList . (flip shiftR 1))
                         ((#peek aiMesh, mPrimitiveTypes) p :: IO CUInt)
     mNumVs           <- liftM fromIntegral
@@ -186,27 +187,27 @@ instance Storable Mesh where
     mNormals         <- (#peek aiMesh, mNormals) p       >>= peekArray' mNumVs
     mTangents        <- (#peek aiMesh, mTangents) p      >>= peekArray' mNumVs
     mBitangents      <- (#peek aiMesh, mBitangents) p    >>= peekArray' mNumVs
-    putStrLn "peeking mColors"
+    logLn "peeking mColors"
     mColors          <- (#peek aiMesh, mColors) p        >>= peekArray' mNumVs
-    putStrLn "peeking mTextureCoords"
+    logLn "peeking mTextureCoords"
     mTextureCoords   <- (#peek aiMesh, mTextureCoords) p >>= peekArray' mNumVs
-    putStrLn "peeking mNumUVComponents"
+    logLn "peeking mNumUVComponents"
     mNumUVComponents <- (#peek aiMesh, mNumUVComponents) p
-    putStrLn "peeking mNumFaces"
+    logLn "peeking mNumFaces"
     mNumFaces        <- liftM fromIntegral 
                         ((#peek aiMesh, mNumFaces) p :: IO CUInt)
-    print (mPrimitiveTypes, mNumVs, mVertices, mNormals, mTangents, mBitangents, mColors, mTextureCoords, mNumUVComponents)
-    putStrLn "peeking mFaces"
-    putStrLn $ "num faces: " ++ (show mNumFaces)
-    (#peek aiMesh, mFaces) p >>= \(x::Ptr ()) -> putStrLn $ "mFaces: " ++ (show x)
+    logPrint (mPrimitiveTypes, mNumVs, mVertices, mNormals, mTangents, mBitangents, mColors, mTextureCoords, mNumUVComponents)
+    logLn "peeking mFaces"
+    logLn $ "num faces: " ++ (show mNumFaces)
+    (#peek aiMesh, mFaces) p >>= \(x::Ptr ()) -> logLn $ "mFaces: " ++ (show x)
     mFaces           <- (#peek aiMesh, mFaces) p >>= peekArray mNumFaces
-    putStrLn $ "numBones: "  
+    logLn $ "numBones: "  
     mNumBones        <- (#peek aiMesh, mNumBones) p :: IO CUInt
-    print mNumBones
+    logPrint mNumBones
     mBones           <- ((#peek aiMesh, mBones) p) >>= peekArrayPtr (fromIntegral mNumBones) 
-    putStrLn "peeking mMaterialIndex"
+    logLn "peeking mMaterialIndex"
     mMaterialIndex   <- (#peek aiMesh, mMaterialIndex) p
-    putStrLn "peeking mName"
+    logLn "peeking mName"
     mName            <- liftM aiStringToString $ (#peek aiMesh, mName) p
     return $ Mesh
                mPrimitiveTypes mVertices mNormals mTangents mBitangents
