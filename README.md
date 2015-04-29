@@ -6,21 +6,21 @@ library. Supports the following formats:
 
 - Collada ( *.dae;*.xml )
 - Blender ( *.blend ) 3
-- Biovision BVH ( *.bvh ) 
-- 3D Studio Max 3DS ( *.3ds ) 
-- 3D Studio Max ASE ( *.ase ) 
-- Wavefront Object ( *.obj ) 
-- Stanford Polygon Library ( *.ply ) 
+- Biovision BVH ( *.bvh )
+- 3D Studio Max 3DS ( *.3ds )
+- 3D Studio Max ASE ( *.ase )
+- Wavefront Object ( *.obj )
+- Stanford Polygon Library ( *.ply )
 - AutoCAD DXF ( *.dxf ) 2
-- Neutral File Format ( *.nff ) 
-- Sense8 WorldToolkit ( *.nff ) 
-- Valve Model ( *.smd,*.vta ) 3 
-- Quake I ( *.mdl ) 
-- Quake II ( *.md2 ) 
-- Quake III ( *.md3 ) 
-- Quake 3 BSP ( *.pk3 ) 1 
+- Neutral File Format ( *.nff )
+- Sense8 WorldToolkit ( *.nff )
+- Valve Model ( *.smd,*.vta ) 3
+- Quake I ( *.mdl )
+- Quake II ( *.md2 )
+- Quake III ( *.md3 )
+- Quake 3 BSP ( *.pk3 ) 1
 - RtCW ( *.mdc )
-- Doom 3 ( *.md5mesh;*.md5anim;*.md5camera ) 
+- Doom 3 ( *.md5mesh;*.md5anim;*.md5camera )
 - DirectX X ( *.x )
 - Quick3D ( *.q3o;*q3s )
 - Raw Triangles ( *.raw )
@@ -30,10 +30,10 @@ library. Supports the following formats:
 - Irrlicht Mesh ( *.irrmesh;*.xml )
 - Irrlicht Scene ( *.irr;*.xml )
 - Object File Format ( *.off )
-- Terragen Terrain ( *.ter ) 
-- 3D GameStudio Model ( *.mdl ) 
+- Terragen Terrain ( *.ter )
+- 3D GameStudio Model ( *.mdl )
 - 3D GameStudio Terrain ( *.hmp )
-- Ogre (*.mesh.xml, *.skeleton.xml, *.material)3 
+- Ogre (*.mesh.xml, *.skeleton.xml, *.material)3
 - Milkshape 3D ( *.ms3d )
 - LightWave Model ( *.lwo )
 - LightWave Scene ( *.lws )
@@ -70,3 +70,6 @@ more information.
       scene <- importFile "model.ply" processing
       
 [![Build Status](https://travis-ci.org/haraldsteinlechner/assimp.svg?branch=travis-assimp3)](https://travis-ci.org/haraldsteinlechner/assimp)
+=======
+
+[![Build Status](https://travis-ci.org/haraldsteinlechner/assimp.svg)](https://travis-ci.org/haraldsteinlechner/assimp)
