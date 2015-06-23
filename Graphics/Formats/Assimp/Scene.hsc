@@ -33,6 +33,7 @@ import Graphics.Formats.Assimp.Mesh
 import Graphics.Formats.Assimp.Anim
 import Graphics.Formats.Assimp.Material
 import Graphics.Formats.Assimp.Texture
+import Graphics.Formats.Assimp.Utils
 
 data SceneFlags = 
   -- |
@@ -199,44 +200,43 @@ instance Storable Scene where
   sizeOf _ = #size aiScene
   alignment _ = #alignment aiScene
   peek p = do
-    putStrLn "peeking mFlags"
+    logLn "peeking mFlags"
     mFlags         <- liftM toEnumList $ ((#peek aiScene, mFlags) p :: IO CUInt)
-    putStrLn "peeking mRootNode"
+    logLn "peeking mRootNode"
     mRootNode      <- (#peek aiScene, mRootNode) p >>= peek
-    putStrLn "peeking mNumMeshes"
+    logLn "peeking mNumMeshes"
     mNumMeshes     <- (#peek aiScene, mNumMeshes) p :: IO CUInt
-    putStrLn "peeking mMeshes'"
+    logLn "peeking mMeshes'"
     mMeshes'       <- (#peek aiScene, mMeshes) p >>= 
                         peekArray (fromIntegral mNumMeshes)
-    putStrLn "peeking mMeshes"
-    putStrLn $ "num meshes: " ++ (show mNumMeshes)
-    putStrLn $ "mMeshes': " ++ (show mMeshes')
+    logLn "peeking mMeshes"
+    logLn $ "num meshes: " ++ (show mNumMeshes)
+    logLn $ "mMeshes': " ++ (show mMeshes')
     mMeshes        <- mapM peek mMeshes'
-    putStrLn "peeking mNumMaterials"
+    logLn "peeking mNumMaterials"
     mNumMaterials  <- (#peek aiScene, mNumMaterials) p :: IO CUInt
-    putStrLn $ "mNumMaterials: " ++ (show mNumMaterials)
-    putStrLn "peeking mMaterials'"
+    logLn $ "mNumMaterials: " ++ (show mNumMaterials)
+    logLn "peeking mMaterials'"
     mMaterials'    <- (#peek aiScene, mMaterials) p >>= 
                         peekArray (fromIntegral mNumMaterials)
-    print mMaterials'
-    putStrLn "peeking mMaterials"
+    logPrint mMaterials'
+    logLn "peeking mMaterials"
     mMaterials     <- mapM peek (mMaterials' :: [Ptr Material])
-    putStrLn "peeking mNumAnimations"
+    logLn "peeking mNumAnimations"
     mNumAnimations <- (#peek aiScene, mNumAnimations) p :: IO CUInt
-    putStrLn $ "mNumAnimations: " ++ (show mNumAnimations)
-    mAnimations    <- (#peek aiScene, mAnimations) p >>= 
-                        peekArrayPtr (fromIntegral mNumAnimations)
+    logLn $ "mNumAnimations: " ++ (show mNumAnimations)
+    mAnimations    <- (#peek aiScene, mAnimations) p >>= peekArrayPtr (fromIntegral mNumAnimations) 
     mNumTextures   <- (#peek aiScene, mNumTextures) p :: IO CUInt
-    putStrLn $ "mNumTextures: " ++ (show mNumTextures)
+    logLn $ "mNumTextures: " ++ (show mNumTextures)
     mTextures      <- (#peek aiScene, mTextures) p >>= 
                         peekArrayPtr (fromIntegral mNumTextures)
     mNumLights     <- (#peek aiScene, mNumLights) p :: IO CUInt
-    putStrLn $ "mNumLights: " ++ (show mNumLights)
+    logLn $ "mNumLights: " ++ (show mNumLights)
     mLights        <- (#peek aiScene, mLights) p >>= 
                         peekArrayPtr (fromIntegral mNumLights)
     mNumCameras    <- (#peek aiScene, mNumCameras) p :: IO CUInt
-    putStrLn $ "mNumCameras: " ++ (show mNumCameras)
-    putStrLn "peeking mCameras"
+    logLn $ "mNumCameras: " ++ (show mNumCameras)
+    logLn "peeking mCameras"
     mCameras       <- (#peek aiScene, mCameras) p >>= 
                         peekArrayPtr (fromIntegral mNumCameras)
     return $ Scene mFlags mRootNode mMeshes mMaterials mAnimations mTextures

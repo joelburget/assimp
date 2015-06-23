@@ -24,8 +24,10 @@ module Graphics.Formats.Assimp.Anim (
 
 import Control.Monad (liftM)
 import Foreign.Storable
+import Foreign.C.Types
 import Foreign.Marshal.Array (peekArray)
 import Graphics.Formats.Assimp.Types
+import Graphics.Formats.Assimp.Utils 
 
 -- | Describes the animation of a single node. /Not yet implemented/
 data NodeAnim = NodeAnim 
@@ -68,13 +70,17 @@ instance Storable Animation where
   alignment _ = #alignment aiAnimation
   peek p = do
     mName            <- liftM aiStringToString $ (#peek aiAnimation, mName) p
+    logPrint mName
     mDuration        <- (#peek aiAnimation, mDuration) p
+    logPrint mDuration
     mTicksPerSecond  <- (#peek aiAnimation, mTicksPerSecond) p
-    mNumChannels     <- (#peek aiAnimation, mNumChannels) p
+    logPrint mTicksPerSecond
+    mNumChannels     <- (#peek aiAnimation, mNumChannels) p :: IO CUInt
+    logPrint mNumChannels
     mChannels'       <- (#peek aiAnimation, mChannels) p
-    mChannels        <- peekArray mNumChannels mChannels'
-    mNumMeshChannels <- (#peek aiAnimation, mNumMeshChannels) p
+    mChannels        <- peekArray (fromIntegral mNumChannels) mChannels'
+    mNumMeshChannels <- (#peek aiAnimation, mNumMeshChannels) p :: IO CUInt
     mMeshChannels'   <- (#peek aiAnimation, mMeshChannels) p
-    mMeshChannels    <- peekArray mNumMeshChannels mMeshChannels'
+    mMeshChannels    <- peekArray (fromIntegral mNumMeshChannels) mMeshChannels'
     return $ Animation mName mDuration mTicksPerSecond mChannels mMeshChannels
   poke = undefined

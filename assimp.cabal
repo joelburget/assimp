@@ -1,5 +1,5 @@
 Name:                assimp
-Version:             0.1
+Version:             0.2
 Synopsis:            The Assimp asset import library
 
 Description:
@@ -72,6 +72,7 @@ Library
     Graphics.Formats.Assimp.Texture
     Graphics.Formats.Assimp.Types
     Graphics.Formats.Assimp.Version
+    Graphics.Formats.Assimp.Utils
   ghc-options: -Wall
   Build-depends: base         >= 4     && < 5
                , vect         >= 0.4.6 && < 0.5
