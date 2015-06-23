@@ -8,3 +8,8 @@ notifications:
   email:
     on_success: change
     on_failure: always
+
+# whitelist
+branches:
+   only:
+       - travis-assimp3
